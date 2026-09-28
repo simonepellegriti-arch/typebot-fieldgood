@@ -10,12 +10,11 @@ export const RootPage = ({ dashboardUrl }: { dashboardUrl: string }) => (
   >
     <div>
       <h1 style={{ fontWeight: "bold", fontSize: "30px" }}>
-        Welcome to Typebot
+        Welcome to FIELDBOT
       </h1>
       <p>
-        Typebot is a no-code platform that enables you to effortlessly create
-        and integrate advanced chatbots into websites and chat platforms like
-        WhatsApp.
+        FIELDBOT is Fieldgood&apos;s conversational survey platform: structured
+        market research interviews on the web and WhatsApp.
       </p>
       <p>
         Go to the <a href={dashboardUrl}>dashboard</a>.

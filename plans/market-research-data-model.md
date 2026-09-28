@@ -278,3 +278,24 @@ MODIFICA: formato Research/Legacy; filtri stato e versione; value/label/both; mu
 Test aggiunti (richiesti): single choice label/value · multiple choice array · label con virgola · intervista completa/incompleta (+ ABANDONED, NOT_STARTED, filtri) · START_TS/END_TS/DURATION (UTC e Europe/Rome) · `-5` · `+39…` · blocco eseguito due volte (colonne, JSON, ultima) · rename label senza cambio colonna · due versioni dello stesso typebot (+ filtro) · lettura di un risultato legacy · codebook SPSS · nomi variabile duplicati · publish versionato.
 
 Non eseguiti: la suite Vitest con container database (`bunx nx test`) e i test Playwright, perché qui Docker non è disponibile.
+
+---
+
+# Aggiornamento — FIELDBOT: export SPSS .sav e rebrand
+
+### Export SPSS .sav
+FILE: `packages/results/src/research/sav/writeSavFile.ts` (nuovo)
+MOTIVO: estrazione SPSS nativa, senza servizi esterni.
+MODIFICA: writer TypeScript del formato SPSS system file (non compresso, UTF-8): variabili numeriche/stringa/datetime, etichette variabile, value labels, missing discreti, livello di misura, nomi lunghi, stringhe molto lunghe (>255 byte, segmentate come SPSS/ReadStat), multiple response set dicotomici.
+
+FILE: `packages/results/src/research/sav/convertDatasetToSav.ts` (nuovo, + test)
+MOTIVO: dal dataset di ricerca + codebook al file .sav.
+MODIFICA: tipi dedotti dai dati, decimali automatici, timestamp come DATETIME nell'orario del fuso scelto, MR set `$D2` dalle dicotomiche.
+
+FILE: `packages/results/src/research/schemas.ts`, `exportResearchDataset.ts`, `workflows/exportResultsWorkflow.ts`, `apps/builder/.../handleExportResearchDataset.ts`, `router.ts`, `ExportAllResultsDialog.tsx`
+MODIFICA: opzione `fileFormat: "csv" | "sav"`; l'endpoint restituisce `savBase64`; export in background carica il .sav su S3; nel dialog il formato predefinito è SPSS (.sav) con multiple dicotomiche.
+
+Verifica: il file generato viene riletto da pyreadstat (ReadStat) con etichette, value labels, missing, misure, datetime, MR set e testi UTF-8 lunghi intatti.
+
+### Rebrand FIELDBOT
+Logo (bolla di chat con barre di risposta) in builder, viewer, badge e favicon; titoli pagina `| FIELDBOT`; testi dell'interfaccia in 9 lingue ("Typebot" → "FIELDBOT", "typebot" → "bot"); badge "Made with FIELDBOT" → fieldgood.it; email transazionali. Nomi interni del codice, API e licenza FSL invariati.

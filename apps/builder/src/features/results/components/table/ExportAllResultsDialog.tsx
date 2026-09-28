@@ -65,7 +65,11 @@ export const ExportAllResultsDialog = ({
     "research",
   );
   const [researchOptions, setResearchOptions] = useState<ResearchExportOptions>(
-    () => researchExportOptionsSchema.parse({}),
+    () =>
+      researchExportOptionsSchema.parse({
+        fileFormat: "sav",
+        multipleChoiceMode: "dichotomous",
+      }),
   );
   const [isCodebookDownloaded, setIsCodebookDownloaded] = useState(true);
   const updateResearchOptions = (changes: Partial<ResearchExportOptions>) =>
@@ -147,14 +151,26 @@ export const ExportAllResultsDialog = ({
 
   const exportResearchDataset = async (typebotId: string) => {
     try {
-      const { csv, codebook, csvFileName, codebookFileName } =
-        await orpcClient.results.exportResearchDataset({
-          typebotId,
-          timeFilter: selectedTimeFilter,
-          timeZone,
-          options: researchOptions,
-        });
-      downloadFile(csv, csvFileName, "text/csv;charset=utf-8;");
+      const {
+        csv,
+        savBase64,
+        codebook,
+        csvFileName,
+        savFileName,
+        codebookFileName,
+      } = await orpcClient.results.exportResearchDataset({
+        typebotId,
+        timeFilter: selectedTimeFilter,
+        timeZone,
+        options: researchOptions,
+      });
+      if (savBase64)
+        downloadFile(
+          base64ToBytes(savBase64),
+          savFileName,
+          "application/x-spss-sav",
+        );
+      else downloadFile(csv, csvFileName, "text/csv;charset=utf-8;");
       if (isCodebookDownloaded)
         downloadFile(codebook, codebookFileName, "application/json");
     } catch (error) {
@@ -399,7 +415,14 @@ export const ExportAllResultsDialog = ({
   );
 };
 
-const downloadFile = (content: string, fileName: string, type: string) => {
+const base64ToBytes = (base64: string) =>
+  Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
+
+const downloadFile = (
+  content: string | Uint8Array<ArrayBuffer>,
+  fileName: string,
+  type: string,
+) => {
   const blob = new Blob([content], { type });
   const tempLink = document.createElement("a");
   tempLink.href = window.URL.createObjectURL(blob);
@@ -552,18 +575,45 @@ const ResearchExportOptionsFields = ({
         />
       </Field.Root>
       <Field.Root>
-        <Field.Label>CSV</Field.Label>
+        <Field.Label>
+          File{" "}
+          <MoreInfoTooltip>
+            SPSS .sav includes variable labels, value labels, missing values,
+            measurement levels and multiple response sets. Use dichotomous
+            multiple choice and codes for SPSS.
+          </MoreInfoTooltip>
+        </Field.Label>
         <BasicSelect
           items={[
-            { label: "Excel-safe CSV", value: "excelSafe" as const },
-            { label: "Raw CSV", value: "raw" as const },
+            { label: "SPSS (.sav)", value: "sav" as const },
+            { label: "CSV", value: "csv" as const },
           ]}
-          value={options.csvMode}
-          onChange={(csvMode) => onChange({ csvMode })}
+          value={options.fileFormat}
+          onChange={(fileFormat) =>
+            onChange(
+              fileFormat === "sav"
+                ? { fileFormat, multipleChoiceMode: "dichotomous" }
+                : { fileFormat },
+            )
+          }
           className="w-full"
         />
       </Field.Root>
-      {options.csvMode === "raw" && (
+      {options.fileFormat === "csv" && (
+        <Field.Root>
+          <Field.Label>CSV</Field.Label>
+          <BasicSelect
+            items={[
+              { label: "Excel-safe CSV", value: "excelSafe" as const },
+              { label: "Raw CSV", value: "raw" as const },
+            ]}
+            value={options.csvMode}
+            onChange={(csvMode) => onChange({ csvMode })}
+            className="w-full"
+          />
+        </Field.Root>
+      )}
+      {options.fileFormat === "csv" && options.csvMode === "raw" && (
         <Alert.Root variant="warning">
           <Alert.Description>
             Raw CSV writes answers exactly as typed by respondents. Opening it

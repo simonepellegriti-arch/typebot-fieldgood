@@ -92,10 +92,11 @@ export const handleExportResearchDataset = async ({
       : undefined,
   });
 
-  const { csv, codebook, rowCount } = exportResearchDataset({
+  const { csv, sav, codebook, rowCount } = exportResearchDataset({
     questionnaireVersions,
     results,
     options: exportOptions,
+    fileLabel: typebot.name,
   });
 
   const csvFileName = getExportFileName(typebot, timeFilter).replace(
@@ -106,7 +107,9 @@ export const handleExportResearchDataset = async ({
   return {
     csvFileName,
     codebookFileName: csvFileName.replace(/\.csv$/, ".codebook.json"),
+    savFileName: csvFileName.replace(/\.csv$/, ".sav"),
     csv,
+    savBase64: sav ? Buffer.from(sav).toString("base64") : undefined,
     codebook: JSON.stringify(codebook, null, 2),
     rowCount,
   };

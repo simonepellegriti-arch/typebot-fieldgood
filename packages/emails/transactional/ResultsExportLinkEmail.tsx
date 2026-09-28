@@ -29,7 +29,7 @@ export const ResultsExportLinkEmail = ({ typebotName, fileUrl }: Props) => {
             You can download it <a href={fileUrl}>here</a>.
           </Text>
           <Hr style={hr} />
-          <Text style={footerText}>Typebot - Build faster, Chat smarter</Text>
+          <Text style={footerText}>FIELDBOT by Fieldgood</Text>
         </Container>
       </Body>
     </Html>

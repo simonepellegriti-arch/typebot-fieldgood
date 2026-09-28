@@ -184,10 +184,15 @@ export const ExportResultsWorkflowLayer = ExportResultsWorkflow.toLayer(
         : undefined;
 
       const exportFileName = researchOptions
-        ? fileName.replace(/\.csv$/, "-research.csv")
+        ? fileName.replace(
+            /\.csv$/,
+            researchOptions.fileFormat === "sav"
+              ? "-research.sav"
+              : "-research.csv",
+          )
         : fileName;
       const s3Key = `private/tmp/workspaces/${typebot.workspaceId}/typebots/${payload.typebotId}/results-exports/${exportFileName}`;
-      const codebookS3Key = s3Key.replace(/\.csv$/, ".codebook.json");
+      const codebookS3Key = s3Key.replace(/\.(csv|sav)$/, ".codebook.json");
 
       yield* Activity.make({
         name: "ExportResultsToS3",
@@ -214,7 +219,7 @@ export const ExportResultsWorkflowLayer = ExportResultsWorkflow.toLayer(
             const s3UploadClient = yield* S3UploadClient;
             const progressReporter = yield* ProgressReporter;
             yield* progressReporter.report(1);
-            const { csv, codebook, rowCount } = yield* Effect.tryPromise({
+            const { csv, sav, codebook, rowCount } = yield* Effect.tryPromise({
               try: async () => {
                 const fromDate = payload.timeFilter
                   ? parseFromDateFromTimeFilter(
@@ -237,6 +242,7 @@ export const ExportResultsWorkflowLayer = ExportResultsWorkflow.toLayer(
                 });
                 return exportResearchDataset({
                   ...exportData,
+                  fileLabel: typebot.name,
                   options: {
                     ...researchOptions,
                     timeZone: researchOptions.timeZone ?? payload.timeZone,
@@ -253,9 +259,11 @@ export const ExportResultsWorkflowLayer = ExportResultsWorkflow.toLayer(
             yield* Effect.all([
               s3UploadClient.uploadObject({
                 key: s3Key,
-                body: Buffer.from(csv, "utf8"),
+                body: sav ? Buffer.from(sav) : Buffer.from(csv, "utf8"),
                 metadata: {
-                  "Content-Type": "text/csv; charset=utf-8",
+                  "Content-Type": sav
+                    ? "application/x-spss-sav"
+                    : "text/csv; charset=utf-8",
                   "Content-Disposition": `attachment; filename="${exportFileName}"`,
                 },
               }),
@@ -264,7 +272,7 @@ export const ExportResultsWorkflowLayer = ExportResultsWorkflow.toLayer(
                 body: Buffer.from(JSON.stringify(codebook, null, 2), "utf8"),
                 metadata: {
                   "Content-Type": "application/json",
-                  "Content-Disposition": `attachment; filename="${exportFileName.replace(/\.csv$/, ".codebook.json")}"`,
+                  "Content-Disposition": `attachment; filename="${exportFileName.replace(/\.(csv|sav)$/, ".codebook.json")}"`,
                 },
               }),
             ]).pipe(

@@ -58,7 +58,7 @@ export const WorkspaceMemberInvitationEmail = ({
           </Button>
 
           <Hr style={hr} />
-          <Text style={footerText}>Typebot - Build faster, Chat smarter</Text>
+          <Text style={footerText}>FIELDBOT by Fieldgood</Text>
         </Container>
       </Body>
     </Html>

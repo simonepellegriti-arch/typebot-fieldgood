@@ -9,7 +9,7 @@ export const Logo = () => (
     src={`${env.NEXTAUTH_URL}/images/logo.png`}
     width="32"
     height="32"
-    alt="Typebot's Logo"
+    alt="FIELDBOT"
     style={{
       margin: "24px 0",
       borderRadius: "3px",

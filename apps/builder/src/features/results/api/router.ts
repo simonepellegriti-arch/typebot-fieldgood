@@ -164,7 +164,7 @@ export const resultsRouter = {
       path: "/v1/typebots/{typebotId}/results/export-research",
       operationId: "results-exportResearchDataset",
       summary:
-        "Export results as a research dataset (CSV + SPSS-ready codebook)",
+        "Export results as a research dataset (CSV or SPSS .sav + codebook)",
       description:
         "One row per interview with stable column names (variable names), interview status, ISO 8601 timestamps, questionnaire version, typed values, structured multiple choice and repeated answers.",
       tags: ["Results"],
@@ -174,7 +174,14 @@ export const resultsRouter = {
       z.object({
         csvFileName: z.string(),
         codebookFileName: z.string(),
+        savFileName: z.string(),
         csv: z.string(),
+        savBase64: z
+          .string()
+          .optional()
+          .describe(
+            "SPSS system file, base64 encoded (when options.fileFormat is `sav`)",
+          ),
         codebook: z.string(),
         rowCount: z.number(),
       }),

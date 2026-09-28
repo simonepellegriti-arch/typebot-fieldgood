@@ -24,13 +24,13 @@ export const galleryTemplates: (Pick<ThemeTemplate, "id" | "name" | "theme"> & {
 })[] = [
   {
     id: "typebot-light",
-    name: "Typebot Light",
+    name: "FIELDBOT Light",
     theme: {},
     isVisible: (typebotVersion) => Number(typebotVersion) >= 6.1,
   },
   {
     id: "typebot-dark",
-    name: "Typebot Dark",
+    name: "FIELDBOT Dark",
     theme: {
       general: {
         background: {
@@ -70,7 +70,7 @@ export const galleryTemplates: (Pick<ThemeTemplate, "id" | "name" | "theme"> & {
   },
   {
     id: "typebot-light-legacy",
-    name: "Typebot Light Legacy",
+    name: "FIELDBOT Light Legacy",
     theme: {
       chat: {
         hostBubbles: {
@@ -108,7 +108,7 @@ export const galleryTemplates: (Pick<ThemeTemplate, "id" | "name" | "theme"> & {
   },
   {
     id: "typebot-dark-legacy",
-    name: "Typebot Dark Legacy",
+    name: "FIELDBOT Dark Legacy",
     theme: {
       chat: {
         inputs: {

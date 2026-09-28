@@ -52,6 +52,8 @@ export const researchExportOptionsSchema = z.object({
     .default(defaultAbandonedAfterMinutes),
   timeZone: z.string().optional(),
   csvMode: z.enum(["excelSafe", "raw"]).default("excelSafe"),
+  /** csv: CSV + JSON codebook. sav: SPSS system file with labels, value labels, missing values and MR sets. */
+  fileFormat: z.enum(["csv", "sav"]).default("csv"),
 });
 export type ResearchExportOptionsInput = z.input<
   typeof researchExportOptionsSchema

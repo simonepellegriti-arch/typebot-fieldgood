@@ -95,7 +95,7 @@ export const LiteBadge = (props: Props) => {
   return (
     <a
       ref={liteBadge}
-      href={"https://typebot.io/?utm_source=litebadge"}
+      href={"https://fieldgood.it"}
       target="_blank"
       rel="noopener noreferrer"
       class="lite-badge"
@@ -103,7 +103,7 @@ export const LiteBadge = (props: Props) => {
       style={defaultStyles}
     >
       <TypebotLogo />
-      <span>Made with Typebot</span>
+      <span>Made with FIELDBOT</span>
     </a>
   );
 };
