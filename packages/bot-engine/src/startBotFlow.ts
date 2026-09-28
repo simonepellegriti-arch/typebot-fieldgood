@@ -91,6 +91,7 @@ const autoContinueChatIfStartingWithInput = async ({
       isCompleted: false,
       resultId,
       typebot: chatReply.newSessionState.typebotsQueue[0].typebot,
+      publishedVersion: chatReply.newSessionState.publishedVersion,
     });
   return continueBotFlow(message, {
     version,

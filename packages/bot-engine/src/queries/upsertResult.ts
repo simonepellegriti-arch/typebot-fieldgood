@@ -16,6 +16,7 @@ type Props = {
   logs?: ContinueChatResponse["logs"];
   visitedEdges?: Prisma.VisitedEdge[];
   setVariableHistory?: SetVariableHistoryItem[];
+  publishedVersion?: { id: string; number: number };
 };
 export const upsertResult = ({
   resultId,
@@ -26,6 +27,7 @@ export const upsertResult = ({
   logs,
   visitedEdges,
   setVariableHistory,
+  publishedVersion,
 }: Props): Prisma.PrismaPromise<any> => {
   const variablesWithValue = filterNonSessionVariablesWithValues(
     typebot.variables,
@@ -85,6 +87,9 @@ export const upsertResult = ({
     create: {
       id: resultId,
       typebotId: typebot.id,
+      publishedVersionId: publishedVersion?.id,
+      publishedVersionNumber: publishedVersion?.number,
+      completedAt: isCompleted ? new Date() : undefined,
       isCompleted,
       hasStarted,
       variables: variablesWithValue,

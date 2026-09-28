@@ -18,6 +18,8 @@ export const findPublicTypebot = ({ publicId }: Props) =>
       variables: true,
       typebotId: true,
       lastActivityAt: true,
+      currentVersionId: true,
+      currentVersionNumber: true,
       typebot: {
         select: {
           workspaceId: true,

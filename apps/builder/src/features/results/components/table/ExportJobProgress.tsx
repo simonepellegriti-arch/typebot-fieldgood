@@ -35,20 +35,30 @@ export const ExportJobProgress = ({ chunk, error }: Props) => {
     );
   }
   if (chunk?.status === "completed") {
+    const fileUrls = [chunk.fileUrl, chunk.codebookUrl].filter(
+      (fileUrl): fileUrl is string => fileUrl !== undefined,
+    );
     return (
-      <div className="flex items-center gap-2 bg-card rounded-md p-4 border justify-between animate-in fade-in-0 slide-in-from-bottom-2">
-        <div className="flex gap-2">
-          <FileEmpty02Icon className="mt-1 size-5" />
-          <p className="text-sm mr-4">{chunk?.fileUrl.split("/").pop()}</p>
-        </div>
-        <Button
-          size="icon"
-          onClick={() => {
-            window.open(chunk?.fileUrl, "_blank");
-          }}
-        >
-          <Download01Icon />
-        </Button>
+      <div className="flex flex-col gap-2">
+        {fileUrls.map((fileUrl) => (
+          <div
+            key={fileUrl}
+            className="flex items-center gap-2 bg-card rounded-md p-4 border justify-between animate-in fade-in-0 slide-in-from-bottom-2"
+          >
+            <div className="flex gap-2">
+              <FileEmpty02Icon className="mt-1 size-5" />
+              <p className="text-sm mr-4">{fileUrl.split("/").pop()}</p>
+            </div>
+            <Button
+              size="icon"
+              onClick={() => {
+                window.open(fileUrl, "_blank");
+              }}
+            >
+              <Download01Icon />
+            </Button>
+          </div>
+        ))}
       </div>
     );
   }

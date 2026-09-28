@@ -2,6 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { WorkflowsRpcClientConfig } from "@typebot.io/config";
 import { createId } from "@typebot.io/lib/createId";
 import prisma from "@typebot.io/prisma";
+import { researchExportOptionsSchema } from "@typebot.io/results/research/schemas";
 import { timeFilterValues } from "@typebot.io/results/timeFilter";
 import { ResultsWorkflowsRpcClient } from "@typebot.io/results/workflows/rpc";
 import { createGlobalTelemetryLayer } from "@typebot.io/telemetry/createGlobalTelemetryLayer";
@@ -23,10 +24,17 @@ export const startExportJobInputSchema = z.object({
   includeDeletedBlocks: z.boolean().optional(),
   timeFilter: z.enum(timeFilterValues).default("allTime"),
   timeZone: z.string().optional(),
+  researchOptions: researchExportOptionsSchema.optional(),
 });
 
 export const handleStartExportJob = async ({
-  input: { typebotId, includeDeletedBlocks, timeFilter, timeZone },
+  input: {
+    typebotId,
+    includeDeletedBlocks,
+    timeFilter,
+    timeZone,
+    researchOptions,
+  },
   context: { user },
 }: {
   input: z.infer<typeof startExportJobInputSchema>;
@@ -74,6 +82,9 @@ export const handleStartExportJob = async ({
       includeDeletedBlocks,
       timeFilter,
       timeZone,
+      researchOptionsJson: researchOptions
+        ? JSON.stringify(researchOptions)
+        : undefined,
     });
   }).pipe(
     Effect.tapError((error) =>

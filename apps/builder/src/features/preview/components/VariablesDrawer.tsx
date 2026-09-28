@@ -17,9 +17,13 @@ import { Cancel01Icon } from "@typebot.io/ui/icons/Cancel01Icon";
 import { MoreHorizontalIcon } from "@typebot.io/ui/icons/MoreHorizontalIcon";
 import { PlusSignIcon } from "@typebot.io/ui/icons/PlusSignIcon";
 import { TrashIcon } from "@typebot.io/ui/icons/TrashIcon";
-import type { Variable } from "@typebot.io/variables/schemas";
+import {
+  type Variable,
+  variableDataTypes,
+} from "@typebot.io/variables/schemas";
 import { useDrag } from "@use-gesture/react";
 import { type FormEvent, useState } from "react";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
 import { toast } from "@/lib/toast";
 import { headerHeight } from "../../editor/constants";
 import { useTypebot } from "../../editor/providers/TypebotProvider";
@@ -159,17 +163,17 @@ const VariableItem = ({
         <Editable.Preview />
       </Editable.Root>
       <div className="flex items-center gap-2">
-        {!isSessionOnly && !isLinkedToAnswer && (
-          <Popover.Root {...settingsPopoverControls}>
-            <Popover.TriggerButton
-              aria-label={"Settings"}
-              size="icon"
-              variant="secondary"
-              className="size-7"
-            >
-              <MoreHorizontalIcon />
-            </Popover.TriggerButton>
-            <Popover.Popup>
+        <Popover.Root {...settingsPopoverControls}>
+          <Popover.TriggerButton
+            aria-label={"Settings"}
+            size="icon"
+            variant="secondary"
+            className="size-7"
+          >
+            <MoreHorizontalIcon />
+          </Popover.TriggerButton>
+          <Popover.Popup className="flex flex-col gap-4 w-80">
+            {!isSessionOnly && !isLinkedToAnswer && (
               <Field.Root className="flex-row items-center">
                 <Switch
                   checked={!variable.isSessionVariable}
@@ -188,9 +192,13 @@ const VariableItem = ({
                   </MoreInfoTooltip>
                 </Field.Label>
               </Field.Root>
-            </Popover.Popup>
-          </Popover.Root>
-        )}
+            )}
+            <VariableResearchMetadataFields
+              variable={variable}
+              onChange={onChange}
+            />
+          </Popover.Popup>
+        </Popover.Root>
         <Button
           aria-label="Delete"
           size="icon"
@@ -203,4 +211,84 @@ const VariableItem = ({
       </div>
     </div>
   );
+};
+
+const VariableResearchMetadataFields = ({
+  variable,
+  onChange,
+}: {
+  variable: Variable;
+  onChange: (variable: Partial<Variable>) => void;
+}) => (
+  <>
+    <Field.Root>
+      <Field.Label>
+        Data type{" "}
+        <MoreInfoTooltip>
+          Used for research exports: answers are stored and exported with this
+          type. List types also save multiple choice answers as lists.
+        </MoreInfoTooltip>
+      </Field.Label>
+      <BasicSelect
+        items={[
+          { label: "Auto", value: "auto" as const },
+          ...variableDataTypes.map((dataType) => ({
+            label: dataType,
+            value: dataType,
+          })),
+        ]}
+        value={variable.dataType ?? "auto"}
+        onChange={(dataType) =>
+          onChange({
+            dataType: dataType === "auto" ? undefined : dataType,
+          })
+        }
+        className="w-full"
+      />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>
+        Label{" "}
+        <MoreInfoTooltip>
+          Variable label in the exported codebook. Editing it never changes the
+          dataset column name.
+        </MoreInfoTooltip>
+      </Field.Label>
+      <Input
+        defaultValue={variable.label ?? ""}
+        placeholder="Quanto sei soddisfatto?"
+        onValueChange={(label) =>
+          onChange({ label: label.trim() ? label : undefined })
+        }
+      />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>
+        Missing values{" "}
+        <MoreInfoTooltip>
+          Codes to declare as missing in the codebook, separated by semicolons
+          (e.g. 98; 99).
+        </MoreInfoTooltip>
+      </Field.Label>
+      <Input
+        defaultValue={variable.missingValues?.join("; ") ?? ""}
+        placeholder="98; 99"
+        onValueChange={(missingValues) =>
+          onChange({ missingValues: parseMissingValues(missingValues) })
+        }
+      />
+    </Field.Root>
+  </>
+);
+
+const parseMissingValues = (text: string) => {
+  const missingValues = text
+    .split(";")
+    .map((missingValue) => missingValue.trim())
+    .filter((missingValue) => missingValue.length > 0)
+    .map((missingValue) => {
+      const numericValue = Number(missingValue.replace(",", "."));
+      return Number.isFinite(numericValue) ? numericValue : missingValue;
+    });
+  return missingValues.length > 0 ? missingValues : undefined;
 };

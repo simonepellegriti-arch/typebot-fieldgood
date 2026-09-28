@@ -93,8 +93,24 @@ export const PublishButton = ({
           queryClient.invalidateQueries({
             queryKey: orpc.typebot.getPublishedTypebot.key(),
           });
-          if (data.warnings) {
-            setTrademarkPotentialInfringement(data.warnings[0].trademark);
+          const researchStructureWarnings =
+            data.warnings?.filter(
+              (warning) => warning.type === "researchStructure",
+            ) ?? [];
+          if (researchStructureWarnings.length > 0)
+            toast({
+              type: "info",
+              title: `Published version ${data.publishedVersion.versionNumber}`,
+              description: `${researchStructureWarnings.length} dataset structure warning(s)`,
+              details: researchStructureWarnings
+                .map((warning) => warning.message)
+                .join("\n"),
+            });
+          const trademarkWarning = data.warnings?.find(
+            (warning) => warning.type === "trademarkInfringement",
+          );
+          if (trademarkWarning) {
+            setTrademarkPotentialInfringement(trademarkWarning.trademark);
             onTrademarkInfringementOpen();
           } else if (!publishedTypebot && !pathname.endsWith("share"))
             push(`/typebots/${query.typebotId}/share`);

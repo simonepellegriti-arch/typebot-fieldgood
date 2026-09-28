@@ -25,6 +25,8 @@ export const publicTypebotSchemaV5 = z.object({
   variables: z.array(variableSchema),
   theme: themeSchema,
   settings: settingsSchema,
+  currentVersionId: z.string().nullish(),
+  currentVersionNumber: z.number().int().nullish(),
 }) satisfies z.ZodType<Partial<Prisma.PublicTypebot>>;
 export type PublicTypebotV5 = z.infer<typeof publicTypebotSchemaV5>;
 

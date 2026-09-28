@@ -165,6 +165,8 @@ export const startTypebotSchema = z
   .and(
     z.object({
       publicTypebotId: z.string().optional(),
+      currentVersionId: z.string().nullish(),
+      currentVersionNumber: z.number().int().nullish(),
     }),
   );
 export type StartTypebot = z.infer<typeof startTypebotSchema>;

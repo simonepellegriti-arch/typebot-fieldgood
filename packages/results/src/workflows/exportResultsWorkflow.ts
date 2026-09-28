@@ -14,12 +14,19 @@ import { Effect, Layer, Option, Ref, Schema, ServiceMap } from "effect";
 import { PlatformError } from "effect/PlatformError";
 import { Activity, Workflow } from "effect/unstable/workflow";
 import { getExportFileName } from "../getExportFileName";
+import { exportResearchDataset } from "../research/exportResearchDataset";
+import { loadResearchExportData } from "../research/loadResearchExportData";
+import { researchExportOptionsSchema } from "../research/schemas";
 import {
   ProgressReporter,
   ProgressReporterError,
   streamResultsToCsvV2,
 } from "../streamAllResultsToCsvV2";
-import { timeFilterValues } from "../timeFilter";
+import {
+  parseFromDateFromTimeFilter,
+  parseToDateFromTimeFilter,
+  timeFilterValues,
+} from "../timeFilter";
 
 // Errors
 export class PrismaConnectionError extends Schema.TaggedErrorClass<PrismaConnectionError>()(
@@ -64,6 +71,7 @@ export const ExportResultsWorkflow = Workflow.make({
   name: "ExportResultsWorkflow",
   success: Schema.Struct({
     fileUrl: Schema.URL,
+    codebookUrl: Schema.URL.pipe(Schema.optional),
     typebotName: Schema.String,
   }),
   error: Schema.Union([
@@ -83,6 +91,8 @@ export const ExportResultsWorkflow = Workflow.make({
     includeDeletedBlocks: Schema.Boolean.pipe(Schema.optional),
     timeFilter: Schema.Literals(timeFilterValues).pipe(Schema.optional),
     timeZone: Schema.String.pipe(Schema.optional),
+    /** JSON-encoded research export options. When set, a research dataset + codebook is exported. */
+    researchOptionsJson: Schema.String.pipe(Schema.optional),
   },
   idempotencyKey: ({ id }) => id,
 });
@@ -167,7 +177,17 @@ export const ExportResultsWorkflowLayer = ExportResultsWorkflow.toLayer(
         payload.timeFilter,
       );
 
-      const s3Key = `private/tmp/workspaces/${typebot.workspaceId}/typebots/${payload.typebotId}/results-exports/${fileName}`;
+      const researchOptions = payload.researchOptionsJson
+        ? researchExportOptionsSchema.parse(
+            JSON.parse(payload.researchOptionsJson),
+          )
+        : undefined;
+
+      const exportFileName = researchOptions
+        ? fileName.replace(/\.csv$/, "-research.csv")
+        : fileName;
+      const s3Key = `private/tmp/workspaces/${typebot.workspaceId}/typebots/${payload.typebotId}/results-exports/${exportFileName}`;
+      const codebookS3Key = s3Key.replace(/\.csv$/, ".codebook.json");
 
       yield* Activity.make({
         name: "ExportResultsToS3",
@@ -188,6 +208,77 @@ export const ExportResultsWorkflowLayer = ExportResultsWorkflow.toLayer(
             return yield* new TooManyAttemptsError({
               message: `ExportResultsToS3 failed after ${totalAttempts} attempts`,
             });
+          }
+
+          if (researchOptions) {
+            const s3UploadClient = yield* S3UploadClient;
+            const progressReporter = yield* ProgressReporter;
+            yield* progressReporter.report(1);
+            const { csv, codebook, rowCount } = yield* Effect.tryPromise({
+              try: async () => {
+                const fromDate = payload.timeFilter
+                  ? parseFromDateFromTimeFilter(
+                      payload.timeFilter,
+                      payload.timeZone,
+                    )
+                  : undefined;
+                const toDate = payload.timeFilter
+                  ? parseToDateFromTimeFilter(
+                      payload.timeFilter,
+                      payload.timeZone,
+                    )
+                  : undefined;
+                const exportData = await loadResearchExportData({
+                  typebotId: payload.typebotId,
+                  options: researchOptions,
+                  createdAt: fromDate
+                    ? { gte: fromDate, lte: toDate ?? undefined }
+                    : undefined,
+                });
+                return exportResearchDataset({
+                  ...exportData,
+                  options: {
+                    ...researchOptions,
+                    timeZone: researchOptions.timeZone ?? payload.timeZone,
+                  },
+                });
+              },
+              catch: (error) =>
+                new PrismaConnectionError({
+                  message:
+                    error instanceof Error ? error.message : "Unknown error",
+                }),
+            });
+            yield* progressReporter.report(80);
+            yield* Effect.all([
+              s3UploadClient.uploadObject({
+                key: s3Key,
+                body: Buffer.from(csv, "utf8"),
+                metadata: {
+                  "Content-Type": "text/csv; charset=utf-8",
+                  "Content-Disposition": `attachment; filename="${exportFileName}"`,
+                },
+              }),
+              s3UploadClient.uploadObject({
+                key: codebookS3Key,
+                body: Buffer.from(JSON.stringify(codebook, null, 2), "utf8"),
+                metadata: {
+                  "Content-Type": "application/json",
+                  "Content-Disposition": `attachment; filename="${exportFileName.replace(/\.csv$/, ".codebook.json")}"`,
+                },
+              }),
+            ]).pipe(
+              Effect.tapError((error) => Effect.logError(error)),
+              Effect.mapError(
+                (error) =>
+                  new S3UploadError({
+                    message:
+                      error instanceof Error ? error.message : "Unknown error",
+                  }),
+              ),
+            );
+            yield* progressReporter.report(100);
+            return { totalRowsExported: rowCount };
           }
 
           const { csvStream, totalRowsExportedRef } =
@@ -239,6 +330,9 @@ export const ExportResultsWorkflowLayer = ExportResultsWorkflow.toLayer(
 
       return {
         fileUrl,
+        codebookUrl: researchOptions
+          ? new URL(`/api/s3/${codebookS3Key}`, nextAuthUrl)
+          : undefined,
         typebotName: typebot.name,
       };
     },

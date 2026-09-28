@@ -39,6 +39,9 @@
     },
     {
       "path": "../blocks/core/tsconfig.lib.json"
+    },
+    {
+      "path": "../blocks/bubbles/tsconfig.lib.json"
     }
   ]
 }

@@ -44,10 +44,16 @@ import { executeInvalidReplyEvent } from "./events/executeInvalidReplyEvent";
 import { executeReplyEvent } from "./events/executeReplyEvent";
 import { formatInputForChatResponse } from "./formatInputForChatResponse";
 import { getReplyOutgoingEdge } from "./getReplyOutgoingEdge";
+import { buildAnswerResearchFields } from "./helpers/buildAnswerResearchFields";
 import { saveAnswer } from "./queries/saveAnswer";
 import { resetSessionState } from "./resetSessionState";
 import { startBotFlow } from "./startBotFlow";
-import type { ContinueBotFlowResponse, SkipReply, SuccessReply } from "./types";
+import type {
+  ContinueBotFlowResponse,
+  SkipReply,
+  StructuredAnswer,
+  SuccessReply,
+} from "./types";
 import { updateVariablesInSession } from "./updateVariablesInSession";
 import { validateAndParseInputMessage } from "./validateAndParseInputMessage";
 import { walkFlowForward } from "./walkFlowForward";
@@ -224,6 +230,9 @@ export const continueBotFlow = async (
     newSessionState = await processAndSaveAnswer(
       newSessionState,
       block,
+      parsedReplyResult.status === "success"
+        ? parsedReplyResult.structuredAnswer
+        : undefined,
     )(
       isDefined(formattedReply)
         ? { ...reply, type: "text", text: formattedReply }
@@ -472,14 +481,22 @@ const processNonInputBlock = async ({
 };
 
 const processAndSaveAnswer =
-  (state: SessionState, block: InputBlock) =>
+  (
+    state: SessionState,
+    block: InputBlock,
+    structuredAnswer: StructuredAnswer | undefined,
+  ) =>
   async (reply: InputMessage | undefined): Promise<SessionState> => {
     if (!reply) return state;
-    return saveAnswerInDb(state, block)(reply);
+    return saveAnswerInDb(state, block, structuredAnswer)(reply);
   };
 
 const saveVariablesValueIfAny =
-  (state: SessionState, block: InputBlock) =>
+  (
+    state: SessionState,
+    block: InputBlock,
+    structuredAnswer: StructuredAnswer | undefined,
+  ) =>
   (reply: Message): SessionState => {
     let newSessionState = saveAttachmentsVarIfAny({ block, reply, state });
     newSessionState = saveAudioClipVarIfAny({
@@ -487,7 +504,12 @@ const saveVariablesValueIfAny =
       reply,
       state: newSessionState,
     });
-    return saveInputVarIfAny({ block, reply, state: newSessionState });
+    return saveInputVarIfAny({
+      block,
+      reply,
+      state: newSessionState,
+      structuredAnswer,
+    });
   };
 
 const saveAttachmentsVarIfAny = ({
@@ -575,10 +597,12 @@ const saveInputVarIfAny = ({
   block,
   reply,
   state,
+  structuredAnswer,
 }: {
   block: InputBlock;
   reply: Message;
   state: SessionState;
+  structuredAnswer?: StructuredAnswer;
 }): SessionState => {
   if (reply.type !== "text" || !block.options?.variableId) return state;
 
@@ -587,14 +611,20 @@ const saveInputVarIfAny = ({
   );
   if (!foundVariable) return state;
 
+  const isDeclaredAsList =
+    foundVariable.dataType === "string[]" ||
+    foundVariable.dataType === "number[]";
+
   const { updatedState } = updateVariablesInSession({
     newVariables: [
       {
         ...foundVariable,
         value:
-          Array.isArray(foundVariable.value) && reply.text
-            ? foundVariable.value.concat(reply.text)
-            : reply.text,
+          isDeclaredAsList && Array.isArray(structuredAnswer?.value)
+            ? structuredAnswer.value.map((item) => String(item))
+            : Array.isArray(foundVariable.value) && reply.text
+              ? foundVariable.value.concat(reply.text)
+              : reply.text,
       },
     ],
     currentBlockId: undefined,
@@ -680,23 +710,44 @@ const parseDefaultRetryMessage = (
 };
 
 const saveAnswerInDb =
-  (state: SessionState, block: InputBlock) =>
+  (
+    state: SessionState,
+    block: InputBlock,
+    structuredAnswer: StructuredAnswer | undefined,
+  ) =>
   async (reply: InputMessage): Promise<SessionState> => {
     let newSessionState = state;
     const replyContent = reply.type === "audio" ? reply.url : reply.text;
     const attachedFileUrls =
       reply.type === "text" ? reply.attachedFileUrls : undefined;
+    const answerVariable = block.options?.variableId
+      ? state.typebotsQueue[0].typebot.variables.find(
+          (variable) => variable.id === block.options?.variableId,
+        )
+      : undefined;
+    const { value, valueLabel } = buildAnswerResearchFields({
+      block,
+      content: replyContent,
+      structuredAnswer,
+      variable: answerVariable,
+    });
     await saveAnswer({
       answer: {
         blockId: block.id,
         content: replyContent,
         attachedFileUrls,
+        value: value ?? undefined,
+        valueLabel: valueLabel ?? undefined,
       },
       state,
     });
 
     newSessionState = {
-      ...saveVariablesValueIfAny(newSessionState, block)(reply),
+      ...saveVariablesValueIfAny(
+        newSessionState,
+        block,
+        structuredAnswer,
+      )(reply),
       previewMetadata: state.typebotsQueue[0].resultId
         ? newSessionState.previewMetadata
         : {

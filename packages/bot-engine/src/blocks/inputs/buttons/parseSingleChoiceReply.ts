@@ -30,12 +30,17 @@ export const parseSingleChoiceReply = (
 
   if (!matchedItem) return { status: "fail" };
 
-  const content = matchedItem.value || parseItemContent(matchedItem);
+  const label = parseItemContent(matchedItem);
+  const content = matchedItem.value || label;
   if (!content) return { status: "fail" };
 
   return {
     status: "success",
     content,
     outgoingEdgeId: matchedItem.outgoingEdgeId,
+    structuredAnswer: {
+      value: content,
+      label: label ?? content,
+    },
   };
 };

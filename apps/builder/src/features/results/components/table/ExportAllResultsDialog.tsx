@@ -7,6 +7,10 @@ import { getExportFileName } from "@typebot.io/results/getExportFileName";
 import { parseBlockIdVariableIdMap } from "@typebot.io/results/parseBlockIdVariableIdMap";
 import { parseColumnsOrder } from "@typebot.io/results/parseColumnsOrder";
 import { parseResultHeader } from "@typebot.io/results/parseResultHeader";
+import {
+  type ResearchExportOptions,
+  researchExportOptionsSchema,
+} from "@typebot.io/results/research/schemas";
 import { sanitizeCsvCell } from "@typebot.io/results/sanitizeCsvCell";
 import {
   type TimeFilter,
@@ -17,11 +21,13 @@ import { Alert } from "@typebot.io/ui/components/Alert";
 import { Button } from "@typebot.io/ui/components/Button";
 import { Dialog } from "@typebot.io/ui/components/Dialog";
 import { Field } from "@typebot.io/ui/components/Field";
+import { Input } from "@typebot.io/ui/components/Input";
 import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
 import { Progress } from "@typebot.io/ui/components/Progress";
 import { Switch } from "@typebot.io/ui/components/Switch";
 import { unparse } from "papaparse";
 import { useState } from "react";
+import { BasicSelect } from "@/components/inputs/BasicSelect";
 import { TimeFilterSelect } from "@/features/analytics/components/TimeFilterSelect";
 import { useTypebot } from "@/features/editor/providers/TypebotProvider";
 import { orpc, orpcClient } from "@/lib/queryClient";
@@ -55,6 +61,18 @@ export const ExportAllResultsDialog = ({
 
   const [areDeletedBlocksIncluded, setAreDeletedBlocksIncluded] =
     useState(false);
+  const [exportFormat, setExportFormat] = useState<"research" | "legacy">(
+    "research",
+  );
+  const [researchOptions, setResearchOptions] = useState<ResearchExportOptions>(
+    () => researchExportOptionsSchema.parse({}),
+  );
+  const [isCodebookDownloaded, setIsCodebookDownloaded] = useState(true);
+  const updateResearchOptions = (changes: Partial<ResearchExportOptions>) =>
+    setResearchOptions((currentOptions) => ({
+      ...currentOptions,
+      ...changes,
+    }));
   const [timeFilterOverride, setTimeFilterOverride] = useState<TimeFilter>();
   const selectedTimeFilter = timeFilterOverride ?? timeFilter;
 
@@ -80,6 +98,15 @@ export const ExportAllResultsDialog = ({
     (exportWorkflowId
       ? { status: "starting" as const, workflowId: exportWorkflowId }
       : undefined);
+
+  const { data: publishedVersionsData } = useQuery(
+    orpc.typebot.listPublishedVersions.queryOptions({
+      input: {
+        typebotId: typebotId as string,
+      },
+      enabled: isOpen && isDefined(typebotId),
+    }),
+  );
 
   const { data: linkedTypebotsData } = useQuery(
     orpc.getLinkedTypebots.queryOptions({
@@ -118,6 +145,26 @@ export const ExportAllResultsDialog = ({
     return allResults;
   };
 
+  const exportResearchDataset = async (typebotId: string) => {
+    try {
+      const { csv, codebook, csvFileName, codebookFileName } =
+        await orpcClient.results.exportResearchDataset({
+          typebotId,
+          timeFilter: selectedTimeFilter,
+          timeZone,
+          options: researchOptions,
+        });
+      downloadFile(csv, csvFileName, "text/csv;charset=utf-8;");
+      if (isCodebookDownloaded)
+        downloadFile(codebook, codebookFileName, "application/json");
+    } catch (error) {
+      if (error instanceof ORPCError && error.message)
+        toast({ description: error.message });
+    } finally {
+      setIsExportLoading(false);
+    }
+  };
+
   const exportAllResultsToCSV = async () => {
     if (!publishedTypebot || !typebotId) return;
 
@@ -135,6 +182,8 @@ export const ExportAllResultsDialog = ({
       startBackgroundExport(typebotId, areDeletedBlocksIncluded);
       return;
     }
+
+    if (exportFormat === "research") return exportResearchDataset(typebotId);
 
     const results = await getAllResults(totalStarts);
 
@@ -209,6 +258,8 @@ export const ExportAllResultsDialog = ({
         includeDeletedBlocks,
         timeFilter: selectedTimeFilter,
         timeZone,
+        researchOptions:
+          exportFormat === "research" ? researchOptions : undefined,
       });
       setExportWorkflowId(workflowId);
     } catch (error) {
@@ -290,18 +341,43 @@ export const ExportAllResultsDialog = ({
                 className="w-full"
               />
             </Field.Root>
-            <Field.Root className="flex-row items-center">
-              <Switch
-                checked={areDeletedBlocksIncluded}
-                onCheckedChange={setAreDeletedBlocksIncluded}
+            <Field.Root>
+              <Field.Label>Format</Field.Label>
+              <BasicSelect
+                items={[
+                  {
+                    label: "Research dataset (codes, status, versions)",
+                    value: "research" as const,
+                  },
+                  { label: "Legacy (results table)", value: "legacy" as const },
+                ]}
+                value={exportFormat}
+                onChange={setExportFormat}
+                className="w-full"
               />
-              <Field.Label>
-                Include deleted blocks{" "}
-                <MoreInfoTooltip>
-                  Blocks from previous bot version that have been deleted
-                </MoreInfoTooltip>
-              </Field.Label>
             </Field.Root>
+            {exportFormat === "legacy" ? (
+              <Field.Root className="flex-row items-center">
+                <Switch
+                  checked={areDeletedBlocksIncluded}
+                  onCheckedChange={setAreDeletedBlocksIncluded}
+                />
+                <Field.Label>
+                  Include deleted blocks{" "}
+                  <MoreInfoTooltip>
+                    Blocks from previous bot version that have been deleted
+                  </MoreInfoTooltip>
+                </Field.Label>
+              </Field.Root>
+            ) : (
+              <ResearchExportOptionsFields
+                options={researchOptions}
+                onChange={updateResearchOptions}
+                publishedVersions={publishedVersionsData?.versions ?? []}
+                isCodebookDownloaded={isCodebookDownloaded}
+                onCodebookDownloadedChange={setIsCodebookDownloaded}
+              />
+            )}
           </div>
         )}
         {!exportWorkflowChunk && (
@@ -320,5 +396,204 @@ export const ExportAllResultsDialog = ({
         )}
       </Dialog.Popup>
     </Dialog.Root>
+  );
+};
+
+const downloadFile = (content: string, fileName: string, type: string) => {
+  const blob = new Blob([content], { type });
+  const tempLink = document.createElement("a");
+  tempLink.href = window.URL.createObjectURL(blob);
+  tempLink.setAttribute("download", fileName);
+  tempLink.click();
+};
+
+const ResearchExportOptionsFields = ({
+  options,
+  onChange,
+  publishedVersions,
+  isCodebookDownloaded,
+  onCodebookDownloadedChange,
+}: {
+  options: ResearchExportOptions;
+  onChange: (changes: Partial<ResearchExportOptions>) => void;
+  publishedVersions: {
+    versionNumber: number;
+    publishedAt: Date;
+    isCurrent: boolean;
+    totalResults: number;
+  }[];
+  isCodebookDownloaded: boolean;
+  onCodebookDownloadedChange: (isCodebookDownloaded: boolean) => void;
+}) => {
+  const selectedVersion =
+    options.versionNumbers?.length === 1
+      ? String(options.versionNumbers[0])
+      : "all";
+  return (
+    <div className="flex flex-col gap-4">
+      <Field.Root>
+        <Field.Label>Interviews</Field.Label>
+        <BasicSelect
+          items={[
+            { label: "All interviews", value: "all" as const },
+            { label: "Complete only", value: "complete" as const },
+            {
+              label: "Incomplete / abandoned only",
+              value: "incomplete" as const,
+            },
+          ]}
+          value={options.statusFilter}
+          onChange={(statusFilter) => onChange({ statusFilter })}
+          className="w-full"
+        />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>
+          Questionnaire version{" "}
+          <MoreInfoTooltip>
+            Each publish creates an immutable version. Every interview keeps the
+            version it was started with.
+          </MoreInfoTooltip>
+        </Field.Label>
+        <BasicSelect
+          items={[
+            { label: "All versions", value: "all" as const },
+            ...publishedVersions.map((version) => ({
+              label: `v${version.versionNumber} - ${version.publishedAt.toLocaleDateString()} (${version.totalResults} interviews)${version.isCurrent ? " - current" : ""}`,
+              value: String(version.versionNumber),
+            })),
+          ]}
+          value={selectedVersion}
+          onChange={(version) =>
+            onChange({
+              versionNumbers: version === "all" ? undefined : [Number(version)],
+            })
+          }
+          className="w-full"
+        />
+      </Field.Root>
+      {options.versionNumbers && (
+        <Field.Root className="flex-row items-center">
+          <Switch
+            checked={options.includePreVersioningResults}
+            onCheckedChange={(includePreVersioningResults) =>
+              onChange({ includePreVersioningResults })
+            }
+          />
+          <Field.Label>
+            Include interviews started before versioning
+          </Field.Label>
+        </Field.Root>
+      )}
+      <Field.Root>
+        <Field.Label>Answer values</Field.Label>
+        <BasicSelect
+          items={[
+            { label: "Codes (value)", value: "value" as const },
+            { label: "Labels", value: "label" as const },
+            { label: "Codes + labels (X and X_LABEL)", value: "both" as const },
+          ]}
+          value={options.valueMode}
+          onChange={(valueMode) => onChange({ valueMode })}
+          className="w-full"
+        />
+      </Field.Root>
+      <div className="flex gap-2">
+        <Field.Root className="flex-1">
+          <Field.Label>Multiple choice</Field.Label>
+          <BasicSelect
+            items={[
+              { label: "Compact (D2 = 1|3|5)", value: "compact" as const },
+              {
+                label: "Dichotomous (D2_1, D2_2...)",
+                value: "dichotomous" as const,
+              },
+            ]}
+            value={options.multipleChoiceMode}
+            onChange={(multipleChoiceMode) => onChange({ multipleChoiceMode })}
+            className="w-full"
+          />
+        </Field.Root>
+        {options.multipleChoiceMode === "compact" && (
+          <Field.Root className="w-24">
+            <Field.Label>Separator</Field.Label>
+            <Input
+              value={options.multipleChoiceSeparator}
+              maxLength={3}
+              onValueChange={(multipleChoiceSeparator) =>
+                multipleChoiceSeparator.length > 0 &&
+                !/[\r\n"]/.test(multipleChoiceSeparator) &&
+                onChange({ multipleChoiceSeparator })
+              }
+            />
+          </Field.Root>
+        )}
+      </div>
+      <Field.Root>
+        <Field.Label>
+          Repeated answers{" "}
+          <MoreInfoTooltip>
+            When the same block is answered several times (loops, probing),
+            every answer is kept.
+          </MoreInfoTooltip>
+        </Field.Label>
+        <BasicSelect
+          items={[
+            {
+              label: "One column per answer (PROBE_1_1, PROBE_1_2...)",
+              value: "columns" as const,
+            },
+            { label: "JSON list in one column", value: "json" as const },
+            { label: "Last answer only", value: "last" as const },
+          ]}
+          value={options.repeatedAnswersMode}
+          onChange={(repeatedAnswersMode) => onChange({ repeatedAnswersMode })}
+          className="w-full"
+        />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>CSV</Field.Label>
+        <BasicSelect
+          items={[
+            { label: "Excel-safe CSV", value: "excelSafe" as const },
+            { label: "Raw CSV", value: "raw" as const },
+          ]}
+          value={options.csvMode}
+          onChange={(csvMode) => onChange({ csvMode })}
+          className="w-full"
+        />
+      </Field.Root>
+      {options.csvMode === "raw" && (
+        <Alert.Root variant="warning">
+          <Alert.Description>
+            Raw CSV writes answers exactly as typed by respondents. Opening it
+            in Excel or Google Sheets can execute formulas contained in the
+            answers (CSV injection). Use it only with statistical software.
+          </Alert.Description>
+        </Alert.Root>
+      )}
+      <Field.Root className="flex-row items-center">
+        <Switch
+          checked={options.includeNotStarted}
+          onCheckedChange={(includeNotStarted) =>
+            onChange({ includeNotStarted })
+          }
+        />
+        <Field.Label>Include NOT_STARTED (opened, never answered)</Field.Label>
+      </Field.Root>
+      <Field.Root className="flex-row items-center">
+        <Switch
+          checked={isCodebookDownloaded}
+          onCheckedChange={onCodebookDownloadedChange}
+        />
+        <Field.Label>
+          Download codebook{" "}
+          <MoreInfoTooltip>
+            JSON with variable labels, value labels, missing values, types and
+            multiple response sets, ready to build an SPSS .sav file.
+          </MoreInfoTooltip>
+        </Field.Label>
+      </Field.Root>
+    </div>
   );
 };

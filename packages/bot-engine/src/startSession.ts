@@ -133,6 +133,15 @@ export const startSession = async ({
     previewUserId:
       startParams.type === "preview" ? startParams.userId : undefined,
     publicTypebotId: typebot.publicTypebotId,
+    publishedVersion:
+      startParams.type === "live" &&
+      typebot.currentVersionId &&
+      isDefined(typebot.currentVersionNumber)
+        ? {
+            id: typebot.currentVersionId,
+            number: typebot.currentVersionNumber,
+          }
+        : undefined,
     typebotsQueue: [
       {
         resultId: result?.id,

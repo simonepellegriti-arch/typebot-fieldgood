@@ -7,6 +7,10 @@ import {
   handleDeleteResults,
 } from "./handleDeleteResults";
 import {
+  exportResearchDatasetInputSchema,
+  handleExportResearchDataset,
+} from "./handleExportResearchDataset";
+import {
   getExportJobStatusInputSchema,
   handleGetExportJobStatus,
 } from "./handleGetExportJobStatus";
@@ -153,6 +157,29 @@ export const resultsRouter = {
       }),
     )
     .handler(handleGetResultBlockFile),
+
+  exportResearchDataset: authenticatedProcedure
+    .route({
+      method: "POST",
+      path: "/v1/typebots/{typebotId}/results/export-research",
+      operationId: "results-exportResearchDataset",
+      summary:
+        "Export results as a research dataset (CSV + SPSS-ready codebook)",
+      description:
+        "One row per interview with stable column names (variable names), interview status, ISO 8601 timestamps, questionnaire version, typed values, structured multiple choice and repeated answers.",
+      tags: ["Results"],
+    })
+    .input(exportResearchDatasetInputSchema)
+    .output(
+      z.object({
+        csvFileName: z.string(),
+        codebookFileName: z.string(),
+        csv: z.string(),
+        codebook: z.string(),
+        rowCount: z.number(),
+      }),
+    )
+    .handler(handleExportResearchDataset),
 
   startExportJob: authenticatedProcedure
     .input(startExportJobInputSchema)

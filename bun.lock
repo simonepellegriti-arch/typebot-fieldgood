@@ -1087,6 +1087,7 @@
       "name": "@typebot.io/results",
       "version": "0.0.1",
       "dependencies": {
+        "@typebot.io/blocks-bubbles": "workspace:*",
         "@typebot.io/blocks-core": "workspace:*",
         "@typebot.io/blocks-inputs": "workspace:*",
         "@typebot.io/config": "workspace:*",

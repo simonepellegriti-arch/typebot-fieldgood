@@ -6,6 +6,7 @@ import type { ChatSession } from "@typebot.io/chat-session/schemas";
 import prisma from "@typebot.io/prisma";
 import type { Prisma } from "@typebot.io/prisma/types";
 import type { SetVariableHistoryItem } from "@typebot.io/variables/schemas";
+import { markResultAsCompleted } from "./queries/markResultAsCompleted";
 import { upsertResult } from "./queries/upsertResult";
 
 type Props = {
@@ -81,21 +82,28 @@ export const saveStateToDatabase = async ({
   }
 
   const answers = state.typebotsQueue[0].answers;
+  const isResultCompleted = Boolean(
+    !input && !containsSetVariableClientSideAction && answers.length > 0,
+  );
 
   queries.push(
     upsertResult({
       resultId,
       typebot: state.typebotsQueue[0].typebot,
-      isCompleted: Boolean(
-        !input && !containsSetVariableClientSideAction && answers.length > 0,
-      ),
+      isCompleted: isResultCompleted,
       hasStarted: answers.length > 0,
       lastChatSessionId: session.id,
       logs,
       visitedEdges,
       setVariableHistory,
+      // Linked typebots (queue length > 1) have their own result and version history.
+      publishedVersion:
+        state.typebotsQueue.length === 1 ? state.publishedVersion : undefined,
     }),
   );
+
+  if (isResultCompleted)
+    queries.push(markResultAsCompleted({ resultId, completedAt: new Date() }));
 
   await prisma.$transaction(queries);
 

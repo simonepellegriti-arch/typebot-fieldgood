@@ -5,11 +5,35 @@ import { isSingleVariable } from "./isSingleVariable";
 
 export const listVariableValue = z.array(z.string().nullable());
 
-const baseVariableSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  isSessionVariable: z.boolean().optional(),
+export const variableDataTypes = [
+  "string",
+  "number",
+  "boolean",
+  "string[]",
+  "number[]",
+  "datetime",
+] as const;
+export const variableDataTypeSchema = z.enum(variableDataTypes);
+export type VariableDataType = z.infer<typeof variableDataTypeSchema>;
+
+/**
+ * Research metadata declared on a variable. Runtime values keep their legacy
+ * representation (string or list of strings); the declared type drives how
+ * answers are stored (AnswerV2.value) and exported.
+ */
+const variableResearchMetadataSchema = z.object({
+  dataType: variableDataTypeSchema.optional(),
+  label: z.string().optional(),
+  missingValues: z.array(z.string().or(z.number())).optional(),
 });
+
+const baseVariableSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    isSessionVariable: z.boolean().optional(),
+  })
+  .merge(variableResearchMetadataSchema);
 
 export const variableSchema = baseVariableSchema.extend({
   value: z.string().or(listVariableValue).nullish(),

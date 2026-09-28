@@ -3,7 +3,10 @@ import prisma from "@typebot.io/prisma";
 import type { Prisma } from "@typebot.io/prisma/types";
 
 type Props = {
-  answer: Omit<Prisma.Prisma.AnswerV2CreateManyInput, "resultId">;
+  answer: Omit<
+    Prisma.Prisma.AnswerV2CreateManyInput,
+    "resultId" | "executionIndex"
+  >;
   state: SessionState;
 };
 const maxAnswerContentByteLength = 65_535;
@@ -31,7 +34,18 @@ export const saveAnswer = async ({ answer, state }: Props) => {
     content = content.slice(0, contentEndIndex);
   }
 
+  const previousExecutionsCount = await prisma.answerV2.count({
+    where: { resultId, blockId: answer.blockId },
+  });
+
   return prisma.answerV2.createMany({
-    data: [{ ...answer, content, resultId }],
+    data: [
+      {
+        ...answer,
+        content,
+        resultId,
+        executionIndex: previousExecutionsCount + 1,
+      },
+    ],
   });
 };

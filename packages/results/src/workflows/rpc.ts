@@ -26,6 +26,7 @@ const ExportResultsWorkflowStatusChunk = Schema.Union([
   Schema.Struct({
     status: Schema.Literal("completed"),
     fileUrl: Schema.String,
+    codebookUrl: Schema.String.pipe(Schema.optional),
   }),
   Schema.Struct({
     status: Schema.Literal("error"),
@@ -63,6 +64,7 @@ export const startExportResultsWorkflowHandler = (payload: {
   readonly includeDeletedBlocks?: boolean;
   readonly timeFilter?: TimeFilter;
   readonly timeZone?: string;
+  readonly researchOptionsJson?: string;
 }) =>
   ExportResultsWorkflow.execute(payload, { discard: true }).pipe(
     Effect.as({ workflowId: payload.id }),
@@ -88,6 +90,9 @@ export const getExportResultsWorkflowStatusHandler = ({
         return {
           status: "completed" as const,
           fileUrl: exit.value.fileUrl.toString(),
+          ...(exit.value.codebookUrl
+            ? { codebookUrl: exit.value.codebookUrl.toString() }
+            : {}),
         };
       }
       return {

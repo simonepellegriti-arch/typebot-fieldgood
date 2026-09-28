@@ -1,5 +1,6 @@
 import type { ChoiceInputBlock } from "@typebot.io/blocks-inputs/choice/schema";
 import type { PictureChoiceBlock } from "@typebot.io/blocks-inputs/pictureChoice/schema";
+import { isDefined } from "@typebot.io/lib/utils";
 import { parseItemContent } from "../../../helpers/parseItemContent";
 import type { ParsedReply } from "../../../types";
 
@@ -63,12 +64,23 @@ export const parseMultipleChoiceReply = (
 
   if (matchedItemIds.length === 0) return { status: "fail" };
 
+  const matchedItems = items.filter((item) => matchedItemIds.includes(item.id));
+  const values = matchedItems
+    .map((item) => item.value ?? parseItemContent(item)?.trim())
+    .filter(isDefined);
+  const labels = matchedItems
+    .map((item) => parseItemContent(item)?.trim() ?? item.value)
+    .filter(isDefined);
+
   return {
     status: "success",
-    content: items
-      .filter((item) => matchedItemIds.includes(item.id))
-      .map((item) => item.value ?? parseItemContent(item)?.trim())
-      .join(", "),
+    // Legacy display representation (chat transcript, webhooks, legacy export).
+    content: values.join(", "),
+    // Research representation: always an array, never a joined string.
+    structuredAnswer: {
+      value: values,
+      label: labels,
+    },
   };
 };
 

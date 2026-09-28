@@ -811,6 +811,33 @@
                 "isSessionVariable": {
                   "type": "boolean"
                 },
+                "dataType": {
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "string[]",
+                    "number[]",
+                    "datetime"
+                  ],
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "missingValues": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
                 "value": {
                   "anyOf": [
                     {
@@ -2471,6 +2498,33 @@
                 },
                 "isSessionVariable": {
                   "type": "boolean"
+                },
+                "dataType": {
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "string[]",
+                    "number[]",
+                    "datetime"
+                  ],
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "missingValues": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
                 },
                 "value": {
                   "anyOf": [
@@ -13954,6 +14008,33 @@
                 "isSessionVariable": {
                   "type": "boolean"
                 },
+                "dataType": {
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "string[]",
+                    "number[]",
+                    "datetime"
+                  ],
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "missingValues": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
                 "value": {
                   "anyOf": [
                     {
@@ -16221,6 +16302,33 @@
                 "isSessionVariable": {
                   "type": "boolean"
                 },
+                "dataType": {
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "string[]",
+                    "number[]",
+                    "datetime"
+                  ],
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "missingValues": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
                 "value": {
                   "anyOf": [
                     {
@@ -18487,6 +18595,33 @@
                 },
                 "isSessionVariable": {
                   "type": "boolean"
+                },
+                "dataType": {
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "string[]",
+                    "number[]",
+                    "datetime"
+                  ],
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "missingValues": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
                 },
                 "value": {
                   "anyOf": [
@@ -20777,6 +20912,33 @@
                 "isSessionVariable": {
                   "type": "boolean"
                 },
+                "dataType": {
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "string[]",
+                    "number[]",
+                    "datetime"
+                  ],
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "missingValues": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
                 "value": {
                   "anyOf": [
                     {
@@ -21477,6 +21639,28 @@
                 }
               }
             }
+          },
+          "currentVersionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "currentVersionNumber": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -22307,6 +22491,33 @@
                 "isSessionVariable": {
                   "type": "boolean"
                 },
+                "dataType": {
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "string[]",
+                    "number[]",
+                    "datetime"
+                  ],
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "missingValues": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
                 "value": {
                   "anyOf": [
                     {
@@ -23007,6 +23218,28 @@
                 }
               }
             }
+          },
+          "currentVersionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "currentVersionNumber": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -23800,6 +24033,33 @@
                                     "isSessionVariable": {
                                       "type": "boolean"
                                     },
+                                    "dataType": {
+                                      "enum": [
+                                        "string",
+                                        "number",
+                                        "boolean",
+                                        "string[]",
+                                        "number[]",
+                                        "datetime"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "missingValues": {
+                                      "type": "array",
+                                      "items": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "number"
+                                          }
+                                        ]
+                                      }
+                                    },
                                     "value": {
                                       "anyOf": [
                                         {
@@ -24553,6 +24813,33 @@
                                     },
                                     "isSessionVariable": {
                                       "type": "boolean"
+                                    },
+                                    "dataType": {
+                                      "enum": [
+                                        "string",
+                                        "number",
+                                        "boolean",
+                                        "string[]",
+                                        "number[]",
+                                        "datetime"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "missingValues": {
+                                      "type": "array",
+                                      "items": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "number"
+                                          }
+                                        ]
+                                      }
                                     },
                                     "value": {
                                       "anyOf": [
@@ -30453,6 +30740,33 @@
                             "isSessionVariable": {
                               "type": "boolean"
                             },
+                            "dataType": {
+                              "enum": [
+                                "string",
+                                "number",
+                                "boolean",
+                                "string[]",
+                                "number[]",
+                                "datetime"
+                              ],
+                              "type": "string"
+                            },
+                            "label": {
+                              "type": "string"
+                            },
+                            "missingValues": {
+                              "type": "array",
+                              "items": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "number"
+                                  }
+                                ]
+                              }
+                            },
                             "value": {
                               "anyOf": [
                                 {
@@ -32770,6 +33084,33 @@
                               },
                               "isSessionVariable": {
                                 "type": "boolean"
+                              },
+                              "dataType": {
+                                "enum": [
+                                  "string",
+                                  "number",
+                                  "boolean",
+                                  "string[]",
+                                  "number[]",
+                                  "datetime"
+                                ],
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "missingValues": {
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ]
+                                }
                               },
                               "value": {
                                 "anyOf": [
@@ -35755,6 +36096,33 @@
                                   "isSessionVariable": {
                                     "type": "boolean"
                                   },
+                                  "dataType": {
+                                    "enum": [
+                                      "string",
+                                      "number",
+                                      "boolean",
+                                      "string[]",
+                                      "number[]",
+                                      "datetime"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "missingValues": {
+                                    "type": "array",
+                                    "items": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "number"
+                                        }
+                                      ]
+                                    }
+                                  },
                                   "value": {
                                     "anyOf": [
                                       {
@@ -37806,6 +38174,33 @@
                                   },
                                   "isSessionVariable": {
                                     "type": "boolean"
+                                  },
+                                  "dataType": {
+                                    "enum": [
+                                      "string",
+                                      "number",
+                                      "boolean",
+                                      "string[]",
+                                      "number[]",
+                                      "datetime"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "missingValues": {
+                                    "type": "array",
+                                    "items": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "number"
+                                        }
+                                      ]
+                                    }
                                   },
                                   "value": {
                                     "anyOf": [
@@ -40025,6 +40420,33 @@
                                 "isSessionVariable": {
                                   "type": "boolean"
                                 },
+                                "dataType": {
+                                  "enum": [
+                                    "string",
+                                    "number",
+                                    "boolean",
+                                    "string[]",
+                                    "number[]",
+                                    "datetime"
+                                  ],
+                                  "type": "string"
+                                },
+                                "label": {
+                                  "type": "string"
+                                },
+                                "missingValues": {
+                                  "type": "array",
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "number"
+                                      }
+                                    ]
+                                  }
+                                },
                                 "value": {
                                   "anyOf": [
                                     {
@@ -41871,6 +42293,33 @@
                                 },
                                 "isSessionVariable": {
                                   "type": "boolean"
+                                },
+                                "dataType": {
+                                  "enum": [
+                                    "string",
+                                    "number",
+                                    "boolean",
+                                    "string[]",
+                                    "number[]",
+                                    "datetime"
+                                  ],
+                                  "type": "string"
+                                },
+                                "label": {
+                                  "type": "string"
+                                },
+                                "missingValues": {
+                                  "type": "array",
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "number"
+                                      }
+                                    ]
+                                  }
                                 },
                                 "value": {
                                   "anyOf": [
@@ -44236,6 +44685,33 @@
                               "isSessionVariable": {
                                 "type": "boolean"
                               },
+                              "dataType": {
+                                "enum": [
+                                  "string",
+                                  "number",
+                                  "boolean",
+                                  "string[]",
+                                  "number[]",
+                                  "datetime"
+                                ],
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "missingValues": {
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ]
+                                }
+                              },
                               "value": {
                                 "anyOf": [
                                   {
@@ -45735,30 +46211,92 @@
                     "message": {
                       "const": "success"
                     },
+                    "publishedVersion": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "versionNumber": {
+                          "type": "number"
+                        },
+                        "publishedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "x-native-type": "date"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "versionNumber",
+                        "publishedAt"
+                      ]
+                    },
                     "warnings": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "enum": [
-                              "trademarkInfringement"
-                            ],
-                            "type": "string"
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "trademarkInfringement"
+                              },
+                              "trademark": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "trademark"
+                            ]
                           },
-                          "trademark": {
-                            "type": "string"
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "researchStructure"
+                              },
+                              "code": {
+                                "enum": [
+                                  "duplicateVariableName",
+                                  "variableSharedByInputBlocks",
+                                  "inputBlockWithoutVariable"
+                                ],
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              },
+                              "variableName": {
+                                "type": "string"
+                              },
+                              "blockId": {
+                                "type": "string"
+                              },
+                              "blockIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "groupTitle": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "code",
+                              "message"
+                            ]
                           }
-                        },
-                        "required": [
-                          "type",
-                          "trademark"
                         ]
                       }
                     }
                   },
                   "required": [
-                    "message"
+                    "message",
+                    "publishedVersion"
                   ]
                 }
               }
@@ -46116,6 +46654,391 @@
                   },
                   "required": [
                     "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Bad Request"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "UNAUTHORIZED"
+                        },
+                        "status": {
+                          "const": 401
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Unauthorized"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "FORBIDDEN"
+                        },
+                        "status": {
+                          "const": 403
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Forbidden"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Not Found"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "INTERNAL_SERVER_ERROR"
+                        },
+                        "status": {
+                          "const": 500
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Internal Server Error"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ]
+      }
+    },
+    "/v1/typebots/{typebotId}/published-versions": {
+      "get": {
+        "operationId": "typebot-listPublishedVersions",
+        "summary": "List immutable published versions of a typebot",
+        "tags": [
+          "Typebot"
+        ],
+        "parameters": [
+          {
+            "name": "typebotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "[Where to find my bot's ID?](../how-to#how-to-find-my-typebotid)"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "versions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "versionNumber": {
+                            "type": "number"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "x-native-type": "date"
+                          },
+                          "publishedById": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "isCurrent": {
+                            "type": "boolean"
+                          },
+                          "totalResults": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "versionNumber",
+                          "publishedAt",
+                          "publishedById",
+                          "isCurrent",
+                          "totalResults"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "versions"
                   ]
                 }
               }
@@ -47924,6 +48847,33 @@
                                       "isSessionVariable": {
                                         "type": "boolean"
                                       },
+                                      "dataType": {
+                                        "enum": [
+                                          "string",
+                                          "number",
+                                          "boolean",
+                                          "string[]",
+                                          "number[]",
+                                          "datetime"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "label": {
+                                        "type": "string"
+                                      },
+                                      "missingValues": {
+                                        "type": "array",
+                                        "items": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string"
+                                            },
+                                            {
+                                              "type": "number"
+                                            }
+                                          ]
+                                        }
+                                      },
                                       "value": {
                                         "anyOf": [
                                           {
@@ -48542,6 +49492,28 @@
                                       }
                                     }
                                   }
+                                },
+                                "currentVersionId": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "currentVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 }
                               },
                               "required": [
@@ -49845,6 +50817,33 @@
                                       "isSessionVariable": {
                                         "type": "boolean"
                                       },
+                                      "dataType": {
+                                        "enum": [
+                                          "string",
+                                          "number",
+                                          "boolean",
+                                          "string[]",
+                                          "number[]",
+                                          "datetime"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "label": {
+                                        "type": "string"
+                                      },
+                                      "missingValues": {
+                                        "type": "array",
+                                        "items": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string"
+                                            },
+                                            {
+                                              "type": "number"
+                                            }
+                                          ]
+                                        }
+                                      },
                                       "value": {
                                         "anyOf": [
                                           {
@@ -50463,6 +51462,28 @@
                                       }
                                     }
                                   }
+                                },
+                                "currentVersionId": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "currentVersionNumber": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 }
                               },
                               "required": [
@@ -51474,6 +52495,33 @@
                                 },
                                 "isSessionVariable": {
                                   "type": "boolean"
+                                },
+                                "dataType": {
+                                  "enum": [
+                                    "string",
+                                    "number",
+                                    "boolean",
+                                    "string[]",
+                                    "number[]",
+                                    "datetime"
+                                  ],
+                                  "type": "string"
+                                },
+                                "label": {
+                                  "type": "string"
+                                },
+                                "missingValues": {
+                                  "type": "array",
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "number"
+                                      }
+                                    ]
+                                  }
                                 },
                                 "value": {
                                   "anyOf": [
@@ -53100,6 +54148,33 @@
                                 },
                                 "isSessionVariable": {
                                   "type": "boolean"
+                                },
+                                "dataType": {
+                                  "enum": [
+                                    "string",
+                                    "number",
+                                    "boolean",
+                                    "string[]",
+                                    "number[]",
+                                    "datetime"
+                                  ],
+                                  "type": "string"
+                                },
+                                "label": {
+                                  "type": "string"
+                                },
+                                "missingValues": {
+                                  "type": "array",
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "number"
+                                      }
+                                    ]
+                                  }
                                 },
                                 "value": {
                                   "anyOf": [
@@ -56069,6 +57144,33 @@
                               "isSessionVariable": {
                                 "type": "boolean"
                               },
+                              "dataType": {
+                                "enum": [
+                                  "string",
+                                  "number",
+                                  "boolean",
+                                  "string[]",
+                                  "number[]",
+                                  "datetime"
+                                ],
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "missingValues": {
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ]
+                                }
+                              },
                               "value": {
                                 "anyOf": [
                                   {
@@ -58768,6 +59870,33 @@
                                 "isSessionVariable": {
                                   "type": "boolean"
                                 },
+                                "dataType": {
+                                  "enum": [
+                                    "string",
+                                    "number",
+                                    "boolean",
+                                    "string[]",
+                                    "number[]",
+                                    "datetime"
+                                  ],
+                                  "type": "string"
+                                },
+                                "label": {
+                                  "type": "string"
+                                },
+                                "missingValues": {
+                                  "type": "array",
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "number"
+                                      }
+                                    ]
+                                  }
+                                },
                                 "value": {
                                   "anyOf": [
                                     {
@@ -58829,6 +59958,40 @@
                               }
                             ]
                           },
+                          "completedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "x-native-type": "date"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "publishedVersionId": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "publishedVersionNumber": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "answers": {
                             "type": "array",
                             "items": {
@@ -58845,6 +60008,70 @@
                                   "items": {
                                     "type": "string"
                                   }
+                                },
+                                "executionIndex": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "value": {
+                                  "anyOf": [
+                                    {
+                                      "anyOf": [
+                                        {
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "number"
+                                        },
+                                        {
+                                          "type": "boolean"
+                                        },
+                                        {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "number"
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "valueLabel": {
+                                  "anyOf": [
+                                    {
+                                      "anyOf": [
+                                        {
+                                          "type": "string"
+                                        },
+                                        {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 }
                               },
                               "required": [
@@ -58863,6 +60090,9 @@
                           "hasStarted",
                           "isArchived",
                           "lastChatSessionId",
+                          "completedAt",
+                          "publishedVersionId",
+                          "publishedVersionNumber",
                           "answers"
                         ]
                       }
@@ -59615,6 +60845,33 @@
                               "isSessionVariable": {
                                 "type": "boolean"
                               },
+                              "dataType": {
+                                "enum": [
+                                  "string",
+                                  "number",
+                                  "boolean",
+                                  "string[]",
+                                  "number[]",
+                                  "datetime"
+                                ],
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "missingValues": {
+                                "type": "array",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ]
+                                }
+                              },
                               "value": {
                                 "anyOf": [
                                   {
@@ -59676,6 +60933,40 @@
                             }
                           ]
                         },
+                        "completedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "x-native-type": "date"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "publishedVersionId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "publishedVersionNumber": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "answers": {
                           "type": "array",
                           "items": {
@@ -59692,6 +60983,70 @@
                                 "items": {
                                   "type": "string"
                                 }
+                              },
+                              "executionIndex": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "value": {
+                                "anyOf": [
+                                  {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "number"
+                                      },
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "number"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "valueLabel": {
+                                "anyOf": [
+                                  {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               }
                             },
                             "required": [
@@ -59710,6 +61065,9 @@
                         "hasStarted",
                         "isArchived",
                         "lastChatSessionId",
+                        "completedAt",
+                        "publishedVersionId",
+                        "publishedVersionNumber",
                         "answers"
                       ]
                     }
@@ -60870,6 +62228,489 @@
                   "type": "string"
                 },
                 "required": true
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Bad Request"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "UNAUTHORIZED"
+                        },
+                        "status": {
+                          "const": 401
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Unauthorized"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "403",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "FORBIDDEN"
+                        },
+                        "status": {
+                          "const": 403
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Forbidden"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Not Found"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "INTERNAL_SERVER_ERROR"
+                        },
+                        "status": {
+                          "const": 500
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Internal Server Error"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": [
+                        "defined",
+                        "code",
+                        "status",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ]
+      }
+    },
+    "/v1/typebots/{typebotId}/results/export-research": {
+      "post": {
+        "operationId": "results-exportResearchDataset",
+        "summary": "Export results as a research dataset (CSV + SPSS-ready codebook)",
+        "description": "One row per interview with stable column names (variable names), interview status, ISO 8601 timestamps, questionnaire version, typed values, structured multiple choice and repeated answers.",
+        "tags": [
+          "Results"
+        ],
+        "parameters": [
+          {
+            "name": "typebotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "[Where to find my bot's ID?](../how-to#how-to-find-my-typebotid)"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "timeFilter": {
+                    "enum": [
+                      "today",
+                      "last7Days",
+                      "last30Days",
+                      "monthToDate",
+                      "lastMonth",
+                      "yearToDate",
+                      "allTime"
+                    ],
+                    "type": "string",
+                    "default": "last7Days"
+                  },
+                  "timeZone": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "valueMode": {
+                        "enum": [
+                          "value",
+                          "label",
+                          "both"
+                        ],
+                        "type": "string",
+                        "default": "value"
+                      },
+                      "multipleChoiceMode": {
+                        "enum": [
+                          "compact",
+                          "dichotomous"
+                        ],
+                        "type": "string",
+                        "default": "compact"
+                      },
+                      "multipleChoiceSeparator": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3,
+                        "default": "|"
+                      },
+                      "repeatedAnswersMode": {
+                        "enum": [
+                          "columns",
+                          "json",
+                          "last"
+                        ],
+                        "type": "string",
+                        "default": "columns"
+                      },
+                      "statusFilter": {
+                        "enum": [
+                          "all",
+                          "complete",
+                          "incomplete"
+                        ],
+                        "type": "string",
+                        "default": "all"
+                      },
+                      "versionNumbers": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "exclusiveMinimum": 0
+                        }
+                      },
+                      "includePreVersioningResults": {
+                        "type": "boolean",
+                        "default": false
+                      },
+                      "includeNotStarted": {
+                        "type": "boolean",
+                        "default": false
+                      },
+                      "abandonedAfterMinutes": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "exclusiveMinimum": 0,
+                        "default": 1440
+                      },
+                      "timeZone": {
+                        "type": "string"
+                      },
+                      "csvMode": {
+                        "enum": [
+                          "excelSafe",
+                          "raw"
+                        ],
+                        "type": "string",
+                        "default": "excelSafe"
+                      }
+                    },
+                    "default": {
+                      "valueMode": "value",
+                      "multipleChoiceMode": "compact",
+                      "multipleChoiceSeparator": "|",
+                      "repeatedAnswersMode": "columns",
+                      "statusFilter": "all",
+                      "includePreVersioningResults": false,
+                      "includeNotStarted": false,
+                      "abandonedAfterMinutes": 1440,
+                      "csvMode": "excelSafe"
+                    }
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "csvFileName": {
+                      "type": "string"
+                    },
+                    "codebookFileName": {
+                      "type": "string"
+                    },
+                    "csv": {
+                      "type": "string"
+                    },
+                    "codebook": {
+                      "type": "string"
+                    },
+                    "rowCount": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "csvFileName",
+                    "codebookFileName",
+                    "csv",
+                    "codebook",
+                    "rowCount"
+                  ]
+                }
               }
             }
           },

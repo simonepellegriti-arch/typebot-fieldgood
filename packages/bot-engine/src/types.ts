@@ -23,11 +23,22 @@ export type ExecuteIntegrationResponse = {
   newSetVariableHistory?: SetVariableHistoryItem[];
 } & Pick<ContinueChatResponse, "clientSideActions" | "logs">;
 
+/**
+ * Research representation of a parsed reply.
+ * `value` is what is stored in the dataset (codes), `label` is what the respondent saw.
+ * Multiple choice replies are always arrays.
+ */
+export type StructuredAnswer = {
+  value: string | number | boolean | string[] | number[];
+  label?: string | string[];
+};
+
 export type SuccessReply = {
   status: "success";
   content: string;
   outgoingEdgeId?: string;
   variablesToUpdate?: VariableWithUnknowValue[];
+  structuredAnswer?: StructuredAnswer;
 };
 
 export type SkipReply = {

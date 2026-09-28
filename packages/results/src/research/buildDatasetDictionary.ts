@@ -1,0 +1,236 @@
+import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
+import { isInputBlock } from "@typebot.io/blocks-core/helpers";
+import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
+import type { InputBlock } from "@typebot.io/blocks-inputs/schema";
+import type { Group } from "@typebot.io/groups/schemas";
+import type { Variable, VariableDataType } from "@typebot.io/variables/schemas";
+import { parseNumericLiteral } from "./coerceResearchValue";
+import type {
+  DatasetDictionary,
+  DictionaryQuestion,
+  QuestionOption,
+} from "./schemas";
+import { systemColumns } from "./schemas";
+
+export type QuestionnaireVersion = {
+  versionId?: string | null;
+  /** null for the pre-versioning snapshot (current published typebot without version) */
+  versionNumber: number | null;
+  groups: Group[];
+  variables: Variable[];
+};
+
+/**
+ * Builds the dataset dictionary (codebook source) from one or more questionnaire versions.
+ * Questions are identified by block id; column names come from variable names only,
+ * so editing a question label never changes the dataset structure.
+ * When the same question exists in several versions, the latest version wins for
+ * name/label/type and options are merged.
+ */
+export const buildDatasetDictionary = (
+  versions: QuestionnaireVersion[],
+): DatasetDictionary => {
+  const sortedVersions = [...versions].sort(
+    (versionA, versionB) =>
+      (versionA.versionNumber ?? 0) - (versionB.versionNumber ?? 0),
+  );
+  const questionsById = new Map<string, DictionaryQuestion>();
+  const variablesById = new Map<string, Variable>();
+  const inputVariableIds = new Set<string>();
+
+  for (const version of sortedVersions) {
+    for (const variable of version.variables)
+      variablesById.set(variable.id, variable);
+
+    for (const { block, precedingText, groupTitle } of listInputBlocks(
+      version.groups,
+    )) {
+      const variable = block.options?.variableId
+        ? version.variables.find(
+            (variable) => variable.id === block.options?.variableId,
+          )
+        : undefined;
+      if (variable) inputVariableIds.add(variable.id);
+      const existingQuestion = questionsById.get(block.id);
+      const isMultiple = isMultipleChoiceBlock(block);
+      const rawOptions = parseBlockOptions(block);
+      const dataType =
+        variable?.dataType ?? inferDataType(block, isMultiple, rawOptions);
+      const options = mergeOptions(
+        existingQuestion?.options ?? [],
+        rawOptions.map((option) => ({
+          label: option.label,
+          value: isNumericDataType(dataType)
+            ? (parseNumericLiteral(String(option.value)) ?? option.value)
+            : option.value,
+        })),
+      );
+      questionsById.set(block.id, {
+        id: block.id,
+        blockId: block.id,
+        blockType: block.type,
+        variableId: variable?.id,
+        variableName: variable?.name ?? `Q_${block.id}`,
+        label: variable?.label ?? precedingText ?? groupTitle,
+        dataType,
+        isMultiple,
+        options,
+        missingValues: variable?.missingValues ?? [],
+        versionNumbers: [
+          ...(existingQuestion?.versionNumbers ?? []),
+          ...(version.versionNumber !== null ? [version.versionNumber] : []),
+        ],
+      });
+    }
+  }
+
+  const questions = ensureUniqueNames([...questionsById.values()]);
+  const reservedNames = new Set<string>([
+    ...Object.values(systemColumns),
+    ...questions.map((question) => question.variableName),
+  ]);
+
+  const variables = [...variablesById.values()]
+    .filter(
+      (variable) =>
+        !inputVariableIds.has(variable.id) && !variable.isSessionVariable,
+    )
+    .map((variable) => ({
+      id: variable.id,
+      name: reservedNames.has(variable.name)
+        ? `${variable.name}_VAR`
+        : variable.name,
+      label: variable.label ?? variable.name,
+      dataType: variable.dataType ?? "string",
+      missingValues: variable.missingValues ?? [],
+    }));
+
+  return { questions, variables };
+};
+
+const listInputBlocks = (groups: Group[]) =>
+  groups.flatMap((group) => {
+    let precedingText: string | undefined;
+    const inputBlocks: {
+      block: InputBlock;
+      precedingText: string | undefined;
+      groupTitle: string;
+    }[] = [];
+    for (const block of group.blocks) {
+      if (block.type === BubbleBlockType.TEXT) {
+        const text = extractPlainText(block.content);
+        if (text) precedingText = text;
+        continue;
+      }
+      if (isInputBlock(block)) {
+        inputBlocks.push({ block, precedingText, groupTitle: group.title });
+        precedingText = undefined;
+      }
+    }
+    return inputBlocks;
+  });
+
+const extractPlainText = (content: unknown): string | undefined => {
+  if (!content || typeof content !== "object") return;
+  if ("plainText" in content && typeof content.plainText === "string") {
+    const trimmedText = content.plainText.trim();
+    if (trimmedText) return trimmedText;
+  }
+  if ("richText" in content && Array.isArray(content.richText)) {
+    const text = content.richText
+      .map((node) => collectText(node))
+      .join("\n")
+      .trim();
+    return text || undefined;
+  }
+};
+
+const collectText = (node: unknown): string => {
+  if (!node || typeof node !== "object") return "";
+  if ("text" in node && typeof node.text === "string") return node.text;
+  if ("children" in node && Array.isArray(node.children))
+    return node.children.map((child) => collectText(child)).join("");
+  return "";
+};
+
+const isMultipleChoiceBlock = (block: InputBlock) =>
+  (block.type === InputBlockType.CHOICE ||
+    block.type === InputBlockType.PICTURE_CHOICE) &&
+  Boolean(block.options?.isMultipleChoice);
+
+const parseBlockOptions = (block: InputBlock): QuestionOption[] => {
+  if (block.type === InputBlockType.CHOICE)
+    return block.items.flatMap((item) => {
+      const label = item.content ?? item.value;
+      const value = item.value ?? item.content;
+      return label !== undefined && value !== undefined
+        ? [{ value, label }]
+        : [];
+    });
+  if (block.type === InputBlockType.PICTURE_CHOICE)
+    return block.items.flatMap((item) => {
+      const label = item.title ?? item.pictureSrc ?? item.value;
+      const value = item.value ?? item.title ?? item.pictureSrc;
+      return label !== undefined && value !== undefined
+        ? [{ value, label }]
+        : [];
+    });
+  return [];
+};
+
+const inferDataType = (
+  block: InputBlock,
+  isMultiple: boolean,
+  options: QuestionOption[],
+): VariableDataType => {
+  switch (block.type) {
+    case InputBlockType.NUMBER:
+    case InputBlockType.RATING:
+      return "number";
+    case InputBlockType.CHOICE:
+    case InputBlockType.PICTURE_CHOICE: {
+      const areAllOptionsNumeric =
+        options.length > 0 &&
+        options.every(
+          (option) => parseNumericLiteral(String(option.value)) !== undefined,
+        );
+      if (isMultiple) return areAllOptionsNumeric ? "number[]" : "string[]";
+      return areAllOptionsNumeric ? "number" : "string";
+    }
+    default:
+      return "string";
+  }
+};
+
+export const isNumericDataType = (dataType: VariableDataType) =>
+  dataType === "number" || dataType === "number[]";
+
+const mergeOptions = (
+  previousOptions: QuestionOption[],
+  newOptions: QuestionOption[],
+): QuestionOption[] => {
+  const mergedOptions = [...previousOptions];
+  for (const newOption of newOptions) {
+    const existingIndex = mergedOptions.findIndex(
+      (option) => String(option.value) === String(newOption.value),
+    );
+    if (existingIndex === -1) mergedOptions.push(newOption);
+    else mergedOptions[existingIndex] = newOption;
+  }
+  return mergedOptions;
+};
+
+const ensureUniqueNames = (
+  questions: DictionaryQuestion[],
+): DictionaryQuestion[] => {
+  const usedNames = new Map<string, number>();
+  return questions.map((question) => {
+    const occurrences = usedNames.get(question.variableName) ?? 0;
+    usedNames.set(question.variableName, occurrences + 1);
+    if (occurrences === 0) return question;
+    return {
+      ...question,
+      variableName: `${question.variableName}_${occurrences + 1}`,
+    };
+  });
+};

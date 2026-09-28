@@ -169,6 +169,15 @@ const sessionStateSchemaV3 = sessionStateSchemaV2
       })
       .optional(),
     publicTypebotId: z.string().optional(),
+    publishedVersion: z
+      .object({
+        id: z.string(),
+        number: z.number().int(),
+      })
+      .optional()
+      .describe(
+        "Questionnaire version the interview was started with. Stored on the result.",
+      ),
   });
 
 export type SessionState = z.infer<typeof sessionStateSchemaV3>;

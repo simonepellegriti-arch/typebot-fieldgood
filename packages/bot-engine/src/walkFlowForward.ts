@@ -25,6 +25,7 @@ import {
   type BubbleBlockWithDefinedContent,
   parseBubbleBlock,
 } from "./parseBubbleBlock";
+import { markResultAsCompleted } from "./queries/markResultAsCompleted";
 import { upsertResult } from "./queries/upsertResult";
 import type { ExecuteIntegrationResponse, ExecuteLogicResponse } from "./types";
 
@@ -414,13 +415,18 @@ const navigateToNextGroupAndUpdateState = async ({
       const isMergingWithParent =
         newSessionState.typebotsQueue[0].isMergingWithParent;
       const currentResultId = newSessionState.typebotsQueue[0].resultId;
-      if (!isMergingWithParent && currentResultId)
+      if (!isMergingWithParent && currentResultId) {
         await upsertResult({
           resultId: currentResultId,
           typebot: newSessionState.typebotsQueue[0].typebot,
           isCompleted: true,
           hasStarted: newSessionState.typebotsQueue[0].answers.length > 0,
         });
+        await markResultAsCompleted({
+          resultId: currentResultId,
+          completedAt: new Date(),
+        });
+      }
       newSessionState = {
         ...newSessionState,
         typebotsQueue: [

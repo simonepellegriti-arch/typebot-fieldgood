@@ -39,6 +39,11 @@ import {
   isPublicIdAvailableInputSchema,
 } from "./handleIsPublicIdAvailable";
 import {
+  handleListPublishedVersions,
+  listPublishedVersionsInputSchema,
+  publishedVersionSummarySchema,
+} from "./handleListPublishedVersions";
+import {
   handleListTypebots,
   listTypebotsInputSchema,
 } from "./handleListTypebots";
@@ -152,10 +157,31 @@ const publishTypebot = authenticatedProcedure
   .output(
     z.object({
       message: z.literal("success"),
+      publishedVersion: z.object({
+        id: z.string(),
+        versionNumber: z.number(),
+        publishedAt: z.date(),
+      }),
       warnings: z.array(warningSchema).optional(),
     }),
   )
   .handler(handlePublishTypebot);
+
+const listPublishedVersions = authenticatedProcedure
+  .route({
+    method: "GET",
+    path: "/v1/typebots/{typebotId}/published-versions",
+    operationId: "typebot-listPublishedVersions",
+    summary: "List immutable published versions of a typebot",
+    tags: ["Typebot"],
+  })
+  .input(listPublishedVersionsInputSchema)
+  .output(
+    z.object({
+      versions: z.array(publishedVersionSummarySchema),
+    }),
+  )
+  .handler(handleListPublishedVersions);
 
 const unpublishTypebot = authenticatedProcedure
   .route({
@@ -222,6 +248,7 @@ export type TypebotRouter = {
   listTypebots: typeof listTypebots;
   publishTypebot: typeof publishTypebot;
   unpublishTypebot: typeof unpublishTypebot;
+  listPublishedVersions: typeof listPublishedVersions;
   getPublishedTypebot: typeof getPublishedTypebot;
   importTypebot: typeof importTypebot;
   getTypebotBlocks: typeof getTypebotBlocks;
@@ -236,6 +263,7 @@ export const typebotRouter: TypebotRouter = {
   listTypebots,
   publishTypebot,
   unpublishTypebot,
+  listPublishedVersions,
   getPublishedTypebot,
   importTypebot,
   getTypebotBlocks,

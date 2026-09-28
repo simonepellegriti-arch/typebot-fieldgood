@@ -14,6 +14,9 @@ export const resultSchema = z.object({
   hasStarted: z.boolean().nullable(),
   isArchived: z.boolean().nullable(),
   lastChatSessionId: z.string().nullable(),
+  completedAt: z.date().nullable(),
+  publishedVersionId: z.string().nullable(),
+  publishedVersionNumber: z.number().int().nullable(),
 }) satisfies z.ZodType<Prisma.Result>;
 
 export const resultWithAnswersSchema = resultSchema.merge(

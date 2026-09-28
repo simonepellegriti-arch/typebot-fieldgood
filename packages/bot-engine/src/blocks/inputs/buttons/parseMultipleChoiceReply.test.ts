@@ -37,7 +37,7 @@ describe("parseMultipleChoiceReply", () => {
         createMockItem("id3", "third item"),
       ],
     });
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       status: "success",
       content: "item, second item, third item",
     });
@@ -50,7 +50,10 @@ describe("parseMultipleChoiceReply", () => {
         createMockItem("id2", "second item"),
       ],
     });
-    expect(result).toEqual({ status: "success", content: "item, second item" });
+    expect(result).toMatchObject({
+      status: "success",
+      content: "item, second item",
+    });
   });
 
   it("should work with number titles", () => {
@@ -64,7 +67,7 @@ describe("parseMultipleChoiceReply", () => {
         createMockPictureItem("id6", "1"),
       ],
     });
-    expect(result).toEqual({ status: "success", content: "4, 2, 1" });
+    expect(result).toMatchObject({ status: "success", content: "4, 2, 1" });
   });
 
   it("should work when the choices are overlapping", () => {
@@ -74,7 +77,10 @@ describe("parseMultipleChoiceReply", () => {
         createMockItem("id2", "second item"),
       ],
     });
-    expect(result).toEqual({ status: "success", content: "item, second item" });
+    expect(result).toMatchObject({
+      status: "success",
+      content: "item, second item",
+    });
   });
 
   it("should work with dirty values / input", () => {
@@ -84,7 +90,10 @@ describe("parseMultipleChoiceReply", () => {
         createMockItem("id2", " second item "),
       ],
     });
-    expect(result).toEqual({ status: "success", content: "item, second item" });
+    expect(result).toMatchObject({
+      status: "success",
+      content: "item, second item",
+    });
 
     const result2 = parseMultipleChoiceReply(" item and second item \n", {
       items: [
@@ -92,7 +101,7 @@ describe("parseMultipleChoiceReply", () => {
         createMockItem("id2", "second item"),
       ],
     });
-    expect(result2).toEqual({
+    expect(result2).toMatchObject({
       status: "success",
       content: "item, second item",
     });
@@ -109,6 +118,6 @@ describe("parseMultipleChoiceReply", () => {
     const result = parseMultipleChoiceReply("아이템", {
       items: [createMockItem("id1", "아이템")],
     });
-    expect(result).toEqual({ status: "success", content: "아이템" });
+    expect(result).toMatchObject({ status: "success", content: "아이템" });
   });
 });
