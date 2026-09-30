@@ -139,121 +139,132 @@ export const RobustVideoPlayer = (props: Props) => {
   onCleanup(clearStallTimeout);
 
   return (
-    <div class={cx("relative w-full", props.class)} style={props.style}>
-      <video
-        ref={setVideoRef}
-        poster={props.poster}
-        loop={props.isLooping}
-        muted={props.isMuted}
-        preload="metadata"
-        controls={props.areControlsDisplayed && status() !== "error"}
-        class="w-full h-auto rounded-md bg-black/5 focus:outline-none"
-        onLoadedMetadata={(event) => {
-          const video = event.currentTarget;
-          setDuration(
-            Number.isFinite(video.duration) ? video.duration : undefined,
-          );
-          if (!hasRestoredStartTime && props.startTime && props.startTime > 0) {
-            hasRestoredStartTime = true;
-            video.currentTime = Math.min(
-              props.startTime,
-              video.duration || props.startTime,
-            );
-          }
-          props.onLoadedMetadata?.(video);
-        }}
-        onCanPlay={() => {
-          clearStallTimeout();
-          if (status() !== "error") setStatus("ready");
-        }}
-        onPlaying={() => {
-          clearStallTimeout();
-          setStatus("ready");
-        }}
-        onWaiting={() => {
-          setStatus("buffering");
-          armStallTimeout();
-        }}
-        onStalled={() => armStallTimeout()}
-        onPlay={(event) => {
-          setIsPaused(false);
-          setIsEnded(false);
-          props.onPlay?.(event.currentTarget);
-        }}
-        onPause={(event) => {
-          setIsPaused(true);
-          props.onPause?.(event.currentTarget);
-        }}
-        onTimeUpdate={(event) => {
-          setCurrentTime(event.currentTarget.currentTime);
-          props.onTimeUpdate?.(event.currentTarget);
-        }}
-        onSeeking={(event) => props.onSeeking?.(event.currentTarget)}
-        onSeeked={(event) => props.onSeeked?.(event.currentTarget)}
-        onEnded={(event) => {
-          setIsEnded(true);
-          setIsPaused(true);
-          props.onEnded?.(event.currentTarget);
-        }}
-        onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
-        onError={() => {
-          clearStallTimeout();
-          setStatus("error");
-        }}
-      >
-        <source
-          src={props.src}
-          type={getVideoMimeType(props.src)}
-          onError={handleSourceError}
-        />
-        <Show when={props.fallbackSrc}>
-          {(fallbackSrc) => (
-            <source
-              src={fallbackSrc()}
-              type={getVideoMimeType(fallbackSrc())}
-              onError={handleSourceError}
-            />
+    <div class={cx("w-full", props.class)} style={props.style}>
+      {/* Overlays are positioned on the video only, never over the controls. */}
+      <div class="relative w-full">
+        <video
+          ref={setVideoRef}
+          poster={props.poster}
+          loop={props.isLooping}
+          muted={props.isMuted}
+          preload="metadata"
+          controls={props.areControlsDisplayed && status() !== "error"}
+          class={cx(
+            "w-full h-auto rounded-md bg-black/5 focus:outline-none",
+            // Keeps a visible frame while the metadata (real size) is loading.
+            duration() === undefined && "aspect-video",
           )}
-        </Show>
-      </video>
-
-      <Show when={status() === "error"}>
-        <div
-          class="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-md bg-black/70 text-white text-sm p-4 text-center"
-          role="alert"
+          onLoadedMetadata={(event) => {
+            const video = event.currentTarget;
+            setDuration(
+              Number.isFinite(video.duration) ? video.duration : undefined,
+            );
+            if (
+              !hasRestoredStartTime &&
+              props.startTime &&
+              props.startTime > 0
+            ) {
+              hasRestoredStartTime = true;
+              video.currentTime = Math.min(
+                props.startTime,
+                video.duration || props.startTime,
+              );
+            }
+            props.onLoadedMetadata?.(video);
+          }}
+          onCanPlay={() => {
+            clearStallTimeout();
+            if (status() !== "error") setStatus("ready");
+          }}
+          onPlaying={() => {
+            clearStallTimeout();
+            setStatus("ready");
+          }}
+          onWaiting={() => {
+            setStatus("buffering");
+            armStallTimeout();
+          }}
+          onStalled={() => armStallTimeout()}
+          onPlay={(event) => {
+            setIsPaused(false);
+            setIsEnded(false);
+            props.onPlay?.(event.currentTarget);
+          }}
+          onPause={(event) => {
+            setIsPaused(true);
+            props.onPause?.(event.currentTarget);
+          }}
+          onTimeUpdate={(event) => {
+            setCurrentTime(event.currentTarget.currentTime);
+            props.onTimeUpdate?.(event.currentTarget);
+          }}
+          onSeeking={(event) => props.onSeeking?.(event.currentTarget)}
+          onSeeked={(event) => props.onSeeked?.(event.currentTarget)}
+          onEnded={(event) => {
+            setIsEnded(true);
+            setIsPaused(true);
+            props.onEnded?.(event.currentTarget);
+          }}
+          onVolumeChange={(event) => setIsMuted(event.currentTarget.muted)}
+          onError={() => {
+            clearStallTimeout();
+            setStatus("error");
+          }}
         >
-          <span>{labels.error}</span>
-          <button
-            type="button"
-            class="rounded-md bg-white/90 text-black px-3 py-1 font-semibold focus:outline-none focus-visible:ring-2"
-            onClick={retry}
+          <source
+            src={props.src}
+            type={getVideoMimeType(props.src)}
+            onError={handleSourceError}
+          />
+          <Show when={props.fallbackSrc}>
+            {(fallbackSrc) => (
+              <source
+                src={fallbackSrc()}
+                type={getVideoMimeType(fallbackSrc())}
+                onError={handleSourceError}
+              />
+            )}
+          </Show>
+        </video>
+
+        <Show when={status() === "error"}>
+          <div
+            class="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-md bg-black/70 text-white text-sm p-4 text-center"
+            role="alert"
           >
-            {labels.retry}
-          </button>
-        </div>
-      </Show>
-
-      <Show
-        when={status() !== "error" && (status() !== "ready" || isStalled())}
-      >
-        <div
-          class="absolute left-2 bottom-2 flex items-center gap-2 rounded-md bg-black/60 text-white text-xs px-2 py-1"
-          aria-live="polite"
-        >
-          <span>
-            {status() === "loading" ? labels.loading : labels.buffering}
-          </span>
-          <Show when={isStalled()}>
+            <span>{labels.error}</span>
             <button
               type="button"
-              class="underline font-semibold focus:outline-none focus-visible:ring-2"
+              class="rounded-md bg-white/90 text-black px-3 py-1 font-semibold focus:outline-none focus-visible:ring-2"
               onClick={retry}
             >
               {labels.retry}
             </button>
-          </Show>
-        </div>
-      </Show>
+          </div>
+        </Show>
+
+        <Show
+          when={status() !== "error" && (status() !== "ready" || isStalled())}
+        >
+          <div
+            class="absolute left-2 bottom-2 flex items-center gap-2 rounded-md bg-black/60 text-white text-xs px-2 py-1 pointer-events-none"
+            aria-live="polite"
+          >
+            <span>
+              {status() === "loading" ? labels.loading : labels.buffering}
+            </span>
+            <Show when={isStalled()}>
+              <button
+                type="button"
+                class="underline font-semibold focus:outline-none focus-visible:ring-2 pointer-events-auto"
+                onClick={retry}
+              >
+                {labels.retry}
+              </button>
+            </Show>
+          </div>
+        </Show>
+      </div>
 
       <Show when={!props.areControlsDisplayed && status() !== "error"}>
         <div class="flex items-center gap-2 pt-2 text-sm">
