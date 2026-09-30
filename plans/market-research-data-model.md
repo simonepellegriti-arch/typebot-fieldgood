@@ -312,4 +312,4 @@ Logo (bolla di chat con barre di risposta) in builder, viewer, badge e favicon; 
 
 - Runtime (`DATABASE_URL` on Vercel) uses the Supabase **transaction pooler** (port 6543): connections are shared between serverless instances, so frozen instances can't exhaust the pool.
 - Each instance keeps at most 2 connections (`createPrismaAdapter`, override with `connection_limit` in the URL).
-- Prisma migrations need a session connection: run them with the same URL on port **5432** (session pooler) or the direct host, never 6543.
+- Prisma migrations need a session connection: the Prisma CLI (`prisma.config.ts`) uses `DIRECT_DATABASE_URL` (Supabase session pooler, port **5432**) when set, and falls back to `DATABASE_URL`. Both are configured on the two Vercel projects; the build runs `prisma migrate deploy` with it.
