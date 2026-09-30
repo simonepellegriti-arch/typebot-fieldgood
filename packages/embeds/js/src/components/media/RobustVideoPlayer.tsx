@@ -128,6 +128,11 @@ export const RobustVideoPlayer = (props: Props) => {
   };
 
   onMount(() => {
+    // <source> elements get their src after being inserted: WebKit (Safari,
+    // iOS) has then already run the resource selection with empty sources and
+    // never loads the video. Restart the selection now that sources are set.
+    if (videoRef && videoRef.networkState === HTMLMediaElement.NETWORK_EMPTY)
+      videoRef.load();
     armStallTimeout();
     if (props.isAutoplayRequested) void play();
   });
