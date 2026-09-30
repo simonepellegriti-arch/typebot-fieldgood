@@ -23,6 +23,7 @@ import { defaultHostAvatarIsEnabled } from "@typebot.io/theme/constants";
 import type { Theme } from "@typebot.io/theme/schemas";
 import { Match, Show, Switch } from "solid-js";
 import { Buttons } from "../features/blocks/inputs/buttons/components/Buttons";
+import { MediaChoiceForm } from "../features/blocks/inputs/buttons/components/MediaChoiceForm";
 import { MultipleChoicesForm } from "../features/blocks/inputs/buttons/components/MultipleChoicesForm";
 import { CardsCaroussel } from "../features/blocks/inputs/cards/CardsCaroussel";
 import { DateForm } from "../features/blocks/inputs/date/components/DateForm";
@@ -191,6 +192,9 @@ const Input = (props: {
       <Match when={isButtonsBlock(props.block)} keyed>
         {(block) => (
           <Switch>
+            <Match when={block.items.some((item) => item.media?.url)}>
+              <MediaChoiceForm block={block} onSubmit={props.onSubmit} />
+            </Match>
             <Match when={!block.options?.isMultipleChoice}>
               <Buttons
                 chunkIndex={props.chunkIndex}

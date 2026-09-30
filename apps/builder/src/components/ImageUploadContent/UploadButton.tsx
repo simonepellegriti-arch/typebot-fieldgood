@@ -1,6 +1,7 @@
 import { uploadFileWithPresignedPostData } from "@typebot.io/lib/s3/uploadFileWithPresignedPostData";
 import type { ButtonProps } from "@typebot.io/ui/components/Button";
 import { UploadButton as UploadButtonPrimitive } from "@typebot.io/ui/components/UploadButton";
+import { checkVideoCompatibility } from "@/features/blocks/bubbles/video/helpers/checkVideoCompatibility";
 import type { FilePathUploadProps } from "@/features/upload/api/generateUploadUrl";
 import { type CompressPreset, compressFile } from "@/helpers/compressFile";
 import { orpc } from "@/lib/queryClient";
@@ -23,6 +24,7 @@ export const UploadButton = ({
   size = "sm",
 }: UploadButtonProps) => {
   const handleFileUploadRequest = async (rawFile: File) => {
+    if (fileType === "video") await warnIfVideoIsNotWidelyCompatible(rawFile);
     const file = await compressFile(rawFile, compressPreset);
     const data = await orpc.generateUploadUrl.call({
       filePathProps,
@@ -59,4 +61,15 @@ export const UploadButton = ({
       {children}
     </UploadButtonPrimitive>
   );
+};
+
+/** Codec check before upload: the file is still uploaded, the warning explains the risk. */
+const warnIfVideoIsNotWidelyCompatible = async (file: File) => {
+  const report = await checkVideoCompatibility(file).catch(() => undefined);
+  if (!report || report.isWidelyCompatible) return;
+  toast({
+    type: "info",
+    title: `${report.container.toUpperCase()} ${[...report.videoCodecs, ...report.audioCodecs].join(" / ")}`,
+    description: `${report.warnings.join(" ")} Recommended: MP4 (H.264 + AAC), with a WebM fallback.`,
+  });
 };

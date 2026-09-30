@@ -18,6 +18,8 @@ export const videoBubbleContentSchema = z.object({
   isMuted: z.boolean().optional(),
   isLooping: z.boolean().optional(),
   posterUrl: z.string().optional(),
+  /** Second source (e.g. WebM) for browsers that can't play the main file. */
+  fallbackUrl: z.string().optional(),
   /**
    * Research tracking for native video files (MP4/WebM, uploaded or linked).
    * When enabled the flow waits on this bubble until the respondent continues,

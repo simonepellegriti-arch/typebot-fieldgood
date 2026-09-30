@@ -44,6 +44,7 @@ export const HostBubble = (props: Props) => (
     </Match>
     <Match when={props.message.type === BubbleBlockType.VIDEO}>
       <VideoBubble
+        bubbleId={props.message.id}
         content={props.message.content as VideoBubbleBlock["content"]}
         onTransitionEnd={props.onTransitionEnd}
         onCompleted={props.onCompleted}

@@ -33,6 +33,8 @@ export const exportResearchDataset = ({
   now?: Date;
 }): {
   csv: string;
+  /** Long layout CSV (one row per answer), when includeLongFormat is set. */
+  longCsv: string | undefined;
   sav: Uint8Array | undefined;
   codebook: Codebook;
   rowCount: number;
@@ -59,6 +61,9 @@ export const exportResearchDataset = ({
   });
   return {
     csv: serializeDatasetToCsv(dataset, { mode: options.csvMode }),
+    longCsv: dataset.longDataset
+      ? serializeDatasetToCsv(dataset.longDataset, { mode: options.csvMode })
+      : undefined,
     sav:
       options.fileFormat === "sav"
         ? convertDatasetToSav({ dataset, codebook, fileLabel, now })

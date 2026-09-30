@@ -59,6 +59,12 @@ export const researchExportOptionsSchema = z.object({
   csvMode: z.enum(["excelSafe", "raw"]).default("excelSafe"),
   /** csv: CSV + JSON codebook. sav: SPSS system file with labels, value labels, missing values and MR sets. */
   fileFormat: z.enum(["csv", "sav"]).default("csv"),
+  /** Wide columns of loop questions: D2_NIKE (item code) or D2_1 (iteration number). */
+  loopColumnNaming: z.enum(["item", "iteration"]).default("item"),
+  /** Also produce the long format (one row per answer: RESULT_ID | LOOP | ITEM | QUESTION | VALUE...). */
+  includeLongFormat: z.boolean().default(false),
+  /** Adds <VAR>_SCORE columns for questions with scored options. */
+  includeScores: z.boolean().default(true),
 });
 export type ResearchExportOptionsInput = z.input<
   typeof researchExportOptionsSchema
@@ -103,6 +109,8 @@ export type DictionaryQuestion = {
   isMultiplePerRow?: boolean;
   /** Codes of "Other, please specify" options (open text exported in its own column). */
   otherOptionValues?: (string | number)[];
+  /** At least one option / matrix column has a score. */
+  hasScores?: boolean;
 };
 
 export type DatasetDictionary = {
@@ -115,6 +123,12 @@ export type DatasetDictionary = {
     dataType: VariableDataType;
     missingValues: (string | number)[];
   }[];
+  /** Loop blocks: name used in exports and labels of their items (by item code). */
+  loops?: {
+    blockId: string;
+    name: string;
+    itemLabels: Record<string, string>;
+  }[];
 };
 
 export type NormalizedAnswer = {
@@ -124,6 +138,11 @@ export type NormalizedAnswer = {
   value: AnswerResearchValue | null;
   valueLabel: AnswerValueLabel | null;
   otherTexts: AnswerOtherTexts | null;
+  score: number | null;
+  rowScores: Record<string, number | null> | null;
+  loopBlockId: string | null;
+  loopIteration: number | null;
+  loopItem: string | null;
   content: string;
 };
 
@@ -139,6 +158,10 @@ export type DatasetColumn = {
   executionIndex?: number;
   /** Matrix: code of the row represented by the column. */
   matrixRowValue?: string | number;
+  /** Loop iteration represented by the column (wide export of loop questions). */
+  loopSlot?: { loopBlockId: string; loopItem?: string; loopIteration?: number };
+  /** Score column: of the whole answer, or of one matrix row. */
+  scoreOf?: { matrixRowValue?: string | number };
   /** Tracked video: metric represented by the column. */
   videoMetric?: VideoMetric;
   /**

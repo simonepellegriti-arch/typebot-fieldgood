@@ -6,6 +6,7 @@ import {
 import { conditionSchema } from "@typebot.io/conditions/schemas";
 import { z } from "zod";
 import { InputBlockType } from "../constants";
+import { optionScoreSchema, scoreTargetSchema } from "../scoring/schema";
 
 export const choiceInputOptionsSchema = optionBaseSchema.merge(
   z.object({
@@ -29,8 +30,25 @@ export const choiceInputOptionsSchema = optionBaseSchema.merge(
       .positive()
       .optional()
       .describe("Multiple choice only."),
+    /** Display order only: option ids and codes never change. */
+    areItemsRandomized: z.boolean().optional(),
+    /** Options with a video: selection allowed only after watching enough of it. */
+    requireWatchBeforeSelect: z.boolean().optional(),
+    minimumWatchPercentage: z.number().min(0).max(100).optional(),
+    scoreTargets: z.array(scoreTargetSchema).optional(),
   }),
 );
+
+/** Image or video shown with a choice option (video clips as answers). */
+export const choiceItemMediaSchema = z.object({
+  type: z.enum(["image", "video"]),
+  url: z.string().optional(),
+  /** Optional second source (e.g. WebM) for browsers that can't play the first one. */
+  fallbackUrl: z.string().optional(),
+  posterUrl: z.string().optional(),
+  areControlsDisplayed: z.boolean().optional(),
+  isMuted: z.boolean().optional(),
+});
 
 /**
  * Research properties of a choice option. All optional: options saved before they
@@ -49,6 +67,8 @@ export const choiceItemResearchSchema = z.object({
     .describe("Shows a text field when selected ('Other, please specify')."),
   textInputRequired: z.boolean().optional(),
   textInputPlaceholder: z.string().optional(),
+  media: choiceItemMediaSchema.optional(),
+  score: optionScoreSchema,
 });
 
 export const buttonItemSchemas = {
@@ -113,5 +133,16 @@ export const choiceStructuredReplySchema = z.object({
   itemIds: z.array(z.string()).max(500),
   /** Open answers of "Other, please specify" options, by item id. Never merged into labels. */
   otherTexts: z.record(z.string(), z.string().max(5000)).optional(),
+  /** Viewing data of video options, by item id (tracked separately for each clip). */
+  mediaWatch: z
+    .record(
+      z.string(),
+      z.object({
+        watchedPercentage: z.number().min(0).max(100),
+        watchedSeconds: z.number().nonnegative(),
+        isCompleted: z.boolean(),
+      }),
+    )
+    .optional(),
 });
 export type ChoiceStructuredReply = z.infer<typeof choiceStructuredReplySchema>;

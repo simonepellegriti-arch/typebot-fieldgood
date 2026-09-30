@@ -9,6 +9,7 @@ import { deepParseVariables } from "@typebot.io/variables/deepParseVariables";
 import type { Variable } from "@typebot.io/variables/schemas";
 import { injectVariableValuesInCardsBlock } from "./blocks/cards/injectVariableValuesInCardsBlock";
 import { injectVariableValuesInButtonsInputBlock } from "./blocks/inputs/buttons/injectVariableValuesInButtonsInputBlock";
+import { randomizeChoiceItems } from "./blocks/inputs/buttons/randomizeChoiceItems";
 import { parseDateInput } from "./blocks/inputs/date/parseDateInput";
 import { formatMatrixInputForDisplay } from "./blocks/inputs/matrix/formatMatrixInputForDisplay";
 import { computePaymentInputRuntimeOptions } from "./blocks/inputs/payment/computePaymentInputRuntimeOptions";
@@ -31,10 +32,12 @@ export const formatInputForChatResponse = async (
 ): Promise<ContinueChatResponse["input"]> => {
   switch (block.type) {
     case InputBlockType.CHOICE: {
-      return injectVariableValuesInButtonsInputBlock(block, {
-        variables,
-        sessionStore,
-      });
+      return randomizeChoiceItems(
+        injectVariableValuesInButtonsInputBlock(block, {
+          variables,
+          sessionStore,
+        }),
+      );
     }
     case InputBlockType.PICTURE_CHOICE: {
       return injectVariableValuesInPictureChoiceBlock(block, {

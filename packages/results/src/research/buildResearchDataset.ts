@@ -6,6 +6,7 @@ import type {
 } from "@typebot.io/variables/schemas";
 import { formatInTimeZone } from "date-fns-tz";
 import type { ResearchAnswer } from "../schemas/answers";
+import { buildLongResearchDataset } from "./buildLongResearchDataset";
 import { coerceResearchValue, isNumericLiteral } from "./coerceResearchValue";
 import { computeInterviewTiming } from "./computeInterviewTiming";
 import { isObjectResearchValue } from "./isObjectResearchValue";
@@ -48,7 +49,11 @@ export const buildResearchDataset = ({
   results: ResearchResultInput[];
   options: ResearchExportOptions;
   now?: Date;
-}): ResearchDataset & { dictionary: DatasetDictionary } => {
+}): ResearchDataset & {
+  dictionary: DatasetDictionary;
+  /** Long layout (one row per answer), when includeLongFormat is set. */
+  longDataset?: ResearchDataset;
+} => {
   const questionsByBlockId = new Map(
     dictionary.questions.map((question) => [question.blockId, question]),
   );
@@ -84,23 +89,18 @@ export const buildResearchDataset = ({
     preparedResults.flatMap(({ answers }) => answers),
   );
 
-  const maxExecutionsByQuestionId = new Map<string, number>();
-  for (const { answers } of preparedResults)
-    for (const answer of answers)
-      maxExecutionsByQuestionId.set(
-        answer.blockId,
-        Math.max(
-          maxExecutionsByQuestionId.get(answer.blockId) ?? 0,
-          answer.executionIndex,
-        ),
-      );
+  const slotsByBlockId = buildAnswerSlots(
+    preparedResults.flatMap(({ answers }) => answers),
+    options,
+    extendedDictionary.loops ?? [],
+  );
 
   const columns: DatasetColumn[] = [
     ...buildSystemColumns(),
     ...extendedDictionary.questions.flatMap((question) =>
       buildQuestionColumns(question, {
         options,
-        maxExecutions: maxExecutionsByQuestionId.get(question.blockId) ?? 1,
+        slots: slotsByBlockId.get(question.blockId) ?? [undefined],
       }),
     ),
     ...extendedDictionary.variables.map<DatasetColumn>((variable) => ({
@@ -158,7 +158,22 @@ export const buildResearchDataset = ({
     });
   });
 
-  return { columns, rows, dictionary: extendedDictionary };
+  return {
+    columns,
+    rows,
+    dictionary: extendedDictionary,
+    longDataset: options.includeLongFormat
+      ? buildLongResearchDataset({
+          interviews: preparedResults.map(({ result, answers, timing }) => ({
+            resultId: result.id,
+            status: timing.status,
+            answers,
+          })),
+          dictionary: extendedDictionary,
+          options,
+        })
+      : undefined,
+  };
 };
 
 const isResultInVersionFilter = (
@@ -286,104 +301,275 @@ export const formatTimestamp = (date: Date, timeZone: string | undefined) =>
     ? formatInTimeZone(date, timeZone, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
     : date.toISOString();
 
+type AnswerSlot =
+  | {
+      suffix: string;
+      labelSuffix: string;
+      fields: Pick<DatasetColumn, "executionIndex" | "loopSlot">;
+    }
+  | undefined;
+
+/**
+ * Wide layout of repeated answers:
+ * - answers given inside a loop get one set of columns per loop item (D2_NIKE)
+ *   or per iteration (D2_1), never merged;
+ * - other repeated answers get one set of columns per execution (D2_1, D2_2).
+ */
+const buildAnswerSlots = (
+  answers: NormalizedAnswer[],
+  options: ResearchExportOptions,
+  loops: NonNullable<DatasetDictionary["loops"]>,
+): Map<string, AnswerSlot[]> => {
+  const answersByBlockId = new Map<string, NormalizedAnswer[]>();
+  for (const answer of answers)
+    answersByBlockId.set(answer.blockId, [
+      ...(answersByBlockId.get(answer.blockId) ?? []),
+      answer,
+    ]);
+
+  const slotsByBlockId = new Map<string, AnswerSlot[]>();
+  for (const [blockId, blockAnswers] of answersByBlockId) {
+    if (options.repeatedAnswersMode === "json") continue;
+    const loopAnswers = blockAnswers.filter(
+      (answer) => answer.loopBlockId !== null && answer.loopIteration !== null,
+    );
+    if (loopAnswers.length > 0) {
+      slotsByBlockId.set(blockId, buildLoopSlots(loopAnswers, options, loops));
+      continue;
+    }
+    const maxExecutions = Math.max(
+      ...blockAnswers.map((answer) => answer.executionIndex),
+    );
+    if (options.repeatedAnswersMode === "columns" && maxExecutions > 1)
+      slotsByBlockId.set(
+        blockId,
+        Array.from({ length: maxExecutions }, (_, index) => ({
+          suffix: String(index + 1),
+          labelSuffix: `#${index + 1}`,
+          fields: { executionIndex: index + 1 },
+        })),
+      );
+  }
+  return slotsByBlockId;
+};
+
+const buildLoopSlots = (
+  loopAnswers: NormalizedAnswer[],
+  options: ResearchExportOptions,
+  loops: NonNullable<DatasetDictionary["loops"]>,
+): AnswerSlot[] => {
+  const itemLabelsByLoopId = new Map(
+    loops.map((loop) => [loop.blockId, loop.itemLabels]),
+  );
+  const byItem = options.loopColumnNaming === "item";
+  const slotsByKey = new Map<
+    string,
+    { loopBlockId: string; loopItem?: string; loopIteration: number }
+  >();
+  for (const answer of loopAnswers) {
+    if (answer.loopBlockId === null || answer.loopIteration === null) continue;
+    const key = `${answer.loopBlockId}:${
+      byItem && answer.loopItem !== null
+        ? answer.loopItem
+        : answer.loopIteration
+    }`;
+    const existingSlot = slotsByKey.get(key);
+    if (!existingSlot || answer.loopIteration < existingSlot.loopIteration)
+      slotsByKey.set(key, {
+        loopBlockId: answer.loopBlockId,
+        loopItem: byItem ? (answer.loopItem ?? undefined) : undefined,
+        loopIteration: answer.loopIteration,
+      });
+  }
+  const usedSuffixes = new Set<string>();
+  return [...slotsByKey.values()]
+    .sort((a, b) => a.loopIteration - b.loopIteration)
+    .map((slot) => {
+      const itemLabel =
+        slot.loopItem !== undefined
+          ? (itemLabelsByLoopId.get(slot.loopBlockId)?.[slot.loopItem] ??
+            slot.loopItem)
+          : undefined;
+      // Item naming uses the item text (D2_NIKE), even when the stored item is a code.
+      let suffix =
+        itemLabel !== undefined
+          ? toLoopItemSuffix(itemLabel, slot.loopIteration)
+          : String(slot.loopIteration + 1);
+      if (usedSuffixes.has(suffix))
+        suffix = `${suffix}_${slot.loopIteration + 1}`;
+      usedSuffixes.add(suffix);
+      return {
+        suffix,
+        labelSuffix: itemLabel ?? `#${slot.loopIteration + 1}`,
+        fields: {
+          loopSlot:
+            slot.loopItem !== undefined
+              ? { loopBlockId: slot.loopBlockId, loopItem: slot.loopItem }
+              : {
+                  loopBlockId: slot.loopBlockId,
+                  loopIteration: slot.loopIteration,
+                },
+        },
+      };
+    });
+};
+
+/** "Nike" → NIKE, "Coca-Cola" → COCA_COLA, codes kept as is; too long → iteration number. */
+const toLoopItemSuffix = (loopItem: string, loopIteration: number) => {
+  const suffix = loopItem
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return suffix && suffix.length <= 16 ? suffix : String(loopIteration + 1);
+};
+
 const buildQuestionColumns = (
   question: DictionaryQuestion,
-  {
-    options,
-    maxExecutions,
-  }: { options: ResearchExportOptions; maxExecutions: number },
+  { options, slots }: { options: ResearchExportOptions; slots: AnswerSlot[] },
+): DatasetColumn[] =>
+  slots.flatMap((slot) => {
+    const columns = buildSlotColumns(question, { options, slot });
+    return [...columns, ...buildScoreColumns(question, { options, slot })];
+  });
+
+const buildSlotColumns = (
+  question: DictionaryQuestion,
+  { options, slot }: { options: ResearchExportOptions; slot: AnswerSlot },
 ): DatasetColumn[] => {
-  const executionSlots =
-    options.repeatedAnswersMode === "columns" && maxExecutions > 1
-      ? Array.from({ length: maxExecutions }, (_, index) => index + 1)
-      : [undefined];
+  const slotFields = slot?.fields ?? {};
+  const baseName = slot
+    ? `${question.variableName}_${slot.suffix}`
+    : question.variableName;
+  const baseLabel = slot
+    ? `${question.label} (${slot.labelSuffix})`
+    : question.label;
 
-  return executionSlots.flatMap((executionIndex) => {
-    const baseName =
-      executionIndex !== undefined
-        ? `${question.variableName}_${executionIndex}`
-        : question.variableName;
-    const baseLabel =
-      executionIndex !== undefined
-        ? `${question.label} (#${executionIndex})`
-        : question.label;
+  if (options.repeatedAnswersMode !== "json") {
+    if (question.kind === "video")
+      return videoMetrics.map<DatasetColumn>((videoMetric) => ({
+        name: `${baseName}_${videoMetric}`,
+        kind: "question",
+        questionId: question.id,
+        ...slotFields,
+        videoMetric,
+        label: `${baseLabel}: ${videoMetricLabels[videoMetric]}`,
+        type: "numeric",
+      }));
+    if (question.kind === "matrix")
+      return buildMatrixColumns(question, {
+        baseName,
+        baseLabel,
+        slotFields,
+        options,
+      });
+  }
 
-    if (options.repeatedAnswersMode !== "json") {
-      if (question.kind === "video")
-        return videoMetrics.map<DatasetColumn>((videoMetric) => ({
-          name: `${baseName}_${videoMetric}`,
-          kind: "question",
-          questionId: question.id,
-          executionIndex,
-          videoMetric,
-          label: `${baseLabel}: ${videoMetricLabels[videoMetric]}`,
-          type: "numeric",
-        }));
-      if (question.kind === "matrix")
-        return buildMatrixColumns(question, {
+  const otherTextColumns =
+    options.repeatedAnswersMode !== "json"
+      ? buildOtherTextColumns(question, {
           baseName,
           baseLabel,
-          executionIndex,
-          options,
-        });
-    }
+          slotFields,
+        })
+      : [];
 
-    const otherTextColumns =
-      options.repeatedAnswersMode !== "json"
-        ? buildOtherTextColumns(question, {
-            baseName,
-            baseLabel,
-            executionIndex,
-          })
-        : [];
-
-    if (
-      question.isMultiple &&
-      options.multipleChoiceMode === "dichotomous" &&
-      options.repeatedAnswersMode !== "json"
-    )
-      return [
-        ...question.options.map<DatasetColumn>((option, optionIndex) => ({
-          name: `${baseName}_${toOptionSuffix(option.value, optionIndex)}`,
-          kind: "question",
-          questionId: question.id,
-          optionValue: option.value,
-          executionIndex,
-          label: `${baseLabel}: ${option.label}`,
-          type: "numeric",
-        })),
-        ...otherTextColumns,
-      ];
-
-    const valueColumn: DatasetColumn = {
-      name: baseName,
-      kind: "question",
-      questionId: question.id,
-      executionIndex,
-      isLabelColumn: options.valueMode === "label",
-      label: baseLabel,
-      type:
-        options.valueMode === "label" ||
-        question.isMultiple ||
-        options.repeatedAnswersMode === "json"
-          ? "string"
-          : toColumnType(question.dataType),
-    };
-    // Label columns only make sense for questions with coded options.
-    if (options.valueMode !== "both" || question.options.length === 0)
-      return [valueColumn, ...otherTextColumns];
+  if (
+    question.isMultiple &&
+    options.multipleChoiceMode === "dichotomous" &&
+    options.repeatedAnswersMode !== "json"
+  )
     return [
-      valueColumn,
-      {
-        ...valueColumn,
-        name: `${baseName}_LABEL`,
-        isLabelColumn: true,
-        label: `${baseLabel} (label)`,
-        type: "string",
-      },
+      ...question.options.map<DatasetColumn>((option, optionIndex) => ({
+        name: `${baseName}_${toOptionSuffix(option.value, optionIndex)}`,
+        kind: "question",
+        questionId: question.id,
+        optionValue: option.value,
+        ...slotFields,
+        label: `${baseLabel}: ${option.label}`,
+        type: "numeric",
+      })),
       ...otherTextColumns,
     ];
-  });
+
+  const valueColumn: DatasetColumn = {
+    name: baseName,
+    kind: "question",
+    questionId: question.id,
+    ...slotFields,
+    isLabelColumn: options.valueMode === "label",
+    label: baseLabel,
+    type:
+      options.valueMode === "label" ||
+      question.isMultiple ||
+      options.repeatedAnswersMode === "json"
+        ? "string"
+        : toColumnType(question.dataType),
+  };
+  // Label columns only make sense for questions with coded options.
+  if (options.valueMode !== "both" || question.options.length === 0)
+    return [valueColumn, ...otherTextColumns];
+  return [
+    valueColumn,
+    {
+      ...valueColumn,
+      name: `${baseName}_LABEL`,
+      isLabelColumn: true,
+      label: `${baseLabel} (label)`,
+      type: "string",
+    },
+    ...otherTextColumns,
+  ];
+};
+
+type SlotFields = Pick<DatasetColumn, "executionIndex" | "loopSlot">;
+
+/**
+ * Scores are exported next to the codes, never instead of them:
+ * D1 = code, D1_LABEL = label, D1_SCORE = score (matrix: one per row + total).
+ */
+const buildScoreColumns = (
+  question: DictionaryQuestion,
+  { options, slot }: { options: ResearchExportOptions; slot: AnswerSlot },
+): DatasetColumn[] => {
+  if (
+    !options.includeScores ||
+    !question.hasScores ||
+    options.repeatedAnswersMode === "json"
+  )
+    return [];
+  const slotFields = slot?.fields ?? {};
+  const baseName = slot
+    ? `${question.variableName}_${slot.suffix}`
+    : question.variableName;
+  const baseLabel = slot
+    ? `${question.label} (${slot.labelSuffix})`
+    : question.label;
+  const rowScoreColumns =
+    question.kind === "matrix"
+      ? (question.matrixRows ?? []).map<DatasetColumn>((row, rowIndex) => ({
+          name: `${baseName}_${toOptionSuffix(row.value, rowIndex)}_SCORE`,
+          kind: "question",
+          questionId: question.id,
+          ...slotFields,
+          scoreOf: { matrixRowValue: row.value },
+          label: `${baseLabel}: ${row.label} (score)`,
+          type: "numeric",
+        }))
+      : [];
+  return [
+    ...rowScoreColumns,
+    {
+      name: `${baseName}_SCORE`,
+      kind: "question",
+      questionId: question.id,
+      ...slotFields,
+      scoreOf: {},
+      label: `${baseLabel} (score)`,
+      type: "numeric",
+    },
+  ];
 };
 
 const videoMetricLabels: Record<VideoMetric, string> = {
@@ -403,12 +589,12 @@ const buildMatrixColumns = (
   {
     baseName,
     baseLabel,
-    executionIndex,
+    slotFields,
     options,
   }: {
     baseName: string;
     baseLabel: string;
-    executionIndex: number | undefined;
+    slotFields: SlotFields;
     options: ResearchExportOptions;
   },
 ): DatasetColumn[] =>
@@ -423,7 +609,7 @@ const buildMatrixColumns = (
         name: `${rowName}_${toOptionSuffix(option.value, optionIndex)}`,
         kind: "question",
         questionId: question.id,
-        executionIndex,
+        ...slotFields,
         matrixRowValue: row.value,
         optionValue: option.value,
         label: `${rowLabel}: ${option.label}`,
@@ -433,7 +619,7 @@ const buildMatrixColumns = (
       name: rowName,
       kind: "question",
       questionId: question.id,
-      executionIndex,
+      ...slotFields,
       matrixRowValue: row.value,
       isLabelColumn: options.valueMode === "label",
       label: rowLabel,
@@ -464,11 +650,11 @@ const buildOtherTextColumns = (
   {
     baseName,
     baseLabel,
-    executionIndex,
+    slotFields,
   }: {
     baseName: string;
     baseLabel: string;
-    executionIndex: number | undefined;
+    slotFields: SlotFields;
   },
 ): DatasetColumn[] => {
   const otherOptionValues = question.otherOptionValues ?? [];
@@ -479,7 +665,7 @@ const buildOtherTextColumns = (
         name: `${baseName}_OTHER`,
         kind: "question",
         questionId: question.id,
-        executionIndex,
+        ...slotFields,
         otherText: {},
         label: `${baseLabel} (other, specify)`,
         type: "string",
@@ -495,7 +681,7 @@ const buildOtherTextColumns = (
       name: `${baseName}_${toOptionSuffix(optionValue, Math.max(optionIndex, 0))}_TEXT`,
       kind: "question",
       questionId: question.id,
-      executionIndex,
+      ...slotFields,
       otherText: { optionValue },
       label: `${baseLabel}: ${optionLabel} (text)`,
       type: "string",
@@ -531,13 +717,13 @@ const computeQuestionCell = (
     );
   }
 
-  const answer =
-    column.executionIndex !== undefined
-      ? answers.find(
-          (answer) => answer.executionIndex === column.executionIndex,
-        )
-      : answers[answers.length - 1];
+  const answer = findSlotAnswer(column, answers);
   if (!answer) return null;
+
+  if (column.scoreOf) {
+    if (column.scoreOf.matrixRowValue === undefined) return answer.score;
+    return answer.rowScores?.[String(column.scoreOf.matrixRowValue)] ?? null;
+  }
 
   if (column.otherText) return computeOtherTextCell(column.otherText, answer);
 
@@ -600,6 +786,26 @@ const computeQuestionCell = (
   if (question.isMultiple || Array.isArray(cellValue))
     return toListCell(cellValue, options.multipleChoiceSeparator);
   return toCell(cellValue, options);
+};
+
+const findSlotAnswer = (
+  column: DatasetColumn,
+  answers: NormalizedAnswer[],
+): NormalizedAnswer | undefined => {
+  const { loopSlot } = column;
+  if (loopSlot)
+    return answers.find(
+      (answer) =>
+        answer.loopBlockId === loopSlot.loopBlockId &&
+        (loopSlot.loopItem !== undefined
+          ? answer.loopItem === loopSlot.loopItem
+          : answer.loopIteration === loopSlot.loopIteration),
+    );
+  if (column.executionIndex !== undefined)
+    return answers.find(
+      (answer) => answer.executionIndex === column.executionIndex,
+    );
+  return answers[answers.length - 1];
 };
 
 const computeOtherTextCell = (

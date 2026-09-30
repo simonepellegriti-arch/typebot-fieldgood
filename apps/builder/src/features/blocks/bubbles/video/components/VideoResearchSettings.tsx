@@ -14,6 +14,7 @@ import type { Variable } from "@typebot.io/variables/schemas";
 import { BasicNumberInput } from "@/components/inputs/BasicNumberInput";
 import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
 import { VariablesCombobox } from "@/components/inputs/VariablesCombobox";
+import { VideoCompatibilityCheck } from "./VideoCompatibilityCheck";
 
 type Props = {
   content: NonNullable<VideoBubbleBlock["content"]>;
@@ -38,6 +39,22 @@ export const VideoResearchSettings = ({ content, onSubmit }: Props) => {
 
   return (
     <div className="flex flex-col gap-4 border-t border-gray-6 pt-4">
+      <VideoCompatibilityCheck url={content.url} />
+      <Field.Root>
+        <Field.Label>
+          {t("video.settings.fallback")}
+          <MoreInfoTooltip>
+            {t("video.settings.fallback.helperText")}
+          </MoreInfoTooltip>
+        </Field.Label>
+        <DebouncedTextInputWithVariablesButton
+          placeholder="https://.../video.webm"
+          defaultValue={content.fallbackUrl ?? ""}
+          onValueChange={(fallbackUrl) =>
+            onSubmit({ ...content, fallbackUrl: fallbackUrl || undefined })
+          }
+        />
+      </Field.Root>
       <Field.Root className="flex-row items-center">
         <Switch
           checked={isMuted}

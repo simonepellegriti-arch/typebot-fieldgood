@@ -28,6 +28,179 @@
           "text": {
             "type": "string"
           },
+          "structuredReply": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "choice"
+                  },
+                  "itemIds": {
+                    "type": "array",
+                    "maxItems": 500,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "otherTexts": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "maxLength": 5000
+                    }
+                  },
+                  "mediaWatch": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "watchedPercentage": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "watchedSeconds": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "isCompleted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "watchedPercentage",
+                        "watchedSeconds",
+                        "isCompleted"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "itemIds"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "matrix"
+                  },
+                  "answers": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "array",
+                      "maxItems": 100,
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "answers"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "video"
+                  },
+                  "result": {
+                    "type": "object",
+                    "properties": {
+                      "isStarted": {
+                        "type": "boolean"
+                      },
+                      "isCompleted": {
+                        "type": "boolean"
+                      },
+                      "watchedSeconds": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "watchedPercentage": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "durationSeconds": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "pauseCount": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "events": {
+                        "type": "array",
+                        "maxItems": 500,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "enum": [
+                                "VIDEO_STARTED",
+                                "VIDEO_PAUSED",
+                                "VIDEO_COMPLETED"
+                              ],
+                              "type": "string"
+                            },
+                            "positionSeconds": {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "at": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "positionSeconds",
+                            "at"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "isStarted",
+                      "isCompleted",
+                      "watchedSeconds",
+                      "watchedPercentage",
+                      "durationSeconds",
+                      "pauseCount",
+                      "events"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "result"
+                ]
+              }
+            ],
+            "description": "Structured answer for matrix, choice (with 'Other, please specify') and tracked video blocks"
+          },
           "metadata": {
             "type": "object",
             "properties": {
@@ -937,6 +1110,49 @@
                                       },
                                       "isAutoplayEnabled": {
                                         "type": "boolean"
+                                      },
+                                      "isMuted": {
+                                        "type": "boolean"
+                                      },
+                                      "isLooping": {
+                                        "type": "boolean"
+                                      },
+                                      "posterUrl": {
+                                        "type": "string"
+                                      },
+                                      "fallbackUrl": {
+                                        "type": "string"
+                                      },
+                                      "watchTracking": {
+                                        "type": "object",
+                                        "properties": {
+                                          "isEnabled": {
+                                            "type": "boolean"
+                                          },
+                                          "isRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "minimumWatchPercentage": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                          },
+                                          "allowSeeking": {
+                                            "type": "boolean"
+                                          },
+                                          "autoContinueOnEnd": {
+                                            "type": "boolean"
+                                          },
+                                          "variableId": {
+                                            "type": "string"
+                                          },
+                                          "buttonLabel": {
+                                            "type": "string"
+                                          },
+                                          "requirementMessage": {
+                                            "type": "string"
+                                          }
+                                        }
                                       }
                                     }
                                   }
@@ -1201,6 +1417,54 @@
                                           "outgoingEdgeId": {
                                             "type": "string"
                                           },
+                                          "isExclusive": {
+                                            "type": "boolean",
+                                            "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                          },
+                                          "hasTextInput": {
+                                            "type": "boolean",
+                                            "description": "Shows a text field when selected ('Other, please specify')."
+                                          },
+                                          "textInputRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "textInputPlaceholder": {
+                                            "type": "string"
+                                          },
+                                          "media": {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "enum": [
+                                                  "image",
+                                                  "video"
+                                                ],
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "type": "string"
+                                              },
+                                              "fallbackUrl": {
+                                                "type": "string"
+                                              },
+                                              "posterUrl": {
+                                                "type": "string"
+                                              },
+                                              "areControlsDisplayed": {
+                                                "type": "boolean"
+                                              },
+                                              "isMuted": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ]
+                                          },
+                                          "score": {
+                                            "type": "number",
+                                            "description": "Score of the option, separate from its code (value). Absent = null, not 0."
+                                          },
                                           "content": {
                                             "type": "string"
                                           },
@@ -1268,6 +1532,57 @@
                                         },
                                         "areInitialSearchButtonsVisible": {
                                           "type": "boolean"
+                                        },
+                                        "minSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                        },
+                                        "maxSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only."
+                                        },
+                                        "areItemsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "requireWatchBeforeSelect": {
+                                          "type": "boolean"
+                                        },
+                                        "minimumWatchPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
                                         }
                                       }
                                     }
@@ -2158,6 +2473,157 @@
                                     "type",
                                     "items"
                                   ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "outgoingEdgeId": {
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "enum": [
+                                        "matrix input"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "options": {
+                                      "type": "object",
+                                      "properties": {
+                                        "variableId": {
+                                          "type": "string"
+                                        },
+                                        "question": {
+                                          "type": "string"
+                                        },
+                                        "rows": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "type": "string"
+                                              },
+                                              "value": {
+                                                "type": "string"
+                                              },
+                                              "isRequired": {
+                                                "type": "boolean"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
+                                        },
+                                        "columns": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "type": "string"
+                                              },
+                                              "value": {
+                                                "type": "string"
+                                              },
+                                              "score": {
+                                                "type": "number",
+                                                "description": "Score of the option, separate from its code (value). Absent = null, not 0."
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
+                                        },
+                                        "answerMode": {
+                                          "enum": [
+                                            "single",
+                                            "multiple"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "requiredMode": {
+                                          "enum": [
+                                            "all",
+                                            "none",
+                                            "custom"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "minAnsweredRows": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 9007199254740991
+                                        },
+                                        "maxAnsweredRows": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0
+                                        },
+                                        "areRowsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "areColumnsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "layout": {
+                                          "enum": [
+                                            "auto",
+                                            "table",
+                                            "cards"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "buttonLabel": {
+                                          "type": "string"
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "type"
+                                  ]
                                 }
                               ]
                             },
@@ -2191,6 +2657,54 @@
                                           },
                                           "outgoingEdgeId": {
                                             "type": "string"
+                                          },
+                                          "isExclusive": {
+                                            "type": "boolean",
+                                            "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                          },
+                                          "hasTextInput": {
+                                            "type": "boolean",
+                                            "description": "Shows a text field when selected ('Other, please specify')."
+                                          },
+                                          "textInputRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "textInputPlaceholder": {
+                                            "type": "string"
+                                          },
+                                          "media": {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "enum": [
+                                                  "image",
+                                                  "video"
+                                                ],
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "type": "string"
+                                              },
+                                              "fallbackUrl": {
+                                                "type": "string"
+                                              },
+                                              "posterUrl": {
+                                                "type": "string"
+                                              },
+                                              "areControlsDisplayed": {
+                                                "type": "boolean"
+                                              },
+                                              "isMuted": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ]
+                                          },
+                                          "score": {
+                                            "type": "number",
+                                            "description": "Score of the option, separate from its code (value). Absent = null, not 0."
                                           },
                                           "content": {
                                             "type": "string"
@@ -2259,6 +2773,57 @@
                                         },
                                         "areInitialSearchButtonsVisible": {
                                           "type": "boolean"
+                                        },
+                                        "minSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                        },
+                                        "maxSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only."
+                                        },
+                                        "areItemsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "requireWatchBeforeSelect": {
+                                          "type": "boolean"
+                                        },
+                                        "minimumWatchPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
                                         }
                                       }
                                     }
@@ -3838,6 +4403,49 @@
                                       },
                                       "isAutoplayEnabled": {
                                         "type": "boolean"
+                                      },
+                                      "isMuted": {
+                                        "type": "boolean"
+                                      },
+                                      "isLooping": {
+                                        "type": "boolean"
+                                      },
+                                      "posterUrl": {
+                                        "type": "string"
+                                      },
+                                      "fallbackUrl": {
+                                        "type": "string"
+                                      },
+                                      "watchTracking": {
+                                        "type": "object",
+                                        "properties": {
+                                          "isEnabled": {
+                                            "type": "boolean"
+                                          },
+                                          "isRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "minimumWatchPercentage": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                          },
+                                          "allowSeeking": {
+                                            "type": "boolean"
+                                          },
+                                          "autoContinueOnEnd": {
+                                            "type": "boolean"
+                                          },
+                                          "variableId": {
+                                            "type": "string"
+                                          },
+                                          "buttonLabel": {
+                                            "type": "string"
+                                          },
+                                          "requirementMessage": {
+                                            "type": "string"
+                                          }
+                                        }
                                       }
                                     }
                                   }
@@ -4102,6 +4710,54 @@
                                           "outgoingEdgeId": {
                                             "type": "string"
                                           },
+                                          "isExclusive": {
+                                            "type": "boolean",
+                                            "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                          },
+                                          "hasTextInput": {
+                                            "type": "boolean",
+                                            "description": "Shows a text field when selected ('Other, please specify')."
+                                          },
+                                          "textInputRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "textInputPlaceholder": {
+                                            "type": "string"
+                                          },
+                                          "media": {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "enum": [
+                                                  "image",
+                                                  "video"
+                                                ],
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "type": "string"
+                                              },
+                                              "fallbackUrl": {
+                                                "type": "string"
+                                              },
+                                              "posterUrl": {
+                                                "type": "string"
+                                              },
+                                              "areControlsDisplayed": {
+                                                "type": "boolean"
+                                              },
+                                              "isMuted": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ]
+                                          },
+                                          "score": {
+                                            "type": "number",
+                                            "description": "Score of the option, separate from its code (value). Absent = null, not 0."
+                                          },
                                           "content": {
                                             "type": "string"
                                           },
@@ -4169,6 +4825,57 @@
                                         },
                                         "areInitialSearchButtonsVisible": {
                                           "type": "boolean"
+                                        },
+                                        "minSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                        },
+                                        "maxSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only."
+                                        },
+                                        "areItemsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "requireWatchBeforeSelect": {
+                                          "type": "boolean"
+                                        },
+                                        "minimumWatchPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
                                         }
                                       }
                                     }
@@ -5059,6 +5766,157 @@
                                     "type",
                                     "items"
                                   ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "outgoingEdgeId": {
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "enum": [
+                                        "matrix input"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "options": {
+                                      "type": "object",
+                                      "properties": {
+                                        "variableId": {
+                                          "type": "string"
+                                        },
+                                        "question": {
+                                          "type": "string"
+                                        },
+                                        "rows": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "type": "string"
+                                              },
+                                              "value": {
+                                                "type": "string"
+                                              },
+                                              "isRequired": {
+                                                "type": "boolean"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
+                                        },
+                                        "columns": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "type": "string"
+                                              },
+                                              "value": {
+                                                "type": "string"
+                                              },
+                                              "score": {
+                                                "type": "number",
+                                                "description": "Score of the option, separate from its code (value). Absent = null, not 0."
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
+                                        },
+                                        "answerMode": {
+                                          "enum": [
+                                            "single",
+                                            "multiple"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "requiredMode": {
+                                          "enum": [
+                                            "all",
+                                            "none",
+                                            "custom"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "minAnsweredRows": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 9007199254740991
+                                        },
+                                        "maxAnsweredRows": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0
+                                        },
+                                        "areRowsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "areColumnsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "layout": {
+                                          "enum": [
+                                            "auto",
+                                            "table",
+                                            "cards"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "buttonLabel": {
+                                          "type": "string"
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "type"
+                                  ]
                                 }
                               ]
                             },
@@ -5092,6 +5950,54 @@
                                           },
                                           "outgoingEdgeId": {
                                             "type": "string"
+                                          },
+                                          "isExclusive": {
+                                            "type": "boolean",
+                                            "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                          },
+                                          "hasTextInput": {
+                                            "type": "boolean",
+                                            "description": "Shows a text field when selected ('Other, please specify')."
+                                          },
+                                          "textInputRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "textInputPlaceholder": {
+                                            "type": "string"
+                                          },
+                                          "media": {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "enum": [
+                                                  "image",
+                                                  "video"
+                                                ],
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "type": "string"
+                                              },
+                                              "fallbackUrl": {
+                                                "type": "string"
+                                              },
+                                              "posterUrl": {
+                                                "type": "string"
+                                              },
+                                              "areControlsDisplayed": {
+                                                "type": "boolean"
+                                              },
+                                              "isMuted": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ]
+                                          },
+                                          "score": {
+                                            "type": "number",
+                                            "description": "Score of the option, separate from its code (value). Absent = null, not 0."
                                           },
                                           "content": {
                                             "type": "string"
@@ -5160,6 +6066,57 @@
                                         },
                                         "areInitialSearchButtonsVisible": {
                                           "type": "boolean"
+                                        },
+                                        "minSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                        },
+                                        "maxSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only."
+                                        },
+                                        "areItemsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "requireWatchBeforeSelect": {
+                                          "type": "boolean"
+                                        },
+                                        "minimumWatchPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
                                         }
                                       }
                                     }
@@ -7741,6 +8698,49 @@
                                       },
                                       "isAutoplayEnabled": {
                                         "type": "boolean"
+                                      },
+                                      "isMuted": {
+                                        "type": "boolean"
+                                      },
+                                      "isLooping": {
+                                        "type": "boolean"
+                                      },
+                                      "posterUrl": {
+                                        "type": "string"
+                                      },
+                                      "fallbackUrl": {
+                                        "type": "string"
+                                      },
+                                      "watchTracking": {
+                                        "type": "object",
+                                        "properties": {
+                                          "isEnabled": {
+                                            "type": "boolean"
+                                          },
+                                          "isRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "minimumWatchPercentage": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                          },
+                                          "allowSeeking": {
+                                            "type": "boolean"
+                                          },
+                                          "autoContinueOnEnd": {
+                                            "type": "boolean"
+                                          },
+                                          "variableId": {
+                                            "type": "string"
+                                          },
+                                          "buttonLabel": {
+                                            "type": "string"
+                                          },
+                                          "requirementMessage": {
+                                            "type": "string"
+                                          }
+                                        }
                                       }
                                     }
                                   }
@@ -8005,6 +9005,54 @@
                                           "outgoingEdgeId": {
                                             "type": "string"
                                           },
+                                          "isExclusive": {
+                                            "type": "boolean",
+                                            "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                          },
+                                          "hasTextInput": {
+                                            "type": "boolean",
+                                            "description": "Shows a text field when selected ('Other, please specify')."
+                                          },
+                                          "textInputRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "textInputPlaceholder": {
+                                            "type": "string"
+                                          },
+                                          "media": {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "enum": [
+                                                  "image",
+                                                  "video"
+                                                ],
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "type": "string"
+                                              },
+                                              "fallbackUrl": {
+                                                "type": "string"
+                                              },
+                                              "posterUrl": {
+                                                "type": "string"
+                                              },
+                                              "areControlsDisplayed": {
+                                                "type": "boolean"
+                                              },
+                                              "isMuted": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ]
+                                          },
+                                          "score": {
+                                            "type": "number",
+                                            "description": "Score of the option, separate from its code (value). Absent = null, not 0."
+                                          },
                                           "content": {
                                             "type": "string"
                                           },
@@ -8072,6 +9120,57 @@
                                         },
                                         "areInitialSearchButtonsVisible": {
                                           "type": "boolean"
+                                        },
+                                        "minSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                        },
+                                        "maxSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only."
+                                        },
+                                        "areItemsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "requireWatchBeforeSelect": {
+                                          "type": "boolean"
+                                        },
+                                        "minimumWatchPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
                                         }
                                       }
                                     }
@@ -8962,6 +10061,157 @@
                                     "type",
                                     "items"
                                   ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "outgoingEdgeId": {
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "enum": [
+                                        "matrix input"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "options": {
+                                      "type": "object",
+                                      "properties": {
+                                        "variableId": {
+                                          "type": "string"
+                                        },
+                                        "question": {
+                                          "type": "string"
+                                        },
+                                        "rows": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "type": "string"
+                                              },
+                                              "value": {
+                                                "type": "string"
+                                              },
+                                              "isRequired": {
+                                                "type": "boolean"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
+                                        },
+                                        "columns": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "type": "string"
+                                              },
+                                              "value": {
+                                                "type": "string"
+                                              },
+                                              "score": {
+                                                "type": "number",
+                                                "description": "Score of the option, separate from its code (value). Absent = null, not 0."
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
+                                        },
+                                        "answerMode": {
+                                          "enum": [
+                                            "single",
+                                            "multiple"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "requiredMode": {
+                                          "enum": [
+                                            "all",
+                                            "none",
+                                            "custom"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "minAnsweredRows": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 9007199254740991
+                                        },
+                                        "maxAnsweredRows": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0
+                                        },
+                                        "areRowsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "areColumnsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "layout": {
+                                          "enum": [
+                                            "auto",
+                                            "table",
+                                            "cards"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "buttonLabel": {
+                                          "type": "string"
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "type"
+                                  ]
                                 }
                               ]
                             },
@@ -8995,6 +10245,54 @@
                                           },
                                           "outgoingEdgeId": {
                                             "type": "string"
+                                          },
+                                          "isExclusive": {
+                                            "type": "boolean",
+                                            "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                          },
+                                          "hasTextInput": {
+                                            "type": "boolean",
+                                            "description": "Shows a text field when selected ('Other, please specify')."
+                                          },
+                                          "textInputRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "textInputPlaceholder": {
+                                            "type": "string"
+                                          },
+                                          "media": {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "enum": [
+                                                  "image",
+                                                  "video"
+                                                ],
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "type": "string"
+                                              },
+                                              "fallbackUrl": {
+                                                "type": "string"
+                                              },
+                                              "posterUrl": {
+                                                "type": "string"
+                                              },
+                                              "areControlsDisplayed": {
+                                                "type": "boolean"
+                                              },
+                                              "isMuted": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ]
+                                          },
+                                          "score": {
+                                            "type": "number",
+                                            "description": "Score of the option, separate from its code (value). Absent = null, not 0."
                                           },
                                           "content": {
                                             "type": "string"
@@ -9063,6 +10361,57 @@
                                         },
                                         "areInitialSearchButtonsVisible": {
                                           "type": "boolean"
+                                        },
+                                        "minSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                        },
+                                        "maxSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only."
+                                        },
+                                        "areItemsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "requireWatchBeforeSelect": {
+                                          "type": "boolean"
+                                        },
+                                        "minimumWatchPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
                                         }
                                       }
                                     }
@@ -11269,6 +12618,49 @@
                                       },
                                       "isAutoplayEnabled": {
                                         "type": "boolean"
+                                      },
+                                      "isMuted": {
+                                        "type": "boolean"
+                                      },
+                                      "isLooping": {
+                                        "type": "boolean"
+                                      },
+                                      "posterUrl": {
+                                        "type": "string"
+                                      },
+                                      "fallbackUrl": {
+                                        "type": "string"
+                                      },
+                                      "watchTracking": {
+                                        "type": "object",
+                                        "properties": {
+                                          "isEnabled": {
+                                            "type": "boolean"
+                                          },
+                                          "isRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "minimumWatchPercentage": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                          },
+                                          "allowSeeking": {
+                                            "type": "boolean"
+                                          },
+                                          "autoContinueOnEnd": {
+                                            "type": "boolean"
+                                          },
+                                          "variableId": {
+                                            "type": "string"
+                                          },
+                                          "buttonLabel": {
+                                            "type": "string"
+                                          },
+                                          "requirementMessage": {
+                                            "type": "string"
+                                          }
+                                        }
                                       }
                                     }
                                   }
@@ -11533,6 +12925,54 @@
                                           "outgoingEdgeId": {
                                             "type": "string"
                                           },
+                                          "isExclusive": {
+                                            "type": "boolean",
+                                            "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                          },
+                                          "hasTextInput": {
+                                            "type": "boolean",
+                                            "description": "Shows a text field when selected ('Other, please specify')."
+                                          },
+                                          "textInputRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "textInputPlaceholder": {
+                                            "type": "string"
+                                          },
+                                          "media": {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "enum": [
+                                                  "image",
+                                                  "video"
+                                                ],
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "type": "string"
+                                              },
+                                              "fallbackUrl": {
+                                                "type": "string"
+                                              },
+                                              "posterUrl": {
+                                                "type": "string"
+                                              },
+                                              "areControlsDisplayed": {
+                                                "type": "boolean"
+                                              },
+                                              "isMuted": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ]
+                                          },
+                                          "score": {
+                                            "type": "number",
+                                            "description": "Score of the option, separate from its code (value). Absent = null, not 0."
+                                          },
                                           "content": {
                                             "type": "string"
                                           },
@@ -11600,6 +13040,57 @@
                                         },
                                         "areInitialSearchButtonsVisible": {
                                           "type": "boolean"
+                                        },
+                                        "minSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                        },
+                                        "maxSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only."
+                                        },
+                                        "areItemsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "requireWatchBeforeSelect": {
+                                          "type": "boolean"
+                                        },
+                                        "minimumWatchPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
                                         }
                                       }
                                     }
@@ -12490,6 +13981,157 @@
                                     "type",
                                     "items"
                                   ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "outgoingEdgeId": {
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "enum": [
+                                        "matrix input"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "options": {
+                                      "type": "object",
+                                      "properties": {
+                                        "variableId": {
+                                          "type": "string"
+                                        },
+                                        "question": {
+                                          "type": "string"
+                                        },
+                                        "rows": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "type": "string"
+                                              },
+                                              "value": {
+                                                "type": "string"
+                                              },
+                                              "isRequired": {
+                                                "type": "boolean"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
+                                        },
+                                        "columns": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "label": {
+                                                "type": "string"
+                                              },
+                                              "value": {
+                                                "type": "string"
+                                              },
+                                              "score": {
+                                                "type": "number",
+                                                "description": "Score of the option, separate from its code (value). Absent = null, not 0."
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
+                                        },
+                                        "answerMode": {
+                                          "enum": [
+                                            "single",
+                                            "multiple"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "requiredMode": {
+                                          "enum": [
+                                            "all",
+                                            "none",
+                                            "custom"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "minAnsweredRows": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 9007199254740991
+                                        },
+                                        "maxAnsweredRows": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0
+                                        },
+                                        "areRowsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "areColumnsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "layout": {
+                                          "enum": [
+                                            "auto",
+                                            "table",
+                                            "cards"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "buttonLabel": {
+                                          "type": "string"
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "type"
+                                  ]
                                 }
                               ]
                             },
@@ -12523,6 +14165,54 @@
                                           },
                                           "outgoingEdgeId": {
                                             "type": "string"
+                                          },
+                                          "isExclusive": {
+                                            "type": "boolean",
+                                            "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                          },
+                                          "hasTextInput": {
+                                            "type": "boolean",
+                                            "description": "Shows a text field when selected ('Other, please specify')."
+                                          },
+                                          "textInputRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "textInputPlaceholder": {
+                                            "type": "string"
+                                          },
+                                          "media": {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "enum": [
+                                                  "image",
+                                                  "video"
+                                                ],
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "type": "string"
+                                              },
+                                              "fallbackUrl": {
+                                                "type": "string"
+                                              },
+                                              "posterUrl": {
+                                                "type": "string"
+                                              },
+                                              "areControlsDisplayed": {
+                                                "type": "boolean"
+                                              },
+                                              "isMuted": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ]
+                                          },
+                                          "score": {
+                                            "type": "number",
+                                            "description": "Score of the option, separate from its code (value). Absent = null, not 0."
                                           },
                                           "content": {
                                             "type": "string"
@@ -12591,6 +14281,57 @@
                                         },
                                         "areInitialSearchButtonsVisible": {
                                           "type": "boolean"
+                                        },
+                                        "minSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                        },
+                                        "maxSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only."
+                                        },
+                                        "areItemsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "requireWatchBeforeSelect": {
+                                          "type": "boolean"
+                                        },
+                                        "minimumWatchPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
                                         }
                                       }
                                     }

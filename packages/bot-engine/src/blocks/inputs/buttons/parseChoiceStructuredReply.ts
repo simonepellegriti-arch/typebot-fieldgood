@@ -1,3 +1,4 @@
+import { defaultChoiceMediaOptions } from "@typebot.io/blocks-inputs/choice/constants";
 import { pickOtherTexts } from "@typebot.io/blocks-inputs/choice/helpers/pickOtherTexts";
 import { validateChoiceSelection } from "@typebot.io/blocks-inputs/choice/helpers/validateChoiceSelection";
 import type {
@@ -34,6 +35,8 @@ export const parseChoiceStructuredReply = (
     otherTexts: reply.otherTexts,
   });
   if (validation.status === "invalid") return { status: "fail" };
+  if (!areWatchRequirementsMet(reply, { items, options }))
+    return { status: "fail" };
 
   // Builder order, whatever the click order.
   const selectedItems = items.filter((item) => reply.itemIds.includes(item.id));
@@ -57,6 +60,8 @@ export const parseChoiceStructuredReply = (
     if (code !== undefined) otherTexts[code] = text;
   }
   const hasOtherTexts = Object.keys(otherTexts).length > 0;
+  const mediaWatch = buildMediaWatchDetails(reply, items);
+  const details = mediaWatch ? { mediaWatch } : undefined;
 
   if (!isMultipleChoice) {
     const [selectedItem] = selectedItems;
@@ -70,6 +75,7 @@ export const parseChoiceStructuredReply = (
         value,
         label: labels[0] ?? value,
         otherTexts: hasOtherTexts ? otherTexts : undefined,
+        details,
       },
     };
   }
@@ -81,6 +87,50 @@ export const parseChoiceStructuredReply = (
       value: values,
       label: labels,
       otherTexts: hasOtherTexts ? otherTexts : undefined,
+      details,
     },
   };
+};
+
+/**
+ * "Watch before select": every selected video option must have been watched up to
+ * the minimum percentage (or to the end). Viewing data is tracked per clip.
+ */
+const areWatchRequirementsMet = (
+  reply: ChoiceStructuredReply,
+  {
+    items,
+    options,
+  }: {
+    items: ChoiceInputBlock["items"];
+    options: ChoiceInputBlock["options"];
+  },
+) => {
+  if (!options?.requireWatchBeforeSelect) return true;
+  const minimumWatchPercentage =
+    options.minimumWatchPercentage ??
+    defaultChoiceMediaOptions.minimumWatchPercentage;
+  return reply.itemIds.every((itemId) => {
+    const item = items.find((item) => item.id === itemId);
+    if (item?.media?.type !== "video") return true;
+    const watch = reply.mediaWatch?.[itemId];
+    return (
+      watch !== undefined &&
+      (watch.isCompleted || watch.watchedPercentage >= minimumWatchPercentage)
+    );
+  });
+};
+
+/** Viewing data of every video option (selected or not), by option code. */
+const buildMediaWatchDetails = (
+  reply: ChoiceStructuredReply,
+  items: ChoiceInputBlock["items"],
+) => {
+  const entries = items.flatMap((item) => {
+    const watch = reply.mediaWatch?.[item.id];
+    const code = item.value ?? parseItemContent(item)?.trim();
+    if (item.media?.type !== "video" || !watch || code === undefined) return [];
+    return [[code, watch] as const];
+  });
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 };

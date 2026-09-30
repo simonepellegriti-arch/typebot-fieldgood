@@ -6,14 +6,17 @@ import { Book02Icon } from "@typebot.io/ui/icons/Book02Icon";
 import { Download01Icon } from "@typebot.io/ui/icons/Download01Icon";
 import { MoreHorizontalIcon } from "@typebot.io/ui/icons/MoreHorizontalIcon";
 import { Settings01Icon } from "@typebot.io/ui/icons/Settings01Icon";
+import { Upload01Icon } from "@typebot.io/ui/icons/Upload01Icon";
 import { useState } from "react";
 import { useTypebot } from "../providers/TypebotProvider";
 import { EditorSettingsDialog } from "./EditorSettingsDialog";
+import { ImportQuestionnaireCodingDialog } from "./ImportQuestionnaireCodingDialog";
 
 export const BoardMenuButton = () => {
   const { typebot, currentUserMode } = useTypebot();
   const [isDownloading, setIsDownloading] = useState(false);
   const { isOpen, onOpen, onClose } = useOpenControls();
+  const codingImportControls = useOpenControls();
   const { t } = useTranslate();
 
   const downloadFlow = () => {
@@ -58,8 +61,18 @@ export const BoardMenuButton = () => {
             {t("editor.graph.menu.exportFlowItem.label")}
           </Menu.Item>
         ) : null}
+        {currentUserMode === "write" ? (
+          <Menu.Item onClick={codingImportControls.onOpen}>
+            <Upload01Icon />
+            {t("editor.coding.import.menuItem")}
+          </Menu.Item>
+        ) : null}
       </Menu.Popup>
       <EditorSettingsDialog isOpen={isOpen} onClose={onClose} />
+      <ImportQuestionnaireCodingDialog
+        isOpen={codingImportControls.isOpen}
+        onClose={codingImportControls.onClose}
+      />
     </Menu.Root>
   );
 };

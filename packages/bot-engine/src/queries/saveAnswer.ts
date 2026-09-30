@@ -1,6 +1,7 @@
 import type { SessionState } from "@typebot.io/chat-session/schemas";
 import prisma from "@typebot.io/prisma";
 import type { Prisma } from "@typebot.io/prisma/types";
+import { getAnswerLoopContext } from "../helpers/getAnswerLoopContext";
 
 type Props = {
   answer: Omit<
@@ -45,6 +46,7 @@ export const saveAnswer = async ({ answer, state }: Props) => {
         content,
         resultId,
         executionIndex: previousExecutionsCount + 1,
+        ...getAnswerLoopContext(state),
       },
     ],
   });

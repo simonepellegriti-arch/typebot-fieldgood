@@ -38,6 +38,7 @@ import { ZapierLogo } from "@/features/blocks/integrations/zapier/components/Zap
 import { AbTestIcon } from "@/features/blocks/logic/abTest/components/AbTestIcon";
 import { ConditionIcon } from "@/features/blocks/logic/condition/components/ConditionIcon";
 import { JumpIcon } from "@/features/blocks/logic/jump/components/JumpIcon";
+import { LoopIcon } from "@/features/blocks/logic/loop/components/LoopIcon";
 import { RedirectIcon } from "@/features/blocks/logic/redirect/components/RedirectIcon";
 import { ReturnBlockIcon } from "@/features/blocks/logic/return/components/ReturnBlockIcon";
 import { ScriptIcon } from "@/features/blocks/logic/script/components/ScriptIcon";
@@ -162,6 +163,8 @@ export const BlockIcon = ({ type, className }: BlockIconProps): JSX.Element => {
       return (
         <ReturnBlockIcon className={cn("text-purple-9 stroke-2", className)} />
       );
+    case LogicBlockType.LOOP:
+      return <LoopIcon className={cn("text-purple-9 stroke-2", className)} />;
     case LogicBlockType.WEBHOOK:
       return (
         <WebhookIcon className={cn("text-purple-9 stroke-2", className)} />

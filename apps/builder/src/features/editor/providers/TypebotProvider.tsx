@@ -55,6 +55,8 @@ type UpdateTypebotPayload = Partial<
     | "isClosed"
     | "whatsAppCredentialsId"
     | "riskLevel"
+    | "groups"
+    | "variables"
   >
 >;
 

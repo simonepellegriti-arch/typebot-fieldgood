@@ -10,15 +10,20 @@ import { ArrowUp01Icon } from "@typebot.io/ui/icons/ArrowUp01Icon";
 import { PlusSignIcon } from "@typebot.io/ui/icons/PlusSignIcon";
 import { TrashIcon } from "@typebot.io/ui/icons/TrashIcon";
 import type { Variable } from "@typebot.io/variables/schemas";
+import { BasicNumberInput } from "@/components/inputs/BasicNumberInput";
 import { VariablesCombobox } from "@/components/inputs/VariablesCombobox";
 
+/** Row, or column (id, label, value and score). */
+type MatrixEntry = MatrixRow & { score?: number };
+
 type Props = {
-  /** Rows, or columns (which only use id, label and value). */
-  entries: MatrixRow[];
+  entries: MatrixEntry[];
   addLabel: string;
+  /** Columns only: score of the scale point (separate from its code). */
+  isScoreVisible?: boolean;
   /** Rows only: per-row "required" switch (custom required mode) and variable. */
   rowExtras?: { isRequiredVisible: boolean };
-  onEntriesChange: (entries: MatrixRow[]) => void;
+  onEntriesChange: (entries: MatrixEntry[]) => void;
 };
 
 /**
@@ -28,12 +33,13 @@ type Props = {
 export const MatrixEntriesEditor = ({
   entries,
   addLabel,
+  isScoreVisible,
   rowExtras,
   onEntriesChange,
 }: Props) => {
   const { t } = useTranslate();
 
-  const updateEntry = (entryId: string, updates: Partial<MatrixRow>) =>
+  const updateEntry = (entryId: string, updates: Partial<MatrixEntry>) =>
     onEntriesChange(
       entries.map((entry) =>
         entry.id === entryId ? { ...entry, ...updates } : entry,
@@ -53,7 +59,7 @@ export const MatrixEntriesEditor = ({
     onEntriesChange(reorderedEntries);
   };
 
-  const addEntry = (newEntry: MatrixRow) =>
+  const addEntry = (newEntry: MatrixEntry) =>
     onEntriesChange([...entries, newEntry]);
 
   return (
@@ -80,6 +86,15 @@ export const MatrixEntriesEditor = ({
                 updateEntry(entry.id, { value: value.trim() || undefined })
               }
             />
+            {isScoreVisible && (
+              <BasicNumberInput
+                className="w-20"
+                withVariableButton={false}
+                placeholder={t("blocks.inputs.score.short")}
+                defaultValue={entry.score}
+                onValueChange={(score) => updateEntry(entry.id, { score })}
+              />
+            )}
             <Button
               size="icon"
               variant="ghost"
@@ -163,7 +178,7 @@ const RowExtras = ({
   );
 };
 
-const getNextNumericCode = (entries: MatrixRow[]) => {
+const getNextNumericCode = (entries: MatrixEntry[]) => {
   const numericCodes = entries
     .map((entry, index) => Number(entry.value?.trim() || index + 1))
     .filter((code) => Number.isInteger(code));

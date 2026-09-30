@@ -304,6 +304,9 @@
                             "$ref": "#/components/schemas/Cards"
                           },
                           {
+                            "$ref": "#/components/schemas/MatrixInput"
+                          },
+                          {
                             "$ref": "#/components/schemas/ChoiceInput"
                           },
                           {
@@ -336,6 +339,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/Return"
+                          },
+                          {
+                            "$ref": "#/components/schemas/Loop"
                           },
                           {
                             "$ref": "#/components/schemas/Condition"
@@ -1992,6 +1998,9 @@
                             "$ref": "#/components/schemas/Cards"
                           },
                           {
+                            "$ref": "#/components/schemas/MatrixInput"
+                          },
+                          {
                             "$ref": "#/components/schemas/ChoiceInput"
                           },
                           {
@@ -2024,6 +2033,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/Return"
+                          },
+                          {
+                            "$ref": "#/components/schemas/Loop"
                           },
                           {
                             "$ref": "#/components/schemas/Condition"
@@ -3551,6 +3563,49 @@
               },
               "isAutoplayEnabled": {
                 "type": "boolean"
+              },
+              "isMuted": {
+                "type": "boolean"
+              },
+              "isLooping": {
+                "type": "boolean"
+              },
+              "posterUrl": {
+                "type": "string"
+              },
+              "fallbackUrl": {
+                "type": "string"
+              },
+              "watchTracking": {
+                "type": "object",
+                "properties": {
+                  "isEnabled": {
+                    "type": "boolean"
+                  },
+                  "isRequired": {
+                    "type": "boolean"
+                  },
+                  "minimumWatchPercentage": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "allowSeeking": {
+                    "type": "boolean"
+                  },
+                  "autoContinueOnEnd": {
+                    "type": "boolean"
+                  },
+                  "variableId": {
+                    "type": "string"
+                  },
+                  "buttonLabel": {
+                    "type": "string"
+                  },
+                  "requirementMessage": {
+                    "type": "string"
+                  }
+                }
               }
             }
           }
@@ -4474,6 +4529,157 @@
           "items"
         ]
       },
+      "MatrixInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "outgoingEdgeId": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "matrix input"
+            ],
+            "type": "string"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "variableId": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "isRequired": {
+                      "type": "boolean"
+                    },
+                    "variableId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              },
+              "columns": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "score": {
+                      "type": "number",
+                      "description": "Score of the option, separate from its code (value). Absent = null, not 0."
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              },
+              "answerMode": {
+                "enum": [
+                  "single",
+                  "multiple"
+                ],
+                "type": "string"
+              },
+              "requiredMode": {
+                "enum": [
+                  "all",
+                  "none",
+                  "custom"
+                ],
+                "type": "string"
+              },
+              "minAnsweredRows": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "maxAnsweredRows": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "exclusiveMinimum": 0
+              },
+              "areRowsRandomized": {
+                "type": "boolean"
+              },
+              "areColumnsRandomized": {
+                "type": "boolean"
+              },
+              "layout": {
+                "enum": [
+                  "auto",
+                  "table",
+                  "cards"
+                ],
+                "type": "string"
+              },
+              "buttonLabel": {
+                "type": "string"
+              },
+              "scoreTargets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "variableId": {
+                      "type": "string"
+                    },
+                    "operation": {
+                      "enum": [
+                        "add",
+                        "subtract",
+                        "set",
+                        "multiply"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
       "ChoiceInput": {
         "type": "object",
         "properties": {
@@ -4499,6 +4705,54 @@
                 },
                 "outgoingEdgeId": {
                   "type": "string"
+                },
+                "isExclusive": {
+                  "type": "boolean",
+                  "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                },
+                "hasTextInput": {
+                  "type": "boolean",
+                  "description": "Shows a text field when selected ('Other, please specify')."
+                },
+                "textInputRequired": {
+                  "type": "boolean"
+                },
+                "textInputPlaceholder": {
+                  "type": "string"
+                },
+                "media": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "enum": [
+                        "image",
+                        "video"
+                      ],
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "fallbackUrl": {
+                      "type": "string"
+                    },
+                    "posterUrl": {
+                      "type": "string"
+                    },
+                    "areControlsDisplayed": {
+                      "type": "boolean"
+                    },
+                    "isMuted": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                "score": {
+                  "type": "number",
+                  "description": "Score of the option, separate from its code (value). Absent = null, not 0."
                 },
                 "content": {
                   "type": "string"
@@ -4594,6 +4848,57 @@
               },
               "areInitialSearchButtonsVisible": {
                 "type": "boolean"
+              },
+              "minSelections": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "exclusiveMinimum": 0,
+                "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+              },
+              "maxSelections": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "exclusiveMinimum": 0,
+                "description": "Multiple choice only."
+              },
+              "areItemsRandomized": {
+                "type": "boolean"
+              },
+              "requireWatchBeforeSelect": {
+                "type": "boolean"
+              },
+              "minimumWatchPercentage": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "scoreTargets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "variableId": {
+                      "type": "string"
+                    },
+                    "operation": {
+                      "enum": [
+                        "add",
+                        "subtract",
+                        "set",
+                        "multiply"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
               }
             }
           }
@@ -5711,6 +6016,184 @@
               "Return"
             ],
             "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "Loop": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "outgoingEdgeId": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "Loop"
+            ],
+            "type": "string"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "sourceType": {
+                "enum": [
+                  "list",
+                  "answers",
+                  "count"
+                ],
+                "type": "string"
+              },
+              "sourceVariableId": {
+                "type": "string"
+              },
+              "sourceBlockId": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              "bodyGroupId": {
+                "type": "string"
+              },
+              "currentItemVariableId": {
+                "type": "string"
+              },
+              "currentIndexVariableId": {
+                "type": "string"
+              },
+              "iterationNumberVariableId": {
+                "type": "string"
+              },
+              "breakCondition": {
+                "type": "object",
+                "properties": {
+                  "isEnabled": {
+                    "type": "boolean"
+                  },
+                  "condition": {
+                    "type": "object",
+                    "properties": {
+                      "logicalOperator": {
+                        "enum": [
+                          "OR",
+                          "AND"
+                        ],
+                        "type": "string"
+                      },
+                      "comparisons": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "variableId": {
+                              "type": "string"
+                            },
+                            "comparisonOperator": {
+                              "enum": [
+                                "Equal to",
+                                "Not equal",
+                                "Contains",
+                                "Does not contain",
+                                "Greater than",
+                                "Greater or equal to",
+                                "Less than",
+                                "Less or equal to",
+                                "Is set",
+                                "Is empty",
+                                "Starts with",
+                                "Ends with",
+                                "Matches regex",
+                                "Does not match regex"
+                              ],
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "continueCondition": {
+                "type": "object",
+                "properties": {
+                  "isEnabled": {
+                    "type": "boolean"
+                  },
+                  "condition": {
+                    "type": "object",
+                    "properties": {
+                      "logicalOperator": {
+                        "enum": [
+                          "OR",
+                          "AND"
+                        ],
+                        "type": "string"
+                      },
+                      "comparisons": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "variableId": {
+                              "type": "string"
+                            },
+                            "comparisonOperator": {
+                              "enum": [
+                                "Equal to",
+                                "Not equal",
+                                "Contains",
+                                "Does not contain",
+                                "Greater than",
+                                "Greater or equal to",
+                                "Less than",
+                                "Less or equal to",
+                                "Is set",
+                                "Is empty",
+                                "Starts with",
+                                "Ends with",
+                                "Matches regex",
+                                "Does not match regex"
+                              ],
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "name": {
+                "type": "string"
+              }
+            }
           }
         },
         "required": [
@@ -12715,6 +13198,9 @@
                             "$ref": "#/components/schemas/Cards"
                           },
                           {
+                            "$ref": "#/components/schemas/MatrixInput"
+                          },
+                          {
                             "type": "object",
                             "properties": {
                               "id": {
@@ -12742,6 +13228,54 @@
                                     },
                                     "outgoingEdgeId": {
                                       "type": "string"
+                                    },
+                                    "isExclusive": {
+                                      "type": "boolean",
+                                      "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                    },
+                                    "hasTextInput": {
+                                      "type": "boolean",
+                                      "description": "Shows a text field when selected ('Other, please specify')."
+                                    },
+                                    "textInputRequired": {
+                                      "type": "boolean"
+                                    },
+                                    "textInputPlaceholder": {
+                                      "type": "string"
+                                    },
+                                    "media": {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "enum": [
+                                            "image",
+                                            "video"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "url": {
+                                          "type": "string"
+                                        },
+                                        "fallbackUrl": {
+                                          "type": "string"
+                                        },
+                                        "posterUrl": {
+                                          "type": "string"
+                                        },
+                                        "areControlsDisplayed": {
+                                          "type": "boolean"
+                                        },
+                                        "isMuted": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": [
+                                        "type"
+                                      ]
+                                    },
+                                    "score": {
+                                      "type": "number",
+                                      "description": "Score of the option, separate from its code (value). Absent = null, not 0."
                                     },
                                     "content": {
                                       "type": "string"
@@ -12793,6 +13327,57 @@
                                   },
                                   "areInitialSearchButtonsVisible": {
                                     "type": "boolean"
+                                  },
+                                  "minSelections": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "exclusiveMinimum": 0,
+                                    "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                  },
+                                  "maxSelections": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "exclusiveMinimum": 0,
+                                    "description": "Multiple choice only."
+                                  },
+                                  "areItemsRandomized": {
+                                    "type": "boolean"
+                                  },
+                                  "requireWatchBeforeSelect": {
+                                    "type": "boolean"
+                                  },
+                                  "minimumWatchPercentage": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100
+                                  },
+                                  "scoreTargets": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "variableId": {
+                                          "type": "string"
+                                        },
+                                        "operation": {
+                                          "enum": [
+                                            "add",
+                                            "subtract",
+                                            "set",
+                                            "multiply"
+                                          ],
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "id"
+                                      ]
+                                    }
                                   }
                                 }
                               }
@@ -13025,6 +13610,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/Return"
+                          },
+                          {
+                            "$ref": "#/components/schemas/Loop"
                           },
                           {
                             "type": "object",
@@ -15009,6 +15597,9 @@
                             "$ref": "#/components/schemas/Cards"
                           },
                           {
+                            "$ref": "#/components/schemas/MatrixInput"
+                          },
+                          {
                             "type": "object",
                             "properties": {
                               "id": {
@@ -15036,6 +15627,54 @@
                                     },
                                     "outgoingEdgeId": {
                                       "type": "string"
+                                    },
+                                    "isExclusive": {
+                                      "type": "boolean",
+                                      "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                    },
+                                    "hasTextInput": {
+                                      "type": "boolean",
+                                      "description": "Shows a text field when selected ('Other, please specify')."
+                                    },
+                                    "textInputRequired": {
+                                      "type": "boolean"
+                                    },
+                                    "textInputPlaceholder": {
+                                      "type": "string"
+                                    },
+                                    "media": {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "enum": [
+                                            "image",
+                                            "video"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "url": {
+                                          "type": "string"
+                                        },
+                                        "fallbackUrl": {
+                                          "type": "string"
+                                        },
+                                        "posterUrl": {
+                                          "type": "string"
+                                        },
+                                        "areControlsDisplayed": {
+                                          "type": "boolean"
+                                        },
+                                        "isMuted": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": [
+                                        "type"
+                                      ]
+                                    },
+                                    "score": {
+                                      "type": "number",
+                                      "description": "Score of the option, separate from its code (value). Absent = null, not 0."
                                     },
                                     "content": {
                                       "type": "string"
@@ -15087,6 +15726,57 @@
                                   },
                                   "areInitialSearchButtonsVisible": {
                                     "type": "boolean"
+                                  },
+                                  "minSelections": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "exclusiveMinimum": 0,
+                                    "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                  },
+                                  "maxSelections": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "exclusiveMinimum": 0,
+                                    "description": "Multiple choice only."
+                                  },
+                                  "areItemsRandomized": {
+                                    "type": "boolean"
+                                  },
+                                  "requireWatchBeforeSelect": {
+                                    "type": "boolean"
+                                  },
+                                  "minimumWatchPercentage": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100
+                                  },
+                                  "scoreTargets": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "variableId": {
+                                          "type": "string"
+                                        },
+                                        "operation": {
+                                          "enum": [
+                                            "add",
+                                            "subtract",
+                                            "set",
+                                            "multiply"
+                                          ],
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "id"
+                                      ]
+                                    }
                                   }
                                 }
                               }
@@ -15319,6 +16009,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/Return"
+                          },
+                          {
+                            "$ref": "#/components/schemas/Loop"
                           },
                           {
                             "type": "object",
@@ -17303,6 +17996,9 @@
                             "$ref": "#/components/schemas/Cards"
                           },
                           {
+                            "$ref": "#/components/schemas/MatrixInput"
+                          },
+                          {
                             "type": "object",
                             "properties": {
                               "id": {
@@ -17330,6 +18026,54 @@
                                     },
                                     "outgoingEdgeId": {
                                       "type": "string"
+                                    },
+                                    "isExclusive": {
+                                      "type": "boolean",
+                                      "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                    },
+                                    "hasTextInput": {
+                                      "type": "boolean",
+                                      "description": "Shows a text field when selected ('Other, please specify')."
+                                    },
+                                    "textInputRequired": {
+                                      "type": "boolean"
+                                    },
+                                    "textInputPlaceholder": {
+                                      "type": "string"
+                                    },
+                                    "media": {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "enum": [
+                                            "image",
+                                            "video"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "url": {
+                                          "type": "string"
+                                        },
+                                        "fallbackUrl": {
+                                          "type": "string"
+                                        },
+                                        "posterUrl": {
+                                          "type": "string"
+                                        },
+                                        "areControlsDisplayed": {
+                                          "type": "boolean"
+                                        },
+                                        "isMuted": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": [
+                                        "type"
+                                      ]
+                                    },
+                                    "score": {
+                                      "type": "number",
+                                      "description": "Score of the option, separate from its code (value). Absent = null, not 0."
                                     },
                                     "content": {
                                       "type": "string"
@@ -17381,6 +18125,57 @@
                                   },
                                   "areInitialSearchButtonsVisible": {
                                     "type": "boolean"
+                                  },
+                                  "minSelections": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "exclusiveMinimum": 0,
+                                    "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                  },
+                                  "maxSelections": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "exclusiveMinimum": 0,
+                                    "description": "Multiple choice only."
+                                  },
+                                  "areItemsRandomized": {
+                                    "type": "boolean"
+                                  },
+                                  "requireWatchBeforeSelect": {
+                                    "type": "boolean"
+                                  },
+                                  "minimumWatchPercentage": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100
+                                  },
+                                  "scoreTargets": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "variableId": {
+                                          "type": "string"
+                                        },
+                                        "operation": {
+                                          "enum": [
+                                            "add",
+                                            "subtract",
+                                            "set",
+                                            "multiply"
+                                          ],
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "id"
+                                      ]
+                                    }
                                   }
                                 }
                               }
@@ -17613,6 +18408,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/Return"
+                          },
+                          {
+                            "$ref": "#/components/schemas/Loop"
                           },
                           {
                             "type": "object",
@@ -19616,6 +20414,9 @@
                             "$ref": "#/components/schemas/Cards"
                           },
                           {
+                            "$ref": "#/components/schemas/MatrixInput"
+                          },
+                          {
                             "type": "object",
                             "properties": {
                               "id": {
@@ -19643,6 +20444,54 @@
                                     },
                                     "outgoingEdgeId": {
                                       "type": "string"
+                                    },
+                                    "isExclusive": {
+                                      "type": "boolean",
+                                      "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                    },
+                                    "hasTextInput": {
+                                      "type": "boolean",
+                                      "description": "Shows a text field when selected ('Other, please specify')."
+                                    },
+                                    "textInputRequired": {
+                                      "type": "boolean"
+                                    },
+                                    "textInputPlaceholder": {
+                                      "type": "string"
+                                    },
+                                    "media": {
+                                      "type": "object",
+                                      "properties": {
+                                        "type": {
+                                          "enum": [
+                                            "image",
+                                            "video"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "url": {
+                                          "type": "string"
+                                        },
+                                        "fallbackUrl": {
+                                          "type": "string"
+                                        },
+                                        "posterUrl": {
+                                          "type": "string"
+                                        },
+                                        "areControlsDisplayed": {
+                                          "type": "boolean"
+                                        },
+                                        "isMuted": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": [
+                                        "type"
+                                      ]
+                                    },
+                                    "score": {
+                                      "type": "number",
+                                      "description": "Score of the option, separate from its code (value). Absent = null, not 0."
                                     },
                                     "content": {
                                       "type": "string"
@@ -19694,6 +20543,57 @@
                                   },
                                   "areInitialSearchButtonsVisible": {
                                     "type": "boolean"
+                                  },
+                                  "minSelections": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "exclusiveMinimum": 0,
+                                    "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                  },
+                                  "maxSelections": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "exclusiveMinimum": 0,
+                                    "description": "Multiple choice only."
+                                  },
+                                  "areItemsRandomized": {
+                                    "type": "boolean"
+                                  },
+                                  "requireWatchBeforeSelect": {
+                                    "type": "boolean"
+                                  },
+                                  "minimumWatchPercentage": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100
+                                  },
+                                  "scoreTargets": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "variableId": {
+                                          "type": "string"
+                                        },
+                                        "operation": {
+                                          "enum": [
+                                            "add",
+                                            "subtract",
+                                            "set",
+                                            "multiply"
+                                          ],
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "id"
+                                      ]
+                                    }
                                   }
                                 }
                               }
@@ -19926,6 +20826,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/Return"
+                          },
+                          {
+                            "$ref": "#/components/schemas/Loop"
                           },
                           {
                             "type": "object",
@@ -21800,6 +22703,9 @@
                             "$ref": "#/components/schemas/Cards"
                           },
                           {
+                            "$ref": "#/components/schemas/MatrixInput"
+                          },
+                          {
                             "$ref": "#/components/schemas/ChoiceInput"
                           },
                           {
@@ -21832,6 +22738,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/Return"
+                          },
+                          {
+                            "$ref": "#/components/schemas/Loop"
                           },
                           {
                             "$ref": "#/components/schemas/Condition"
@@ -23393,7 +24302,12 @@
                                                       "maxWidth": {},
                                                       "queryParamsStr": {},
                                                       "areControlsDisplayed": {},
-                                                      "isAutoplayEnabled": {}
+                                                      "isAutoplayEnabled": {},
+                                                      "isMuted": {},
+                                                      "isLooping": {},
+                                                      "posterUrl": {},
+                                                      "fallbackUrl": {},
+                                                      "watchTracking": {}
                                                     }
                                                   }
                                                 },
@@ -23528,6 +24442,9 @@
                                                 "$ref": "#/components/schemas/Cards"
                                               },
                                               {
+                                                "$ref": "#/components/schemas/MatrixInput"
+                                              },
+                                              {
                                                 "type": "object",
                                                 "properties": {
                                                   "id": {
@@ -23562,7 +24479,13 @@
                                                       "dynamicVariableId": {},
                                                       "isSearchable": {},
                                                       "searchInputPlaceholder": {},
-                                                      "areInitialSearchButtonsVisible": {}
+                                                      "areInitialSearchButtonsVisible": {},
+                                                      "minSelections": {},
+                                                      "maxSelections": {},
+                                                      "areItemsRandomized": {},
+                                                      "requireWatchBeforeSelect": {},
+                                                      "minimumWatchPercentage": {},
+                                                      "scoreTargets": {}
                                                     }
                                                   }
                                                 },
@@ -23671,6 +24594,9 @@
                                               },
                                               {
                                                 "$ref": "#/components/schemas/Return"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/Loop"
                                               },
                                               {
                                                 "type": "object",
@@ -24208,7 +25134,12 @@
                                                       "maxWidth": {},
                                                       "queryParamsStr": {},
                                                       "areControlsDisplayed": {},
-                                                      "isAutoplayEnabled": {}
+                                                      "isAutoplayEnabled": {},
+                                                      "isMuted": {},
+                                                      "isLooping": {},
+                                                      "posterUrl": {},
+                                                      "fallbackUrl": {},
+                                                      "watchTracking": {}
                                                     }
                                                   }
                                                 },
@@ -24343,6 +25274,9 @@
                                                 "$ref": "#/components/schemas/Cards"
                                               },
                                               {
+                                                "$ref": "#/components/schemas/MatrixInput"
+                                              },
+                                              {
                                                 "$ref": "#/components/schemas/ChoiceInput"
                                               },
                                               {
@@ -24375,6 +25309,9 @@
                                               },
                                               {
                                                 "$ref": "#/components/schemas/Return"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/Loop"
                                               },
                                               {
                                                 "$ref": "#/components/schemas/Condition"
@@ -29489,6 +30426,9 @@
                                         "$ref": "#/components/schemas/Cards"
                                       },
                                       {
+                                        "$ref": "#/components/schemas/MatrixInput"
+                                      },
+                                      {
                                         "$ref": "#/components/schemas/ChoiceInput"
                                       },
                                       {
@@ -29521,6 +30461,9 @@
                                       },
                                       {
                                         "$ref": "#/components/schemas/Return"
+                                      },
+                                      {
+                                        "$ref": "#/components/schemas/Loop"
                                       },
                                       {
                                         "$ref": "#/components/schemas/Condition"
@@ -31273,6 +32216,49 @@
                                                 },
                                                 "isAutoplayEnabled": {
                                                   "type": "boolean"
+                                                },
+                                                "isMuted": {
+                                                  "type": "boolean"
+                                                },
+                                                "isLooping": {
+                                                  "type": "boolean"
+                                                },
+                                                "posterUrl": {
+                                                  "type": "string"
+                                                },
+                                                "fallbackUrl": {
+                                                  "type": "string"
+                                                },
+                                                "watchTracking": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "isEnabled": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "isRequired": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "minimumWatchPercentage": {
+                                                      "type": "number",
+                                                      "minimum": 0,
+                                                      "maximum": 100
+                                                    },
+                                                    "allowSeeking": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "autoContinueOnEnd": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "variableId": {
+                                                      "type": "string"
+                                                    },
+                                                    "buttonLabel": {
+                                                      "type": "string"
+                                                    },
+                                                    "requirementMessage": {
+                                                      "type": "string"
+                                                    }
+                                                  }
                                                 }
                                               }
                                             }
@@ -31535,6 +32521,9 @@
                                           "$ref": "#/components/schemas/Cards"
                                         },
                                         {
+                                          "$ref": "#/components/schemas/MatrixInput"
+                                        },
+                                        {
                                           "$ref": "#/components/schemas/ChoiceInput"
                                         },
                                         {
@@ -31567,6 +32556,9 @@
                                         },
                                         {
                                           "$ref": "#/components/schemas/Return"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/Loop"
                                         },
                                         {
                                           "$ref": "#/components/schemas/Condition"
@@ -34995,6 +35987,31 @@
                                                     },
                                                     "isAutoplayEnabled": {
                                                       "type": "boolean"
+                                                    },
+                                                    "isMuted": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "isLooping": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "posterUrl": {
+                                                      "type": "string"
+                                                    },
+                                                    "fallbackUrl": {
+                                                      "type": "string"
+                                                    },
+                                                    "watchTracking": {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "isEnabled": {},
+                                                        "isRequired": {},
+                                                        "minimumWatchPercentage": {},
+                                                        "allowSeeking": {},
+                                                        "autoContinueOnEnd": {},
+                                                        "variableId": {},
+                                                        "buttonLabel": {},
+                                                        "requirementMessage": {}
+                                                      }
                                                     }
                                                   }
                                                 }
@@ -35233,6 +36250,9 @@
                                               "$ref": "#/components/schemas/Cards"
                                             },
                                             {
+                                              "$ref": "#/components/schemas/MatrixInput"
+                                            },
+                                            {
                                               "$ref": "#/components/schemas/ChoiceInput"
                                             },
                                             {
@@ -35265,6 +36285,9 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/Return"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/Loop"
                                             },
                                             {
                                               "$ref": "#/components/schemas/Condition"
@@ -37060,6 +38083,31 @@
                                                     },
                                                     "isAutoplayEnabled": {
                                                       "type": "boolean"
+                                                    },
+                                                    "isMuted": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "isLooping": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "posterUrl": {
+                                                      "type": "string"
+                                                    },
+                                                    "fallbackUrl": {
+                                                      "type": "string"
+                                                    },
+                                                    "watchTracking": {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "isEnabled": {},
+                                                        "isRequired": {},
+                                                        "minimumWatchPercentage": {},
+                                                        "allowSeeking": {},
+                                                        "autoContinueOnEnd": {},
+                                                        "variableId": {},
+                                                        "buttonLabel": {},
+                                                        "requirementMessage": {}
+                                                      }
                                                     }
                                                   }
                                                 }
@@ -37298,6 +38346,9 @@
                                               "$ref": "#/components/schemas/Cards"
                                             },
                                             {
+                                              "$ref": "#/components/schemas/MatrixInput"
+                                            },
+                                            {
                                               "type": "object",
                                               "properties": {
                                                 "id": {
@@ -37320,6 +38371,12 @@
                                                       "id": {},
                                                       "blockId": {},
                                                       "outgoingEdgeId": {},
+                                                      "isExclusive": {},
+                                                      "hasTextInput": {},
+                                                      "textInputRequired": {},
+                                                      "textInputPlaceholder": {},
+                                                      "media": {},
+                                                      "score": {},
                                                       "content": {},
                                                       "value": {},
                                                       "displayCondition": {}
@@ -37349,6 +38406,42 @@
                                                     },
                                                     "areInitialSearchButtonsVisible": {
                                                       "type": "boolean"
+                                                    },
+                                                    "minSelections": {
+                                                      "type": "integer",
+                                                      "minimum": -9007199254740991,
+                                                      "maximum": 9007199254740991,
+                                                      "exclusiveMinimum": 0,
+                                                      "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                                    },
+                                                    "maxSelections": {
+                                                      "type": "integer",
+                                                      "minimum": -9007199254740991,
+                                                      "maximum": 9007199254740991,
+                                                      "exclusiveMinimum": 0,
+                                                      "description": "Multiple choice only."
+                                                    },
+                                                    "areItemsRandomized": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "requireWatchBeforeSelect": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "minimumWatchPercentage": {
+                                                      "type": "number",
+                                                      "minimum": 0,
+                                                      "maximum": 100
+                                                    },
+                                                    "scoreTargets": {
+                                                      "type": "array",
+                                                      "items": {
+                                                        "anyOf": [
+                                                          {},
+                                                          {
+                                                            "type": "null"
+                                                          }
+                                                        ]
+                                                      }
                                                     }
                                                   }
                                                 }
@@ -37517,6 +38610,9 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/Return"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/Loop"
                                             },
                                             {
                                               "type": "object",
@@ -39454,6 +40550,9 @@
                                             "$ref": "#/components/schemas/Cards"
                                           },
                                           {
+                                            "$ref": "#/components/schemas/MatrixInput"
+                                          },
+                                          {
                                             "$ref": "#/components/schemas/ChoiceInput"
                                           },
                                           {
@@ -39486,6 +40585,9 @@
                                           },
                                           {
                                             "$ref": "#/components/schemas/Return"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/Loop"
                                           },
                                           {
                                             "$ref": "#/components/schemas/Condition"
@@ -40947,6 +42049,9 @@
                                             "$ref": "#/components/schemas/Cards"
                                           },
                                           {
+                                            "$ref": "#/components/schemas/MatrixInput"
+                                          },
+                                          {
                                             "type": "object",
                                             "properties": {
                                               "id": {
@@ -40969,6 +42074,12 @@
                                                     "id": {},
                                                     "blockId": {},
                                                     "outgoingEdgeId": {},
+                                                    "isExclusive": {},
+                                                    "hasTextInput": {},
+                                                    "textInputRequired": {},
+                                                    "textInputPlaceholder": {},
+                                                    "media": {},
+                                                    "score": {},
                                                     "content": {},
                                                     "value": {},
                                                     "displayCondition": {}
@@ -40998,6 +42109,35 @@
                                                   },
                                                   "areInitialSearchButtonsVisible": {
                                                     "type": "boolean"
+                                                  },
+                                                  "minSelections": {
+                                                    "type": "integer",
+                                                    "minimum": -9007199254740991,
+                                                    "maximum": 9007199254740991,
+                                                    "exclusiveMinimum": 0,
+                                                    "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                                  },
+                                                  "maxSelections": {
+                                                    "type": "integer",
+                                                    "minimum": -9007199254740991,
+                                                    "maximum": 9007199254740991,
+                                                    "exclusiveMinimum": 0,
+                                                    "description": "Multiple choice only."
+                                                  },
+                                                  "areItemsRandomized": {
+                                                    "type": "boolean"
+                                                  },
+                                                  "requireWatchBeforeSelect": {
+                                                    "type": "boolean"
+                                                  },
+                                                  "minimumWatchPercentage": {
+                                                    "type": "number",
+                                                    "minimum": 0,
+                                                    "maximum": 100
+                                                  },
+                                                  "scoreTargets": {
+                                                    "type": "array",
+                                                    "items": {}
                                                   }
                                                 }
                                               }
@@ -41166,6 +42306,9 @@
                                           },
                                           {
                                             "$ref": "#/components/schemas/Return"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/Loop"
                                           },
                                           {
                                             "type": "object",
@@ -42873,6 +44016,49 @@
                                                 },
                                                 "isAutoplayEnabled": {
                                                   "type": "boolean"
+                                                },
+                                                "isMuted": {
+                                                  "type": "boolean"
+                                                },
+                                                "isLooping": {
+                                                  "type": "boolean"
+                                                },
+                                                "posterUrl": {
+                                                  "type": "string"
+                                                },
+                                                "fallbackUrl": {
+                                                  "type": "string"
+                                                },
+                                                "watchTracking": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "isEnabled": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "isRequired": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "minimumWatchPercentage": {
+                                                      "type": "number",
+                                                      "minimum": 0,
+                                                      "maximum": 100
+                                                    },
+                                                    "allowSeeking": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "autoContinueOnEnd": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "variableId": {
+                                                      "type": "string"
+                                                    },
+                                                    "buttonLabel": {
+                                                      "type": "string"
+                                                    },
+                                                    "requirementMessage": {
+                                                      "type": "string"
+                                                    }
+                                                  }
                                                 }
                                               }
                                             }
@@ -43135,6 +44321,9 @@
                                           "$ref": "#/components/schemas/Cards"
                                         },
                                         {
+                                          "$ref": "#/components/schemas/MatrixInput"
+                                        },
+                                        {
                                           "$ref": "#/components/schemas/ChoiceInput"
                                         },
                                         {
@@ -43167,6 +44356,9 @@
                                         },
                                         {
                                           "$ref": "#/components/schemas/Return"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/Loop"
                                         },
                                         {
                                           "$ref": "#/components/schemas/Condition"
@@ -46261,7 +47453,8 @@
                                 "enum": [
                                   "duplicateVariableName",
                                   "variableSharedByInputBlocks",
-                                  "inputBlockWithoutVariable"
+                                  "inputBlockWithoutVariable",
+                                  "duplicateCode"
                                 ],
                                 "type": "string"
                               },
@@ -46281,6 +47474,9 @@
                                 }
                               },
                               "groupTitle": {
+                                "type": "string"
+                              },
+                              "duplicatedCode": {
                                 "type": "string"
                               }
                             },
@@ -47562,6 +48758,31 @@
                                                         },
                                                         "isAutoplayEnabled": {
                                                           "type": "boolean"
+                                                        },
+                                                        "isMuted": {
+                                                          "type": "boolean"
+                                                        },
+                                                        "isLooping": {
+                                                          "type": "boolean"
+                                                        },
+                                                        "posterUrl": {
+                                                          "type": "string"
+                                                        },
+                                                        "fallbackUrl": {
+                                                          "type": "string"
+                                                        },
+                                                        "watchTracking": {
+                                                          "type": "object",
+                                                          "properties": {
+                                                            "isEnabled": {},
+                                                            "isRequired": {},
+                                                            "minimumWatchPercentage": {},
+                                                            "allowSeeking": {},
+                                                            "autoContinueOnEnd": {},
+                                                            "variableId": {},
+                                                            "buttonLabel": {},
+                                                            "requirementMessage": {}
+                                                          }
                                                         }
                                                       }
                                                     }
@@ -47800,6 +49021,9 @@
                                                   "$ref": "#/components/schemas/Cards"
                                                 },
                                                 {
+                                                  "$ref": "#/components/schemas/MatrixInput"
+                                                },
+                                                {
                                                   "$ref": "#/components/schemas/ChoiceInput"
                                                 },
                                                 {
@@ -47832,6 +49056,9 @@
                                                 },
                                                 {
                                                   "$ref": "#/components/schemas/Return"
+                                                },
+                                                {
+                                                  "$ref": "#/components/schemas/Loop"
                                                 },
                                                 {
                                                   "$ref": "#/components/schemas/Condition"
@@ -49699,6 +50926,31 @@
                                                         },
                                                         "isAutoplayEnabled": {
                                                           "type": "boolean"
+                                                        },
+                                                        "isMuted": {
+                                                          "type": "boolean"
+                                                        },
+                                                        "isLooping": {
+                                                          "type": "boolean"
+                                                        },
+                                                        "posterUrl": {
+                                                          "type": "string"
+                                                        },
+                                                        "fallbackUrl": {
+                                                          "type": "string"
+                                                        },
+                                                        "watchTracking": {
+                                                          "type": "object",
+                                                          "properties": {
+                                                            "isEnabled": {},
+                                                            "isRequired": {},
+                                                            "minimumWatchPercentage": {},
+                                                            "allowSeeking": {},
+                                                            "autoContinueOnEnd": {},
+                                                            "variableId": {},
+                                                            "buttonLabel": {},
+                                                            "requirementMessage": {}
+                                                          }
                                                         }
                                                       }
                                                     }
@@ -49937,6 +51189,9 @@
                                                   "$ref": "#/components/schemas/Cards"
                                                 },
                                                 {
+                                                  "$ref": "#/components/schemas/MatrixInput"
+                                                },
+                                                {
                                                   "type": "object",
                                                   "properties": {
                                                     "id": {
@@ -49959,6 +51214,12 @@
                                                           "id": {},
                                                           "blockId": {},
                                                           "outgoingEdgeId": {},
+                                                          "isExclusive": {},
+                                                          "hasTextInput": {},
+                                                          "textInputRequired": {},
+                                                          "textInputPlaceholder": {},
+                                                          "media": {},
+                                                          "score": {},
                                                           "content": {},
                                                           "value": {},
                                                           "displayCondition": {}
@@ -49988,6 +51249,42 @@
                                                         },
                                                         "areInitialSearchButtonsVisible": {
                                                           "type": "boolean"
+                                                        },
+                                                        "minSelections": {
+                                                          "type": "integer",
+                                                          "minimum": -9007199254740991,
+                                                          "maximum": 9007199254740991,
+                                                          "exclusiveMinimum": 0,
+                                                          "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                                        },
+                                                        "maxSelections": {
+                                                          "type": "integer",
+                                                          "minimum": -9007199254740991,
+                                                          "maximum": 9007199254740991,
+                                                          "exclusiveMinimum": 0,
+                                                          "description": "Multiple choice only."
+                                                        },
+                                                        "areItemsRandomized": {
+                                                          "type": "boolean"
+                                                        },
+                                                        "requireWatchBeforeSelect": {
+                                                          "type": "boolean"
+                                                        },
+                                                        "minimumWatchPercentage": {
+                                                          "type": "number",
+                                                          "minimum": 0,
+                                                          "maximum": 100
+                                                        },
+                                                        "scoreTargets": {
+                                                          "type": "array",
+                                                          "items": {
+                                                            "anyOf": [
+                                                              {},
+                                                              {
+                                                                "type": "null"
+                                                              }
+                                                            ]
+                                                          }
                                                         }
                                                       }
                                                     }
@@ -50156,6 +51453,9 @@
                                                 },
                                                 {
                                                   "$ref": "#/components/schemas/Return"
+                                                },
+                                                {
+                                                  "$ref": "#/components/schemas/Loop"
                                                 },
                                                 {
                                                   "type": "object",
@@ -52145,6 +53445,9 @@
                                             "$ref": "#/components/schemas/Cards"
                                           },
                                           {
+                                            "$ref": "#/components/schemas/MatrixInput"
+                                          },
+                                          {
                                             "$ref": "#/components/schemas/ChoiceInput"
                                           },
                                           {
@@ -52177,6 +53480,9 @@
                                           },
                                           {
                                             "$ref": "#/components/schemas/Return"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/Loop"
                                           },
                                           {
                                             "$ref": "#/components/schemas/Condition"
@@ -53417,6 +54723,9 @@
                                             "$ref": "#/components/schemas/Cards"
                                           },
                                           {
+                                            "$ref": "#/components/schemas/MatrixInput"
+                                          },
+                                          {
                                             "type": "object",
                                             "properties": {
                                               "id": {
@@ -53439,6 +54748,12 @@
                                                     "id": {},
                                                     "blockId": {},
                                                     "outgoingEdgeId": {},
+                                                    "isExclusive": {},
+                                                    "hasTextInput": {},
+                                                    "textInputRequired": {},
+                                                    "textInputPlaceholder": {},
+                                                    "media": {},
+                                                    "score": {},
                                                     "content": {},
                                                     "value": {},
                                                     "displayCondition": {}
@@ -53468,6 +54783,35 @@
                                                   },
                                                   "areInitialSearchButtonsVisible": {
                                                     "type": "boolean"
+                                                  },
+                                                  "minSelections": {
+                                                    "type": "integer",
+                                                    "minimum": -9007199254740991,
+                                                    "maximum": 9007199254740991,
+                                                    "exclusiveMinimum": 0,
+                                                    "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                                  },
+                                                  "maxSelections": {
+                                                    "type": "integer",
+                                                    "minimum": -9007199254740991,
+                                                    "maximum": 9007199254740991,
+                                                    "exclusiveMinimum": 0,
+                                                    "description": "Multiple choice only."
+                                                  },
+                                                  "areItemsRandomized": {
+                                                    "type": "boolean"
+                                                  },
+                                                  "requireWatchBeforeSelect": {
+                                                    "type": "boolean"
+                                                  },
+                                                  "minimumWatchPercentage": {
+                                                    "type": "number",
+                                                    "minimum": 0,
+                                                    "maximum": 100
+                                                  },
+                                                  "scoreTargets": {
+                                                    "type": "array",
+                                                    "items": {}
                                                   }
                                                 }
                                               }
@@ -53636,6 +54980,9 @@
                                           },
                                           {
                                             "$ref": "#/components/schemas/Return"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/Loop"
                                           },
                                           {
                                             "type": "object",
@@ -55332,6 +56679,49 @@
                                                 },
                                                 "isAutoplayEnabled": {
                                                   "type": "boolean"
+                                                },
+                                                "isMuted": {
+                                                  "type": "boolean"
+                                                },
+                                                "isLooping": {
+                                                  "type": "boolean"
+                                                },
+                                                "posterUrl": {
+                                                  "type": "string"
+                                                },
+                                                "fallbackUrl": {
+                                                  "type": "string"
+                                                },
+                                                "watchTracking": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "isEnabled": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "isRequired": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "minimumWatchPercentage": {
+                                                      "type": "number",
+                                                      "minimum": 0,
+                                                      "maximum": 100
+                                                    },
+                                                    "allowSeeking": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "autoContinueOnEnd": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "variableId": {
+                                                      "type": "string"
+                                                    },
+                                                    "buttonLabel": {
+                                                      "type": "string"
+                                                    },
+                                                    "requirementMessage": {
+                                                      "type": "string"
+                                                    }
+                                                  }
                                                 }
                                               }
                                             }
@@ -55594,6 +56984,9 @@
                                           "$ref": "#/components/schemas/Cards"
                                         },
                                         {
+                                          "$ref": "#/components/schemas/MatrixInput"
+                                        },
+                                        {
                                           "$ref": "#/components/schemas/ChoiceInput"
                                         },
                                         {
@@ -55626,6 +57019,9 @@
                                         },
                                         {
                                           "$ref": "#/components/schemas/Return"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/Loop"
                                         },
                                         {
                                           "$ref": "#/components/schemas/Condition"
@@ -60026,24 +61422,130 @@
                                     {
                                       "anyOf": [
                                         {
-                                          "type": "string"
+                                          "anyOf": [
+                                            {
+                                              "type": "string"
+                                            },
+                                            {
+                                              "type": "number"
+                                            },
+                                            {
+                                              "type": "boolean"
+                                            },
+                                            {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "number"
+                                              }
+                                            }
+                                          ]
                                         },
                                         {
-                                          "type": "number"
+                                          "type": "object",
+                                          "properties": {
+                                            "isStarted": {
+                                              "type": "boolean"
+                                            },
+                                            "isCompleted": {
+                                              "type": "boolean"
+                                            },
+                                            "watchedSeconds": {
+                                              "type": "number",
+                                              "minimum": 0
+                                            },
+                                            "watchedPercentage": {
+                                              "type": "number",
+                                              "minimum": 0,
+                                              "maximum": 100
+                                            },
+                                            "durationSeconds": {
+                                              "anyOf": [
+                                                {
+                                                  "type": "number",
+                                                  "minimum": 0
+                                                },
+                                                {
+                                                  "type": "null"
+                                                }
+                                              ]
+                                            },
+                                            "pauseCount": {
+                                              "type": "integer",
+                                              "minimum": 0,
+                                              "maximum": 9007199254740991
+                                            },
+                                            "events": {
+                                              "type": "array",
+                                              "maxItems": 500,
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "type": {
+                                                    "enum": [
+                                                      "VIDEO_STARTED",
+                                                      "VIDEO_PAUSED",
+                                                      "VIDEO_COMPLETED"
+                                                    ],
+                                                    "type": "string"
+                                                  },
+                                                  "positionSeconds": {
+                                                    "type": "number",
+                                                    "minimum": 0
+                                                  },
+                                                  "at": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "type",
+                                                  "positionSeconds",
+                                                  "at"
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "required": [
+                                            "isStarted",
+                                            "isCompleted",
+                                            "watchedSeconds",
+                                            "watchedPercentage",
+                                            "durationSeconds",
+                                            "pauseCount",
+                                            "events"
+                                          ]
                                         },
                                         {
-                                          "type": "boolean"
-                                        },
-                                        {
-                                          "type": "array",
-                                          "items": {
+                                          "type": "object",
+                                          "propertyNames": {
                                             "type": "string"
-                                          }
-                                        },
-                                        {
-                                          "type": "array",
-                                          "items": {
-                                            "type": "number"
+                                          },
+                                          "additionalProperties": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "number"
+                                              },
+                                              {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "string"
+                                                }
+                                              },
+                                              {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "number"
+                                                }
+                                              }
+                                            ]
                                           }
                                         }
                                       ]
@@ -60065,8 +61567,138 @@
                                           "items": {
                                             "type": "string"
                                           }
+                                        },
+                                        {
+                                          "type": "object",
+                                          "propertyNames": {
+                                            "type": "string"
+                                          },
+                                          "additionalProperties": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              },
+                                              {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "string"
+                                                }
+                                              }
+                                            ]
+                                          }
                                         }
                                       ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "otherTexts": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "propertyNames": {
+                                        "type": "string"
+                                      },
+                                      "additionalProperties": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "score": {
+                                  "anyOf": [
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "details": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "rowScores": {
+                                          "type": "object",
+                                          "propertyNames": {
+                                            "type": "string"
+                                          },
+                                          "additionalProperties": {
+                                            "anyOf": [
+                                              {
+                                                "type": "number"
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        "mediaWatch": {
+                                          "type": "object",
+                                          "propertyNames": {
+                                            "type": "string"
+                                          },
+                                          "additionalProperties": {
+                                            "type": "object",
+                                            "properties": {
+                                              "watchedPercentage": {
+                                                "type": "number"
+                                              },
+                                              "watchedSeconds": {
+                                                "type": "number"
+                                              },
+                                              "isCompleted": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "watchedPercentage",
+                                              "watchedSeconds",
+                                              "isCompleted"
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "loopBlockId": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "loopIteration": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "loopItem": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
                                     },
                                     {
                                       "type": "null"
@@ -61001,24 +62633,130 @@
                                   {
                                     "anyOf": [
                                       {
-                                        "type": "string"
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "number"
+                                          },
+                                          {
+                                            "type": "boolean"
+                                          },
+                                          {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "number"
+                                            }
+                                          }
+                                        ]
                                       },
                                       {
-                                        "type": "number"
+                                        "type": "object",
+                                        "properties": {
+                                          "isStarted": {
+                                            "type": "boolean"
+                                          },
+                                          "isCompleted": {
+                                            "type": "boolean"
+                                          },
+                                          "watchedSeconds": {
+                                            "type": "number",
+                                            "minimum": 0
+                                          },
+                                          "watchedPercentage": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                          },
+                                          "durationSeconds": {
+                                            "anyOf": [
+                                              {
+                                                "type": "number",
+                                                "minimum": 0
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          },
+                                          "pauseCount": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "events": {
+                                            "type": "array",
+                                            "maxItems": 500,
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "type": {
+                                                  "enum": [
+                                                    "VIDEO_STARTED",
+                                                    "VIDEO_PAUSED",
+                                                    "VIDEO_COMPLETED"
+                                                  ],
+                                                  "type": "string"
+                                                },
+                                                "positionSeconds": {
+                                                  "type": "number",
+                                                  "minimum": 0
+                                                },
+                                                "at": {
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "type",
+                                                "positionSeconds",
+                                                "at"
+                                              ]
+                                            }
+                                          }
+                                        },
+                                        "required": [
+                                          "isStarted",
+                                          "isCompleted",
+                                          "watchedSeconds",
+                                          "watchedPercentage",
+                                          "durationSeconds",
+                                          "pauseCount",
+                                          "events"
+                                        ]
                                       },
                                       {
-                                        "type": "boolean"
-                                      },
-                                      {
-                                        "type": "array",
-                                        "items": {
+                                        "type": "object",
+                                        "propertyNames": {
                                           "type": "string"
-                                        }
-                                      },
-                                      {
-                                        "type": "array",
-                                        "items": {
-                                          "type": "number"
+                                        },
+                                        "additionalProperties": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string"
+                                            },
+                                            {
+                                              "type": "number"
+                                            },
+                                            {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "number"
+                                              }
+                                            }
+                                          ]
                                         }
                                       }
                                     ]
@@ -61040,8 +62778,138 @@
                                         "items": {
                                           "type": "string"
                                         }
+                                      },
+                                      {
+                                        "type": "object",
+                                        "propertyNames": {
+                                          "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string"
+                                            },
+                                            {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          ]
+                                        }
                                       }
                                     ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "otherTexts": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "score": {
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "details": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "rowScores": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                          "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                          "anyOf": [
+                                            {
+                                              "type": "number"
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "mediaWatch": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                          "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                          "type": "object",
+                                          "properties": {
+                                            "watchedPercentage": {
+                                              "type": "number"
+                                            },
+                                            "watchedSeconds": {
+                                              "type": "number"
+                                            },
+                                            "isCompleted": {
+                                              "type": "boolean"
+                                            }
+                                          },
+                                          "required": [
+                                            "watchedPercentage",
+                                            "watchedSeconds",
+                                            "isCompleted"
+                                          ]
+                                        }
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "loopBlockId": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "loopIteration": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "loopItem": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
                                   },
                                   {
                                     "type": "null"
@@ -62542,7 +64410,7 @@
     "/v1/typebots/{typebotId}/results/export-research": {
       "post": {
         "operationId": "results-exportResearchDataset",
-        "summary": "Export results as a research dataset (CSV + SPSS-ready codebook)",
+        "summary": "Export results as a research dataset (CSV or SPSS .sav + codebook)",
         "description": "One row per interview with stable column names (variable names), interview status, ISO 8601 timestamps, questionnaire version, typed values, structured multiple choice and repeated answers.",
         "tags": [
           "Results"
@@ -62659,6 +64527,30 @@
                         ],
                         "type": "string",
                         "default": "excelSafe"
+                      },
+                      "fileFormat": {
+                        "enum": [
+                          "csv",
+                          "sav"
+                        ],
+                        "type": "string",
+                        "default": "csv"
+                      },
+                      "loopColumnNaming": {
+                        "enum": [
+                          "item",
+                          "iteration"
+                        ],
+                        "type": "string",
+                        "default": "item"
+                      },
+                      "includeLongFormat": {
+                        "type": "boolean",
+                        "default": false
+                      },
+                      "includeScores": {
+                        "type": "boolean",
+                        "default": true
                       }
                     },
                     "default": {
@@ -62670,7 +64562,11 @@
                       "includePreVersioningResults": false,
                       "includeNotStarted": false,
                       "abandonedAfterMinutes": 1440,
-                      "csvMode": "excelSafe"
+                      "csvMode": "excelSafe",
+                      "fileFormat": "csv",
+                      "loopColumnNaming": "item",
+                      "includeLongFormat": false,
+                      "includeScores": true
                     }
                   }
                 },
@@ -62693,8 +64589,22 @@
                     "codebookFileName": {
                       "type": "string"
                     },
+                    "savFileName": {
+                      "type": "string"
+                    },
                     "csv": {
                       "type": "string"
+                    },
+                    "longCsvFileName": {
+                      "type": "string"
+                    },
+                    "longCsv": {
+                      "type": "string",
+                      "description": "Long format (one row per answer, with loop / iteration / item / score), when options.includeLongFormat is true."
+                    },
+                    "savBase64": {
+                      "type": "string",
+                      "description": "SPSS system file, base64 encoded (when options.fileFormat is `sav`)"
                     },
                     "codebook": {
                       "type": "string"
@@ -62706,7 +64616,9 @@
                   "required": [
                     "csvFileName",
                     "codebookFileName",
+                    "savFileName",
                     "csv",
+                    "longCsvFileName",
                     "codebook",
                     "rowCount"
                   ]
@@ -76600,6 +78512,179 @@
                               "text": {
                                 "type": "string"
                               },
+                              "structuredReply": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "const": "choice"
+                                      },
+                                      "itemIds": {
+                                        "type": "array",
+                                        "maxItems": 500,
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "otherTexts": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                          "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                          "type": "string",
+                                          "maxLength": 5000
+                                        }
+                                      },
+                                      "mediaWatch": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                          "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                          "type": "object",
+                                          "properties": {
+                                            "watchedPercentage": {
+                                              "type": "number",
+                                              "minimum": 0,
+                                              "maximum": 100
+                                            },
+                                            "watchedSeconds": {
+                                              "type": "number",
+                                              "minimum": 0
+                                            },
+                                            "isCompleted": {
+                                              "type": "boolean"
+                                            }
+                                          },
+                                          "required": [
+                                            "watchedPercentage",
+                                            "watchedSeconds",
+                                            "isCompleted"
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "itemIds"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "const": "matrix"
+                                      },
+                                      "answers": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                          "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                          "type": "array",
+                                          "maxItems": 100,
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "answers"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "const": "video"
+                                      },
+                                      "result": {
+                                        "type": "object",
+                                        "properties": {
+                                          "isStarted": {
+                                            "type": "boolean"
+                                          },
+                                          "isCompleted": {
+                                            "type": "boolean"
+                                          },
+                                          "watchedSeconds": {
+                                            "type": "number",
+                                            "minimum": 0
+                                          },
+                                          "watchedPercentage": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                          },
+                                          "durationSeconds": {
+                                            "anyOf": [
+                                              {
+                                                "type": "number",
+                                                "minimum": 0
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
+                                          },
+                                          "pauseCount": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "events": {
+                                            "type": "array",
+                                            "maxItems": 500,
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "type": {
+                                                  "enum": [
+                                                    "VIDEO_STARTED",
+                                                    "VIDEO_PAUSED",
+                                                    "VIDEO_COMPLETED"
+                                                  ],
+                                                  "type": "string"
+                                                },
+                                                "positionSeconds": {
+                                                  "type": "number",
+                                                  "minimum": 0
+                                                },
+                                                "at": {
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "type",
+                                                "positionSeconds",
+                                                "at"
+                                              ]
+                                            }
+                                          }
+                                        },
+                                        "required": [
+                                          "isStarted",
+                                          "isCompleted",
+                                          "watchedSeconds",
+                                          "watchedPercentage",
+                                          "durationSeconds",
+                                          "pauseCount",
+                                          "events"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "result"
+                                    ]
+                                  }
+                                ],
+                                "description": "Structured answer for matrix, choice (with 'Other, please specify') and tracked video blocks"
+                              },
                               "metadata": {
                                 "type": "object",
                                 "properties": {
@@ -76822,6 +78907,49 @@
                                       },
                                       "isAutoplayEnabled": {
                                         "type": "boolean"
+                                      },
+                                      "isMuted": {
+                                        "type": "boolean"
+                                      },
+                                      "isLooping": {
+                                        "type": "boolean"
+                                      },
+                                      "posterUrl": {
+                                        "type": "string"
+                                      },
+                                      "fallbackUrl": {
+                                        "type": "string"
+                                      },
+                                      "watchTracking": {
+                                        "type": "object",
+                                        "properties": {
+                                          "isEnabled": {
+                                            "type": "boolean"
+                                          },
+                                          "isRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "minimumWatchPercentage": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                          },
+                                          "allowSeeking": {
+                                            "type": "boolean"
+                                          },
+                                          "autoContinueOnEnd": {
+                                            "type": "boolean"
+                                          },
+                                          "variableId": {
+                                            "type": "string"
+                                          },
+                                          "buttonLabel": {
+                                            "type": "string"
+                                          },
+                                          "requirementMessage": {
+                                            "type": "string"
+                                          }
+                                        }
                                       }
                                     }
                                   }
@@ -77176,6 +79304,9 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/Cards"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/MatrixInput"
                                 }
                               ]
                             },
@@ -77209,6 +79340,54 @@
                                           },
                                           "outgoingEdgeId": {
                                             "type": "string"
+                                          },
+                                          "isExclusive": {
+                                            "type": "boolean",
+                                            "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                          },
+                                          "hasTextInput": {
+                                            "type": "boolean",
+                                            "description": "Shows a text field when selected ('Other, please specify')."
+                                          },
+                                          "textInputRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "textInputPlaceholder": {
+                                            "type": "string"
+                                          },
+                                          "media": {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "enum": [
+                                                  "image",
+                                                  "video"
+                                                ],
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "type": "string"
+                                              },
+                                              "fallbackUrl": {
+                                                "type": "string"
+                                              },
+                                              "posterUrl": {
+                                                "type": "string"
+                                              },
+                                              "areControlsDisplayed": {
+                                                "type": "boolean"
+                                              },
+                                              "isMuted": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ]
+                                          },
+                                          "score": {
+                                            "type": "number",
+                                            "description": "Score of the option, separate from its code (value). Absent = null, not 0."
                                           },
                                           "content": {
                                             "type": "string"
@@ -77277,6 +79456,57 @@
                                         },
                                         "areInitialSearchButtonsVisible": {
                                           "type": "boolean"
+                                        },
+                                        "minSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                        },
+                                        "maxSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only."
+                                        },
+                                        "areItemsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "requireWatchBeforeSelect": {
+                                          "type": "boolean"
+                                        },
+                                        "minimumWatchPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
                                         }
                                       }
                                     }
@@ -78670,6 +80900,179 @@
                           "text": {
                             "type": "string"
                           },
+                          "structuredReply": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "const": "choice"
+                                  },
+                                  "itemIds": {
+                                    "type": "array",
+                                    "maxItems": 500,
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "otherTexts": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "string",
+                                      "maxLength": 5000
+                                    }
+                                  },
+                                  "mediaWatch": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "object",
+                                      "properties": {
+                                        "watchedPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "watchedSeconds": {
+                                          "type": "number",
+                                          "minimum": 0
+                                        },
+                                        "isCompleted": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": [
+                                        "watchedPercentage",
+                                        "watchedSeconds",
+                                        "isCompleted"
+                                      ]
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "itemIds"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "const": "matrix"
+                                  },
+                                  "answers": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "array",
+                                      "maxItems": 100,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "answers"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "const": "video"
+                                  },
+                                  "result": {
+                                    "type": "object",
+                                    "properties": {
+                                      "isStarted": {
+                                        "type": "boolean"
+                                      },
+                                      "isCompleted": {
+                                        "type": "boolean"
+                                      },
+                                      "watchedSeconds": {
+                                        "type": "number",
+                                        "minimum": 0
+                                      },
+                                      "watchedPercentage": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                      },
+                                      "durationSeconds": {
+                                        "anyOf": [
+                                          {
+                                            "type": "number",
+                                            "minimum": 0
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "pauseCount": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "events": {
+                                        "type": "array",
+                                        "maxItems": 500,
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "type": {
+                                              "enum": [
+                                                "VIDEO_STARTED",
+                                                "VIDEO_PAUSED",
+                                                "VIDEO_COMPLETED"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "positionSeconds": {
+                                              "type": "number",
+                                              "minimum": 0
+                                            },
+                                            "at": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "required": [
+                                            "type",
+                                            "positionSeconds",
+                                            "at"
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "isStarted",
+                                      "isCompleted",
+                                      "watchedSeconds",
+                                      "watchedPercentage",
+                                      "durationSeconds",
+                                      "pauseCount",
+                                      "events"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "result"
+                                ]
+                              }
+                            ],
+                            "description": "Structured answer for matrix, choice (with 'Other, please specify') and tracked video blocks"
+                          },
                           "metadata": {
                             "type": "object",
                             "properties": {
@@ -79495,6 +81898,49 @@
                                       },
                                       "isAutoplayEnabled": {
                                         "type": "boolean"
+                                      },
+                                      "isMuted": {
+                                        "type": "boolean"
+                                      },
+                                      "isLooping": {
+                                        "type": "boolean"
+                                      },
+                                      "posterUrl": {
+                                        "type": "string"
+                                      },
+                                      "fallbackUrl": {
+                                        "type": "string"
+                                      },
+                                      "watchTracking": {
+                                        "type": "object",
+                                        "properties": {
+                                          "isEnabled": {
+                                            "type": "boolean"
+                                          },
+                                          "isRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "minimumWatchPercentage": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                          },
+                                          "allowSeeking": {
+                                            "type": "boolean"
+                                          },
+                                          "autoContinueOnEnd": {
+                                            "type": "boolean"
+                                          },
+                                          "variableId": {
+                                            "type": "string"
+                                          },
+                                          "buttonLabel": {
+                                            "type": "string"
+                                          },
+                                          "requirementMessage": {
+                                            "type": "string"
+                                          }
+                                        }
                                       }
                                     }
                                   }
@@ -79849,6 +82295,9 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/Cards"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/MatrixInput"
                                 }
                               ]
                             },
@@ -79882,6 +82331,54 @@
                                           },
                                           "outgoingEdgeId": {
                                             "type": "string"
+                                          },
+                                          "isExclusive": {
+                                            "type": "boolean",
+                                            "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                          },
+                                          "hasTextInput": {
+                                            "type": "boolean",
+                                            "description": "Shows a text field when selected ('Other, please specify')."
+                                          },
+                                          "textInputRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "textInputPlaceholder": {
+                                            "type": "string"
+                                          },
+                                          "media": {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "enum": [
+                                                  "image",
+                                                  "video"
+                                                ],
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "type": "string"
+                                              },
+                                              "fallbackUrl": {
+                                                "type": "string"
+                                              },
+                                              "posterUrl": {
+                                                "type": "string"
+                                              },
+                                              "areControlsDisplayed": {
+                                                "type": "boolean"
+                                              },
+                                              "isMuted": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ]
+                                          },
+                                          "score": {
+                                            "type": "number",
+                                            "description": "Score of the option, separate from its code (value). Absent = null, not 0."
                                           },
                                           "content": {
                                             "type": "string"
@@ -79950,6 +82447,57 @@
                                         },
                                         "areInitialSearchButtonsVisible": {
                                           "type": "boolean"
+                                        },
+                                        "minSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                        },
+                                        "maxSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only."
+                                        },
+                                        "areItemsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "requireWatchBeforeSelect": {
+                                          "type": "boolean"
+                                        },
+                                        "minimumWatchPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
                                         }
                                       }
                                     }
@@ -81344,6 +83892,179 @@
                           "text": {
                             "type": "string"
                           },
+                          "structuredReply": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "const": "choice"
+                                  },
+                                  "itemIds": {
+                                    "type": "array",
+                                    "maxItems": 500,
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "otherTexts": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "string",
+                                      "maxLength": 5000
+                                    }
+                                  },
+                                  "mediaWatch": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "object",
+                                      "properties": {
+                                        "watchedPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "watchedSeconds": {
+                                          "type": "number",
+                                          "minimum": 0
+                                        },
+                                        "isCompleted": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": [
+                                        "watchedPercentage",
+                                        "watchedSeconds",
+                                        "isCompleted"
+                                      ]
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "itemIds"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "const": "matrix"
+                                  },
+                                  "answers": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "array",
+                                      "maxItems": 100,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "answers"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "const": "video"
+                                  },
+                                  "result": {
+                                    "type": "object",
+                                    "properties": {
+                                      "isStarted": {
+                                        "type": "boolean"
+                                      },
+                                      "isCompleted": {
+                                        "type": "boolean"
+                                      },
+                                      "watchedSeconds": {
+                                        "type": "number",
+                                        "minimum": 0
+                                      },
+                                      "watchedPercentage": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                      },
+                                      "durationSeconds": {
+                                        "anyOf": [
+                                          {
+                                            "type": "number",
+                                            "minimum": 0
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
+                                      "pauseCount": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "events": {
+                                        "type": "array",
+                                        "maxItems": 500,
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "type": {
+                                              "enum": [
+                                                "VIDEO_STARTED",
+                                                "VIDEO_PAUSED",
+                                                "VIDEO_COMPLETED"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "positionSeconds": {
+                                              "type": "number",
+                                              "minimum": 0
+                                            },
+                                            "at": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "required": [
+                                            "type",
+                                            "positionSeconds",
+                                            "at"
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "isStarted",
+                                      "isCompleted",
+                                      "watchedSeconds",
+                                      "watchedPercentage",
+                                      "durationSeconds",
+                                      "pauseCount",
+                                      "events"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "result"
+                                ]
+                              }
+                            ],
+                            "description": "Structured answer for matrix, choice (with 'Other, please specify') and tracked video blocks"
+                          },
                           "metadata": {
                             "type": "object",
                             "properties": {
@@ -82165,6 +84886,49 @@
                                       },
                                       "isAutoplayEnabled": {
                                         "type": "boolean"
+                                      },
+                                      "isMuted": {
+                                        "type": "boolean"
+                                      },
+                                      "isLooping": {
+                                        "type": "boolean"
+                                      },
+                                      "posterUrl": {
+                                        "type": "string"
+                                      },
+                                      "fallbackUrl": {
+                                        "type": "string"
+                                      },
+                                      "watchTracking": {
+                                        "type": "object",
+                                        "properties": {
+                                          "isEnabled": {
+                                            "type": "boolean"
+                                          },
+                                          "isRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "minimumWatchPercentage": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                          },
+                                          "allowSeeking": {
+                                            "type": "boolean"
+                                          },
+                                          "autoContinueOnEnd": {
+                                            "type": "boolean"
+                                          },
+                                          "variableId": {
+                                            "type": "string"
+                                          },
+                                          "buttonLabel": {
+                                            "type": "string"
+                                          },
+                                          "requirementMessage": {
+                                            "type": "string"
+                                          }
+                                        }
                                       }
                                     }
                                   }
@@ -82519,6 +85283,9 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/Cards"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/MatrixInput"
                                 }
                               ]
                             },
@@ -82552,6 +85319,54 @@
                                           },
                                           "outgoingEdgeId": {
                                             "type": "string"
+                                          },
+                                          "isExclusive": {
+                                            "type": "boolean",
+                                            "description": "Multiple choice: selecting it deselects every other option (e.g. 'None of these')."
+                                          },
+                                          "hasTextInput": {
+                                            "type": "boolean",
+                                            "description": "Shows a text field when selected ('Other, please specify')."
+                                          },
+                                          "textInputRequired": {
+                                            "type": "boolean"
+                                          },
+                                          "textInputPlaceholder": {
+                                            "type": "string"
+                                          },
+                                          "media": {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "enum": [
+                                                  "image",
+                                                  "video"
+                                                ],
+                                                "type": "string"
+                                              },
+                                              "url": {
+                                                "type": "string"
+                                              },
+                                              "fallbackUrl": {
+                                                "type": "string"
+                                              },
+                                              "posterUrl": {
+                                                "type": "string"
+                                              },
+                                              "areControlsDisplayed": {
+                                                "type": "boolean"
+                                              },
+                                              "isMuted": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ]
+                                          },
+                                          "score": {
+                                            "type": "number",
+                                            "description": "Score of the option, separate from its code (value). Absent = null, not 0."
                                           },
                                           "content": {
                                             "type": "string"
@@ -82620,6 +85435,57 @@
                                         },
                                         "areInitialSearchButtonsVisible": {
                                           "type": "boolean"
+                                        },
+                                        "minSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only. An exclusive option is always valid, even below this minimum."
+                                        },
+                                        "maxSelections": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991,
+                                          "exclusiveMinimum": 0,
+                                          "description": "Multiple choice only."
+                                        },
+                                        "areItemsRandomized": {
+                                          "type": "boolean"
+                                        },
+                                        "requireWatchBeforeSelect": {
+                                          "type": "boolean"
+                                        },
+                                        "minimumWatchPercentage": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "scoreTargets": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "variableId": {
+                                                "type": "string"
+                                              },
+                                              "operation": {
+                                                "enum": [
+                                                  "add",
+                                                  "subtract",
+                                                  "set",
+                                                  "multiply"
+                                                ],
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "id"
+                                            ]
+                                          }
                                         }
                                       }
                                     }

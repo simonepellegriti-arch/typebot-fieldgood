@@ -153,6 +153,8 @@ export const ExportAllResultsDialog = ({
     try {
       const {
         csv,
+        longCsv,
+        longCsvFileName,
         savBase64,
         codebook,
         csvFileName,
@@ -171,6 +173,8 @@ export const ExportAllResultsDialog = ({
           "application/x-spss-sav",
         );
       else downloadFile(csv, csvFileName, "text/csv;charset=utf-8;");
+      if (longCsv)
+        downloadFile(longCsv, longCsvFileName, "text/csv;charset=utf-8;");
       if (isCodebookDownloaded)
         downloadFile(codebook, codebookFileName, "application/json");
     } catch (error) {
@@ -573,6 +577,52 @@ const ResearchExportOptionsFields = ({
           onChange={(repeatedAnswersMode) => onChange({ repeatedAnswersMode })}
           className="w-full"
         />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>
+          Loop columns{" "}
+          <MoreInfoTooltip>
+            Wide columns of questions asked inside a Loop block: named after the
+            item (D2_NIKE) or after the iteration number (D2_1).
+          </MoreInfoTooltip>
+        </Field.Label>
+        <BasicSelect
+          items={[
+            { label: "By item (D2_NIKE)", value: "item" as const },
+            { label: "By iteration (D2_1)", value: "iteration" as const },
+          ]}
+          value={options.loopColumnNaming}
+          onChange={(loopColumnNaming) => onChange({ loopColumnNaming })}
+          className="w-full"
+        />
+      </Field.Root>
+      <Field.Root className="flex-row items-center">
+        <Switch
+          checked={options.includeScores}
+          onCheckedChange={(includeScores) => onChange({ includeScores })}
+        />
+        <Field.Label>
+          Include scores{" "}
+          <MoreInfoTooltip>
+            Adds D1_SCORE next to D1 and D1_LABEL for questions with scored
+            options (matrices: one score per row plus the total).
+          </MoreInfoTooltip>
+        </Field.Label>
+      </Field.Root>
+      <Field.Root className="flex-row items-center">
+        <Switch
+          checked={options.includeLongFormat}
+          onCheckedChange={(includeLongFormat) =>
+            onChange({ includeLongFormat })
+          }
+        />
+        <Field.Label>
+          Also download long format{" "}
+          <MoreInfoTooltip>
+            Extra CSV with one row per answer: RESULT_ID, LOOP, ITERATION, ITEM,
+            QUESTION, VALUE, LABEL, SCORE, TEXT.
+          </MoreInfoTooltip>
+        </Field.Label>
       </Field.Root>
       <Field.Root>
         <Field.Label>

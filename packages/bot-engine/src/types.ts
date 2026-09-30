@@ -5,6 +5,7 @@ import type {
 import type { SessionState } from "@typebot.io/chat-session/schemas";
 import type { Prisma } from "@typebot.io/prisma/types";
 import type {
+  AnswerDetails,
   AnswerOtherTexts,
   AnswerResearchValue,
   AnswerValueLabel,
@@ -40,6 +41,9 @@ export type StructuredAnswer = {
   otherTexts?: AnswerOtherTexts;
   /** Overrides what is stored in the block variable (e.g. JSON for matrices). */
   variableValue?: string;
+  /** Score of the answer, separate from the codes. null = no scored option selected. */
+  score?: number | null;
+  details?: AnswerDetails;
 };
 
 export type SuccessReply = {

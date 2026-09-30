@@ -1,6 +1,7 @@
 import { useTranslate } from "@tolgee/react";
 import { defaultMatrixInputOptions } from "@typebot.io/blocks-inputs/matrix/constants";
 import type {
+  MatrixColumn,
   MatrixInputBlock,
   MatrixInputOptions,
   MatrixRow,
@@ -14,6 +15,7 @@ import { BasicSelect } from "@/components/inputs/BasicSelect";
 import { DebouncedTextareaWithVariablesButton } from "@/components/inputs/DebouncedTextarea";
 import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
 import { VariablesCombobox } from "@/components/inputs/VariablesCombobox";
+import { ScoreTargetsEditor } from "../../scoring/ScoreTargetsEditor";
 import { MatrixEntriesEditor } from "./MatrixEntriesEditor";
 
 type Props = {
@@ -61,6 +63,7 @@ export const MatrixInputSettings = ({ options, onOptionsChange }: Props) => {
         <MatrixEntriesEditor
           entries={options?.columns ?? []}
           addLabel={t("blocks.inputs.matrix.settings.addColumn")}
+          isScoreVisible
           onEntriesChange={(columns) =>
             updateOptions({ columns: columns.map(toColumn) })
           }
@@ -202,6 +205,11 @@ export const MatrixInputSettings = ({ options, onOptionsChange }: Props) => {
         />
       </Field.Root>
 
+      <ScoreTargetsEditor
+        scoreTargets={options?.scoreTargets}
+        onScoreTargetsChange={(scoreTargets) => updateOptions({ scoreTargets })}
+      />
+
       <Field.Root>
         <Field.Label>
           {t("blocks.inputs.settings.saveAnswer.label")}
@@ -220,4 +228,15 @@ export const MatrixInputSettings = ({ options, onOptionsChange }: Props) => {
   );
 };
 
-const toColumn = ({ id, label, value }: MatrixRow) => ({ id, label, value });
+/** Columns keep their score; row-only properties are dropped. */
+const toColumn = ({
+  id,
+  label,
+  value,
+  score,
+}: MatrixRow & { score?: number }): MatrixColumn => ({
+  id,
+  label,
+  value,
+  score,
+});

@@ -92,7 +92,7 @@ export const handleExportResearchDataset = async ({
       : undefined,
   });
 
-  const { csv, sav, codebook, rowCount } = exportResearchDataset({
+  const { csv, longCsv, sav, codebook, rowCount } = exportResearchDataset({
     questionnaireVersions,
     results,
     options: exportOptions,
@@ -109,6 +109,8 @@ export const handleExportResearchDataset = async ({
     codebookFileName: csvFileName.replace(/\.csv$/, ".codebook.json"),
     savFileName: csvFileName.replace(/\.csv$/, ".sav"),
     csv,
+    longCsvFileName: csvFileName.replace(/\.csv$/, "-long.csv"),
+    longCsv,
     savBase64: sav ? Buffer.from(sav).toString("base64") : undefined,
     codebook: JSON.stringify(codebook, null, 2),
     rowCount,

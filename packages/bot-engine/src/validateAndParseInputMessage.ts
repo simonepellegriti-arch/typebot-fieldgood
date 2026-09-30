@@ -9,6 +9,7 @@ import { isURL } from "@typebot.io/lib/isURL";
 import type { SessionStore } from "@typebot.io/runtime-session-store";
 import type { Variable } from "@typebot.io/variables/schemas";
 import { parseCardsReply } from "./blocks/cards/parseCardsReply";
+import { addChoiceScores } from "./blocks/inputs/buttons/addChoiceScores";
 import { injectVariableValuesInButtonsInputBlock } from "./blocks/inputs/buttons/injectVariableValuesInButtonsInputBlock";
 import { parseChoiceStructuredReply } from "./blocks/inputs/buttons/parseChoiceStructuredReply";
 import { parseMultipleChoiceReply } from "./blocks/inputs/buttons/parseMultipleChoiceReply";
@@ -73,22 +74,24 @@ export const validateAndParseInputMessage = (
         sessionStore,
         skipDisplayConditionCheck: skipValidation,
       }).items;
-      if (message.structuredReply?.type === "choice")
-        return parseChoiceStructuredReply(message.structuredReply, {
-          items: displayedItems,
-          options: block.options,
-        });
-      if (block.options?.isMultipleChoice)
-        return enforceMultipleChoiceRules(
-          parseMultipleChoiceReply(message.text, {
-            items: displayedItems,
-          }),
-          { items: displayedItems, options: block.options },
-        );
-      return parseSingleChoiceReply(message.text, {
-        replyId: message.metadata?.replyId,
-        items: displayedItems,
-      });
+      const parsedChoiceReply =
+        message.structuredReply?.type === "choice"
+          ? parseChoiceStructuredReply(message.structuredReply, {
+              items: displayedItems,
+              options: block.options,
+            })
+          : block.options?.isMultipleChoice
+            ? enforceMultipleChoiceRules(
+                parseMultipleChoiceReply(message.text, {
+                  items: displayedItems,
+                }),
+                { items: displayedItems, options: block.options },
+              )
+            : parseSingleChoiceReply(message.text, {
+                replyId: message.metadata?.replyId,
+                items: displayedItems,
+              });
+      return addChoiceScores(parsedChoiceReply, { items: displayedItems });
     }
     case InputBlockType.MATRIX: {
       if (!message || message.type !== "text") return { status: "fail" };

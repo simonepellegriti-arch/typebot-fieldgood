@@ -24,7 +24,10 @@ type Props = {
 
 export const ButtonsItemNode = ({ item, indices, isMouseOver }: Props) => {
   const { t } = useTranslate();
-  const { deleteItem, updateItem, createItem } = useTypebot();
+  const { deleteItem, updateItem, createItem, typebot } = useTypebot();
+  const blockId = typebot?.groups
+    .at(indices.groupIndex)
+    ?.blocks?.at(indices.blockIndex)?.id;
   const { openedNodeId, setOpenedNodeId } = useGraph();
   const [itemValue, setItemValue] = useState(
     item.content ??
@@ -94,7 +97,18 @@ export const ButtonsItemNode = ({ item, indices, isMouseOver }: Props) => {
     >
       <Popover.Trigger
         render={(props) => (
-          <div className="flex px-4 py-2 justify-center w-full" {...props}>
+          <div
+            className="flex px-4 py-2 justify-center items-center gap-1 w-full"
+            {...props}
+          >
+            {item.media?.url && (
+              <span
+                className="text-xs rounded bg-gray-3 px-1 text-gray-11"
+                title={item.media.url}
+              >
+                {item.media.type === "video" ? "▶" : "🖼"}
+              </span>
+            )}
             <Editable.Root
               defaultEdit={
                 isEmpty(item.content) ||
@@ -140,6 +154,16 @@ export const ButtonsItemNode = ({ item, indices, isMouseOver }: Props) => {
       <Popover.Popup side="right" className="p-4">
         <ButtonsItemSettings
           item={item}
+          uploadFileProps={
+            typebot && blockId
+              ? {
+                  workspaceId: typebot.workspaceId,
+                  typebotId: typebot.id,
+                  blockId,
+                  itemId: item.id,
+                }
+              : undefined
+          }
           onSettingsChange={updateItemSettings}
         />
       </Popover.Popup>

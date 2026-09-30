@@ -29,13 +29,16 @@
       "path": "../env/tsconfig.lib.json"
     },
     {
+      "path": "../emails/tsconfig.lib.json"
+    },
+    {
       "path": "../config/tsconfig.lib.json"
     },
     {
-      "path": "../blocks/inputs/tsconfig.lib.json"
+      "path": "../blocks/logic/tsconfig.lib.json"
     },
     {
-      "path": "../emails/tsconfig.lib.json"
+      "path": "../blocks/inputs/tsconfig.lib.json"
     },
     {
       "path": "../blocks/core/tsconfig.lib.json"

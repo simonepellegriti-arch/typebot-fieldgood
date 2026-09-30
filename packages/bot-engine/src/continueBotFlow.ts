@@ -47,6 +47,8 @@ import { executeReplyEvent } from "./events/executeReplyEvent";
 import { formatInputForChatResponse } from "./formatInputForChatResponse";
 import { getReplyOutgoingEdge } from "./getReplyOutgoingEdge";
 import { buildAnswerResearchFields } from "./helpers/buildAnswerResearchFields";
+import { getAnswerLoopContext } from "./helpers/getAnswerLoopContext";
+import { saveScoreVarsIfAny } from "./helpers/saveScoreVarsIfAny";
 import { saveAnswer } from "./queries/saveAnswer";
 import { resetSessionState } from "./resetSessionState";
 import { startBotFlow } from "./startBotFlow";
@@ -515,6 +517,11 @@ const saveVariablesValueIfAny =
       reply,
       state: newSessionState,
     });
+    newSessionState = saveScoreVarsIfAny({
+      block,
+      state: newSessionState,
+      structuredAnswer,
+    });
     return saveInputVarIfAny({
       block,
       reply,
@@ -752,6 +759,8 @@ const saveAnswerInDb =
         value: value ?? undefined,
         valueLabel: valueLabel ?? undefined,
         otherTexts: otherTexts ?? undefined,
+        score: structuredAnswer?.score ?? undefined,
+        details: structuredAnswer?.details ?? undefined,
       },
       state,
     });
@@ -766,10 +775,17 @@ const saveAnswerInDb =
         ? newSessionState.previewMetadata
         : {
             ...newSessionState.previewMetadata,
+            // Preview answers keep the same research fields as saved results.
             answers: (newSessionState.previewMetadata?.answers ?? []).concat({
               blockId: block.id,
               content: replyContent,
               attachedFileUrls,
+              value: value ?? undefined,
+              valueLabel: valueLabel ?? undefined,
+              otherTexts: otherTexts ?? undefined,
+              score: structuredAnswer?.score ?? undefined,
+              details: structuredAnswer?.details ?? undefined,
+              ...getAnswerLoopContext(state),
             }),
           },
     };

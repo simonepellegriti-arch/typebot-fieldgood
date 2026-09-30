@@ -176,6 +176,13 @@ export const resultsRouter = {
         codebookFileName: z.string(),
         savFileName: z.string(),
         csv: z.string(),
+        longCsvFileName: z.string(),
+        longCsv: z
+          .string()
+          .optional()
+          .describe(
+            "Long format (one row per answer, with loop / iteration / item / score), when options.includeLongFormat is true.",
+          ),
         savBase64: z
           .string()
           .optional()

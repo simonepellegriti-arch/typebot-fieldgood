@@ -5,6 +5,7 @@ import { isInputBlock } from "@typebot.io/blocks-core/helpers";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import { getMatrixCode } from "@typebot.io/blocks-inputs/matrix/helpers/getMatrixCode";
 import type { InputBlock } from "@typebot.io/blocks-inputs/schema";
+import { LogicBlockType } from "@typebot.io/blocks-logic/constants";
 import type { Group } from "@typebot.io/groups/schemas";
 import type { Variable, VariableDataType } from "@typebot.io/variables/schemas";
 import { parseNumericLiteral } from "./coerceResearchValue";
@@ -140,6 +141,9 @@ export const buildDatasetDictionary = (
         ...(otherOptionValues && otherOptionValues.length > 0
           ? { otherOptionValues }
           : {}),
+        ...(existingQuestion?.hasScores || hasScoredOptions(block)
+          ? { hasScores: true }
+          : {}),
       });
     }
   }
@@ -165,7 +169,42 @@ export const buildDatasetDictionary = (
       missingValues: variable.missingValues ?? [],
     }));
 
-  return { questions, variables };
+  return {
+    questions,
+    variables,
+    loops: buildLoopsDictionary(sortedVersions, questionsById),
+  };
+};
+
+/** Loop names and item labels (answers loops: labels of the source question options). */
+const buildLoopsDictionary = (
+  versions: QuestionnaireVersion[],
+  questionsById: Map<string, DictionaryQuestion>,
+): NonNullable<DatasetDictionary["loops"]> => {
+  const loopsById = new Map<
+    string,
+    NonNullable<DatasetDictionary["loops"]>[number]
+  >();
+  for (const version of versions)
+    for (const group of version.groups)
+      for (const block of group.blocks) {
+        if (block.type !== LogicBlockType.LOOP) continue;
+        const sourceQuestion = block.options?.sourceBlockId
+          ? questionsById.get(block.options.sourceBlockId)
+          : undefined;
+        const itemLabels = Object.fromEntries(
+          [
+            ...(sourceQuestion?.options ?? []),
+            ...(sourceQuestion?.matrixRows ?? []),
+          ].map((option) => [String(option.value), option.label]),
+        );
+        loopsById.set(block.id, {
+          blockId: block.id,
+          name: block.options?.name?.trim() || group.title || block.id,
+          itemLabels,
+        });
+      }
+  return [...loopsById.values()];
 };
 
 /** Input blocks and tracked videos (which produce answers) with their preceding text. */
@@ -328,4 +367,14 @@ const ensureUniqueNames = (
       variableName: `${question.variableName}_${occurrences + 1}`,
     };
   });
+};
+
+const hasScoredOptions = (block: InputBlock) => {
+  if (block.type === InputBlockType.CHOICE)
+    return block.items.some((item) => item.score !== undefined);
+  if (block.type === InputBlockType.MATRIX)
+    return (block.options?.columns ?? []).some(
+      (column) => column.score !== undefined,
+    );
+  return false;
 };

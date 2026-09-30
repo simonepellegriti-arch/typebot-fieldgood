@@ -57,6 +57,11 @@ export const normalizeResultAnswers = (
       value,
       valueLabel,
       otherTexts: answer.otherTexts ?? null,
+      score: answer.score ?? null,
+      rowScores: answer.details?.rowScores ?? null,
+      loopBlockId: answer.loopBlockId ?? null,
+      loopIteration: answer.loopIteration ?? null,
+      loopItem: answer.loopItem ?? null,
       content: answer.content,
     };
   });

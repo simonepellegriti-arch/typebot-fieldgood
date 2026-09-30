@@ -169,6 +169,16 @@ const sessionStateSchemaV3 = sessionStateSchemaV2
       })
       .optional(),
     publicTypebotId: z.string().optional(),
+    /** Active loops, innermost last. Each iteration keeps its item code and label. */
+    loops: z
+      .array(
+        z.object({
+          blockId: z.string(),
+          items: z.array(z.object({ code: z.string(), label: z.string() })),
+          index: z.number().int().nonnegative(),
+        }),
+      )
+      .optional(),
     publishedVersion: z
       .object({
         id: z.string(),

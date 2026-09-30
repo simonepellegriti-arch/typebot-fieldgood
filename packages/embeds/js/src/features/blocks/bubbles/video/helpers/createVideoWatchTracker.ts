@@ -8,6 +8,7 @@ import { computeVideoWatchProgress } from "@typebot.io/blocks-bubbles/video/watc
 import { isVideoWatchRequirementMet } from "@typebot.io/blocks-bubbles/video/watch/isVideoWatchRequirementMet";
 import { resolveSeekTarget } from "@typebot.io/blocks-bubbles/video/watch/resolveSeekTarget";
 import { createSignal } from "solid-js";
+import type { VideoResumeState } from "../../../../../components/media/createVideoResumeStore";
 
 /** The subset of HTMLVideoElement the tracker reads (and writes, for seeking). */
 export type TrackedMedia = {
@@ -35,19 +36,24 @@ export const createVideoWatchTracker = ({
   tracking,
   onEnded,
   now = () => new Date(),
+  initialState,
 }: {
   tracking: () => VideoWatchTracking | undefined;
   onEnded?: () => void;
   now?: () => Date;
+  /** Resumed viewing (the respondent came back to this video). */
+  initialState?: VideoResumeState;
 }) => {
   const [progress, setProgress] = createSignal({
-    watchedSeconds: 0,
-    watchedPercentage: 0,
+    watchedSeconds: initialState?.watchedSeconds ?? 0,
+    watchedPercentage: initialState?.watchedPercentage ?? 0,
   });
-  const [isCompleted, setIsCompleted] = createSignal(false);
-  let isStarted = false;
-  let pauseCount = 0;
-  let maxReachedTime = 0;
+  const [isCompleted, setIsCompleted] = createSignal(
+    initialState?.isCompleted ?? false,
+  );
+  let isStarted = initialState?.isStarted ?? false;
+  let pauseCount = initialState?.pauseCount ?? 0;
+  let maxReachedTime = initialState?.maxReachedTime ?? 0;
   let durationSeconds: number | null = null;
   const events: VideoWatchEvent[] = [];
 
@@ -79,10 +85,21 @@ export const createVideoWatchTracker = ({
         end: media.played.end(i),
       }),
     );
-    const newProgress = computeVideoWatchProgress({
+    const playedProgress = computeVideoWatchProgress({
       playedRanges,
       durationSeconds,
     });
+    // After a resume the new "played" ranges start empty: keep the best known progress.
+    const newProgress = {
+      watchedSeconds: Math.max(
+        playedProgress.watchedSeconds,
+        initialState?.watchedSeconds ?? 0,
+      ),
+      watchedPercentage: Math.max(
+        playedProgress.watchedPercentage,
+        initialState?.watchedPercentage ?? 0,
+      ),
+    };
     setProgress(newProgress);
     if (newProgress.watchedPercentage >= completionPercentage)
       markCompleted(media);
@@ -128,6 +145,17 @@ export const createVideoWatchTracker = ({
         watchedPercentage: progress().watchedPercentage,
         isCompleted: isCompleted(),
       }),
+    getResumeState: (
+      media: Pick<TrackedMedia, "currentTime">,
+    ): VideoResumeState => ({
+      currentTime: media.currentTime,
+      maxReachedTime,
+      watchedSeconds: progress().watchedSeconds,
+      watchedPercentage: progress().watchedPercentage,
+      isCompleted: isCompleted(),
+      isStarted,
+      pauseCount,
+    }),
     getResult: (): VideoWatchResult => ({
       isStarted,
       isCompleted: isCompleted(),

@@ -4,6 +4,7 @@ import type {
   MatrixInputBlock,
   MatrixStructuredReply,
 } from "@typebot.io/blocks-inputs/matrix/schema";
+import { sumDefinedScores } from "@typebot.io/blocks-inputs/scoring/sumDefinedScores";
 import { parseNumericLiteral } from "@typebot.io/results/research/coerceResearchValue";
 import type { MatrixAnswerValue } from "@typebot.io/results/schemas/answers";
 import type {
@@ -40,6 +41,8 @@ export const parseMatrixReply = (
   const label: Record<string, string | string[]> = {};
   const contentLines: string[] = [];
   const variablesToUpdate: VariableWithUnknowValue[] = [];
+  const rowScores: Record<string, number | null> = {};
+  const hasScoredColumns = columns.some((column) => column.score !== undefined);
 
   rows.forEach((row, rowIndex) => {
     const selectedColumnIds = answers[row.id] ?? [];
@@ -50,6 +53,7 @@ export const parseMatrixReply = (
             {
               code: getMatrixCode(column, columnIndex),
               label: column.label ?? getMatrixCode(column, columnIndex),
+              score: column.score,
             },
           ]
         : [],
@@ -61,6 +65,10 @@ export const parseMatrixReply = (
     const columnLabels = selectedColumns.map((column) => column.label);
     label[rowCode] = isMultiplePerRow ? columnLabels : columnLabels[0]!;
     contentLines.push(`${row.label ?? rowCode}: ${columnLabels.join(", ")}`);
+    if (hasScoredColumns)
+      rowScores[rowCode] = sumDefinedScores(
+        selectedColumns.map((column) => column.score),
+      );
 
     const rowVariable = row.variableId
       ? variables.find((variable) => variable.id === row.variableId)
@@ -84,6 +92,12 @@ export const parseMatrixReply = (
       value,
       label,
       variableValue: JSON.stringify(value),
+      ...(hasScoredColumns
+        ? {
+            score: sumDefinedScores(Object.values(rowScores)),
+            details: { rowScores },
+          }
+        : {}),
     },
   };
 };

@@ -50,6 +50,24 @@ export const answerOtherTextsSchema = z.record(z.string(), z.string());
 export type AnswerOtherTexts = z.infer<typeof answerOtherTextsSchema>;
 export type AnswerValueLabel = z.infer<typeof answerValueLabelSchema>;
 
+/** Research details stored with an answer. */
+export const answerDetailsSchema = z.object({
+  /** Matrix: score of each answered row, by row code (null when its column has no score). */
+  rowScores: z.record(z.string(), z.number().nullable()).optional(),
+  /** Video options: what was watched of each clip, by option code. */
+  mediaWatch: z
+    .record(
+      z.string(),
+      z.object({
+        watchedPercentage: z.number(),
+        watchedSeconds: z.number(),
+        isCompleted: z.boolean(),
+      }),
+    )
+    .optional(),
+});
+export type AnswerDetails = z.infer<typeof answerDetailsSchema>;
+
 export const answerSchema = z.object({
   blockId: z.string(),
   content: z.string(),
@@ -58,6 +76,11 @@ export const answerSchema = z.object({
   value: answerResearchValueSchema.nullish().catch(null),
   valueLabel: answerValueLabelSchema.nullish().catch(null),
   otherTexts: answerOtherTextsSchema.nullish().catch(null),
+  score: z.number().nullish().catch(null),
+  details: answerDetailsSchema.nullish().catch(null),
+  loopBlockId: z.string().nullish(),
+  loopIteration: z.number().int().nullish(),
+  loopItem: z.string().nullish(),
 });
 
 export const answerInputSchema = answerV1Schema

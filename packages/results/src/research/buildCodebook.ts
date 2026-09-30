@@ -22,6 +22,12 @@ export type CodebookVariable = {
   variableId?: string;
   executionIndex?: number;
   optionValue?: string | number;
+  /** Loop question columns: loop block and item / iteration represented. */
+  loopBlockId?: string;
+  loopItem?: string;
+  loopIteration?: number;
+  /** Score column (value = score, never the answer code). */
+  isScore?: boolean;
 };
 
 export type Codebook = {
@@ -164,10 +170,20 @@ const buildQuestionCodebookVariable = (
     questionId: column.questionId,
     variableId: question?.variableId,
     executionIndex: column.executionIndex,
+    loopBlockId: column.loopSlot?.loopBlockId,
+    loopItem: column.loopSlot?.loopItem,
+    loopIteration: column.loopSlot?.loopIteration,
     missingValues: question?.missingValues.length
       ? question.missingValues
       : undefined,
   };
+  if (column.scoreOf)
+    return {
+      ...base,
+      missingValues: undefined,
+      isScore: true,
+      measure: "scale",
+    };
   if (column.otherText)
     return { ...base, missingValues: undefined, measure: "nominal" };
   if (column.videoMetric)

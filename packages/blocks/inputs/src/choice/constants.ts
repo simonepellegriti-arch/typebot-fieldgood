@@ -15,3 +15,16 @@ export const defaultChoiceItemResearchOptions = {
   textInputRequired: false,
   textInputPlaceholder: "Please specify...",
 } as const;
+
+/** Video/image options and display order (all optional in saved bots). */
+export const defaultChoiceMediaOptions = {
+  areItemsRandomized: false,
+  requireWatchBeforeSelect: false,
+  minimumWatchPercentage: 80,
+} as const;
+
+/** Clip of a video option: custom play/pause/replay controls unless native ones are enabled. */
+export const defaultChoiceItemMediaOptions = {
+  areControlsDisplayed: false,
+  isMuted: false,
+} as const;

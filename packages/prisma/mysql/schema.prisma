@@ -428,6 +428,14 @@ model AnswerV2 {
   valueLabel       Json?
   /// Open answers of "Other, please specify" options, by option code: {"98": "Brand XYZ"}
   otherTexts       Json?
+  /// Score of the answer (sum of the selected options / matrix rows), separate from the codes
+  score            Float?
+  /// Research details: matrix row scores, viewing data of video options
+  details          Json?
+  /// Loop context: loop block, 0-based iteration and item code the answer belongs to
+  loopBlockId      String?
+  loopIteration    Int?
+  loopItem         String?
   resultId         String
   result           Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
 

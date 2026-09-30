@@ -4,6 +4,7 @@ import {
 } from "@typebot.io/blocks-base/schemas";
 import { z } from "zod";
 import { InputBlockType } from "../constants";
+import { optionScoreSchema, scoreTargetSchema } from "../scoring/schema";
 
 /**
  * A matrix row (statement to rate). `value` is the stable code used in exports
@@ -24,6 +25,8 @@ export const matrixColumnSchema = z.object({
   id: z.string(),
   label: z.string().optional(),
   value: z.string().optional(),
+  /** Score given to each row answered with this column (separate from the code). */
+  score: optionScoreSchema,
 });
 
 export const matrixInputOptionsSchema = optionBaseSchema.extend({
@@ -41,6 +44,7 @@ export const matrixInputOptionsSchema = optionBaseSchema.extend({
   /** auto: table on wide screens, one card per row on narrow screens. */
   layout: z.enum(["auto", "table", "cards"]).optional(),
   buttonLabel: z.string().optional(),
+  scoreTargets: z.array(scoreTargetSchema).optional(),
 });
 
 export const matrixInputSchema = blockBaseSchema.merge(

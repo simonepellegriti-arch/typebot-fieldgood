@@ -6,15 +6,23 @@ import type { Condition } from "@typebot.io/conditions/schemas";
 import { Field } from "@typebot.io/ui/components/Field";
 import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
 import { Switch } from "@typebot.io/ui/components/Switch";
+import { BasicNumberInput } from "@/components/inputs/BasicNumberInput";
 import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
 import { ConditionForm } from "@/features/blocks/logic/condition/components/ConditionForm";
+import type { FilePathUploadProps } from "@/features/upload/api/generateUploadUrl";
+import { ChoiceItemMediaSettings } from "./ChoiceItemMediaSettings";
 
 type Props = {
   item: ButtonItem;
+  uploadFileProps?: FilePathUploadProps;
   onSettingsChange: (updates: Omit<ButtonItem, "content">) => void;
 };
 
-export const ButtonsItemSettings = ({ item, onSettingsChange }: Props) => {
+export const ButtonsItemSettings = ({
+  item,
+  uploadFileProps,
+  onSettingsChange,
+}: Props) => {
   const { t } = useTranslate();
 
   const updateIsDisplayConditionEnabled = (isEnabled: boolean) =>
@@ -85,6 +93,25 @@ export const ButtonsItemSettings = ({ item, onSettingsChange }: Props) => {
           onValueChange={updateButtonValue}
         />
       </Field.Root>
+      <Field.Root>
+        <Field.Label>
+          {t("blocks.inputs.score.label")}
+          <MoreInfoTooltip>
+            {t("blocks.inputs.score.helperText")}
+          </MoreInfoTooltip>
+        </Field.Label>
+        <BasicNumberInput
+          withVariableButton={false}
+          placeholder={t("blocks.inputs.score.placeholder")}
+          defaultValue={item.score}
+          onValueChange={(score) => updateItem({ score })}
+        />
+      </Field.Root>
+      <ChoiceItemMediaSettings
+        media={item.media}
+        uploadFileProps={uploadFileProps}
+        onMediaChange={(media) => updateItem({ media })}
+      />
       <Field.Root className="flex-row items-center">
         <Switch
           checked={

@@ -21,11 +21,15 @@ import {
   Switch,
 } from "solid-js";
 import { Button } from "../../../../../components/Button";
+import { createVideoResumeStore } from "../../../../../components/media/createVideoResumeStore";
+import { RobustVideoPlayer } from "../../../../../components/media/RobustVideoPlayer";
 import { TypingBubble } from "../../../../../components/TypingBubble";
 import type { InputSubmitContent } from "../../../../../types";
 import { createVideoWatchTracker } from "../helpers/createVideoWatchTracker";
 
 type Props = {
+  /** Message id, used to resume the video when the respondent comes back to it. */
+  bubbleId?: string;
   content: VideoBubbleBlock["content"];
   onTransitionEnd?: (ref?: HTMLDivElement) => void;
   onCompleted?: (reply?: InputSubmitContent) => void;
@@ -38,7 +42,6 @@ export const VideoBubble = (props: Props) => {
   let ref: HTMLDivElement | undefined;
   let videoRef: HTMLVideoElement | undefined;
   const [isTyping, setIsTyping] = createSignal(!!props.onTransitionEnd);
-  const [isPaused, setIsPaused] = createSignal(true);
   const [isSubmitted, setIsSubmitted] = createSignal(false);
   const tracking = () => props.content?.watchTracking;
   // Only the bubble being displayed now waits for the respondent (older chunks don't).
@@ -47,7 +50,17 @@ export const VideoBubble = (props: Props) => {
     Boolean(props.onTransitionEnd) &&
     Boolean(props.onCompleted) &&
     !isSubmitted();
+  // Coming back to the same video (e.g. page reload) resumes position and progress.
+  const resumeStore = createVideoResumeStore(
+    props.bubbleId && props.content?.url
+      ? `${props.bubbleId}:${props.content.url}`
+      : undefined,
+  );
+  const resumeState = resumeStore.read();
+  const saveResumeState = (video: HTMLVideoElement) =>
+    resumeStore.write(tracker.getResumeState(video));
   const tracker = createVideoWatchTracker({
+    initialState: resumeState,
     tracking: () => tracking(),
     onEnded: () => {
       if (
@@ -80,12 +93,6 @@ export const VideoBubble = (props: Props) => {
       videoRef.muted = true;
       await videoRef.play().catch(() => undefined);
     }
-  };
-
-  const togglePlay = () => {
-    if (!videoRef) return;
-    if (videoRef.paused) void videoRef.play().catch(() => undefined);
-    else videoRef.pause();
   };
 
   const isAutoplayEnabled = () =>
@@ -151,71 +158,49 @@ export const VideoBubble = (props: Props) => {
               }
             >
               <div class="flex flex-col w-full relative z-20">
-                <div class="relative w-full">
-                  {/* biome-ignore lint/a11y/useMediaCaption: Captions are not available for dynamically configured video bubble sources. */}
-                  <video
-                    ref={videoRef}
-                    src={props.content?.url}
-                    poster={props.content?.posterUrl}
-                    muted={
-                      props.content?.isMuted ??
-                      defaultVideoBubbleContent.isMuted
-                    }
-                    loop={
-                      props.content?.isLooping ??
-                      defaultVideoBubbleContent.isLooping
-                    }
-                    playsinline
-                    preload="metadata"
-                    controls={areControlsDisplayed()}
-                    class={cx(
-                      "p-4 focus:outline-none w-full relative text-fade-in rounded-md",
-                      isTyping()
-                        ? "opacity-0 h-8 @xs:h-9"
-                        : "opacity-100 h-auto",
-                    )}
-                    style={{
-                      "aspect-ratio": props.content?.aspectRatio,
-                      "max-width":
-                        props.content?.maxWidth ??
-                        defaultVideoBubbleContent.maxWidth,
-                    }}
-                    onPlay={(event) => {
-                      setIsPaused(false);
-                      tracker.handlePlay(event.currentTarget);
-                    }}
-                    onPause={(event) => {
-                      setIsPaused(true);
-                      tracker.handlePause(event.currentTarget);
-                    }}
-                    onTimeUpdate={(event) =>
-                      tracker.handleTimeUpdate(event.currentTarget)
-                    }
-                    onSeeking={(event) =>
-                      tracker.handleSeeking(event.currentTarget)
-                    }
-                    onEnded={(event) =>
-                      tracker.handleEnded(event.currentTarget)
-                    }
-                    onLoadedMetadata={(event) =>
-                      tracker.handleTimeUpdate(event.currentTarget)
-                    }
-                  />
-                  <Show when={!areControlsDisplayed() && !isTyping()}>
-                    <button
-                      type="button"
-                      class="absolute inset-0 m-4 flex items-center justify-center focus:outline-none focus-visible:ring-2 rounded-md"
-                      aria-label={isPaused() ? "Play" : "Pause"}
-                      onClick={togglePlay}
-                    >
-                      <Show when={isPaused()}>
-                        <span class="rounded-full bg-black/60 text-white w-14 h-14 flex items-center justify-center text-2xl">
-                          ▶
-                        </span>
-                      </Show>
-                    </button>
-                  </Show>
-                </div>
+                <RobustVideoPlayer
+                  src={props.content?.url ?? ""}
+                  fallbackSrc={props.content?.fallbackUrl}
+                  poster={props.content?.posterUrl}
+                  isMuted={
+                    props.content?.isMuted ?? defaultVideoBubbleContent.isMuted
+                  }
+                  isLooping={
+                    props.content?.isLooping ??
+                    defaultVideoBubbleContent.isLooping
+                  }
+                  areControlsDisplayed={areControlsDisplayed()}
+                  startTime={resumeState?.currentTime}
+                  class={cx(
+                    "p-4 text-fade-in",
+                    isTyping() ? "opacity-0 h-8 @xs:h-9" : "opacity-100",
+                  )}
+                  style={{
+                    "aspect-ratio": props.content?.aspectRatio,
+                    "max-width":
+                      props.content?.maxWidth ??
+                      defaultVideoBubbleContent.maxWidth,
+                  }}
+                  ref={(video) => {
+                    videoRef = video;
+                  }}
+                  onPlay={(video) => tracker.handlePlay(video)}
+                  onPause={(video) => {
+                    tracker.handlePause(video);
+                    saveResumeState(video);
+                  }}
+                  onTimeUpdate={(video) => {
+                    tracker.handleTimeUpdate(video);
+                    saveResumeState(video);
+                  }}
+                  onSeeking={(video) => tracker.handleSeeking(video)}
+                  onSeeked={(video) => tracker.handleTimeUpdate(video)}
+                  onEnded={(video) => {
+                    tracker.handleEnded(video);
+                    saveResumeState(video);
+                  }}
+                  onLoadedMetadata={(video) => tracker.handleTimeUpdate(video)}
+                />
                 <Show when={isTrackingInteractive() && !isTyping()}>
                   <div class="flex flex-col gap-2 px-4 pb-4">
                     <Show
