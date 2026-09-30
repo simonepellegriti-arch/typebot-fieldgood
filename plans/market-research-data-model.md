@@ -307,3 +307,9 @@ Logo (bolla di chat con barre di risposta) in builder, viewer, badge e favicon; 
 - **Tracked video** (video bubble `watchTracking`, native files only): the flow waits on the bubble (not on WhatsApp); the client sends `{isStarted, isCompleted, watchedSeconds, watchedPercentage, durationSeconds, pauseCount, events[]}` computed from HTML5 `played` ranges; forward seeking can be blocked; saved as the block answer. Export: `<NAME>_STARTED`, `_COMPLETED`, `_WATCHED_SECONDS`, `_WATCHED_PCT`, `_PAUSES`.
 - Structured replies travel in `textMessageSchema.structuredReply` (`choice` | `matrix` | `video`); plain text replies keep working (matrix accepts JSON or `row=column` pairs).
 - Migration `20260930090000_answer_other_texts` (nullable JSONB column, additive).
+
+## Deployment note: database connections
+
+- Runtime (`DATABASE_URL` on Vercel) uses the Supabase **transaction pooler** (port 6543): connections are shared between serverless instances, so frozen instances can't exhaust the pool.
+- Each instance keeps at most 2 connections (`createPrismaAdapter`, override with `connection_limit` in the URL).
+- Prisma migrations need a session connection: run them with the same URL on port **5432** (session pooler) or the direct host, never 6543.
