@@ -5,6 +5,7 @@ import { Field } from "@typebot.io/ui/components/Field";
 import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
 import { Switch } from "@typebot.io/ui/components/Switch";
 import type { Variable } from "@typebot.io/variables/schemas";
+import { BasicNumberInput } from "@/components/inputs/BasicNumberInput";
 import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
 import { VariablesCombobox } from "@/components/inputs/VariablesCombobox";
 
@@ -60,6 +61,40 @@ export const ButtonsBlockSettings = ({ options, onOptionsChange }: Props) => {
               onValueChange={updateButtonLabel}
             />
           </Field.Root>
+        )}
+        {(options?.isMultipleChoice ??
+          defaultChoiceInputOptions.isMultipleChoice) && (
+          <div className="flex gap-2">
+            <Field.Root className="flex-1">
+              <Field.Label>
+                {t("blocks.inputs.settings.minSelections.label")}
+                <MoreInfoTooltip>
+                  {t("blocks.inputs.settings.minSelections.helperText")}
+                </MoreInfoTooltip>
+              </Field.Label>
+              <BasicNumberInput
+                withVariableButton={false}
+                min={1}
+                defaultValue={options?.minSelections}
+                onValueChange={(minSelections) =>
+                  onOptionsChange({ ...options, minSelections })
+                }
+              />
+            </Field.Root>
+            <Field.Root className="flex-1">
+              <Field.Label>
+                {t("blocks.inputs.settings.maxSelections.label")}
+              </Field.Label>
+              <BasicNumberInput
+                withVariableButton={false}
+                min={1}
+                defaultValue={options?.maxSelections}
+                onValueChange={(maxSelections) =>
+                  onOptionsChange({ ...options, maxSelections })
+                }
+              />
+            </Field.Root>
+          </div>
         )}
       </Field.Container>
       <Field.Container>

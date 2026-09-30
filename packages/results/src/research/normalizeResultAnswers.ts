@@ -3,6 +3,7 @@ import {
   coerceResearchValue,
   parseNumericLiteral,
 } from "./coerceResearchValue";
+import { isObjectResearchValue } from "./isObjectResearchValue";
 import type {
   DictionaryQuestion,
   NormalizedAnswer,
@@ -55,6 +56,7 @@ export const normalizeResultAnswers = (
       createdAt: answer.createdAt,
       value,
       valueLabel,
+      otherTexts: answer.otherTexts ?? null,
       content: answer.content,
     };
   });
@@ -70,8 +72,17 @@ const parseStructuredValue = (
       valueLabel: answer.valueLabel ?? null,
     };
 
+  // Matrix rows and video watch results are stored as typed objects.
+  if (question.kind !== "standard")
+    return {
+      value: isObjectResearchValue(answer.value) ? answer.value : null,
+      valueLabel: answer.valueLabel ?? null,
+    };
+
   if (answer.value !== null && answer.value !== undefined) {
-    const value = coerceResearchValue(answer.value, question.dataType);
+    const value = isObjectResearchValue(answer.value)
+      ? JSON.stringify(answer.value)
+      : coerceResearchValue(answer.value, question.dataType);
     return {
       value,
       valueLabel:
@@ -187,7 +198,8 @@ const findLabels = (
   value: NormalizedAnswer["value"],
   options: QuestionOption[],
 ): string | string[] | undefined => {
-  if (value === null || options.length === 0) return;
+  if (value === null || options.length === 0 || isObjectResearchValue(value))
+    return;
   const findLabel = (singleValue: string | number | boolean) =>
     options.find((option) => String(option.value) === String(singleValue))
       ?.label ?? String(singleValue);

@@ -19,6 +19,18 @@ export const defaultVideoBubbleContent = {
   maxWidth: "100%",
   areControlsDisplayed: true,
   isAutoplayEnabled: true,
+  isMuted: false,
+  isLooping: false,
+} as const;
+
+export const defaultVideoWatchTracking = {
+  isEnabled: false,
+  isRequired: false,
+  minimumWatchPercentage: 80,
+  allowSeeking: true,
+  autoContinueOnEnd: false,
+  buttonLabel: "Continue",
+  requirementMessage: "Please watch the video to continue",
 } as const;
 
 export const horizontalVideoSuggestionSize = {

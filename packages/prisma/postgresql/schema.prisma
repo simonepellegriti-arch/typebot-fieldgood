@@ -397,10 +397,12 @@ model AnswerV2 {
   attachedFileUrls Json?
   /// 1-based position of this answer among the answers given to the same block in the same result
   executionIndex   Int?
-  /// Typed research value: number, string, boolean, array or ISO datetime string
+  /// Typed research value: number, string, boolean, array, ISO datetime string, matrix object (row code -> column code) or video watch result
   value            Json?
   /// Label(s) displayed to the respondent for the value (string or string[])
   valueLabel       Json?
+  /// Open answers of "Other, please specify" options, by option code: {"98": "Brand XYZ"}
+  otherTexts       Json?
   resultId         String
   result           Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
 

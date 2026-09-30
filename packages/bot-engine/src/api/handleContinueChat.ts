@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
+import { isVideoWatchTrackingActive } from "@typebot.io/blocks-bubbles/video/watch/isVideoWatchTrackingActive";
 import { messageSchema } from "@typebot.io/chat-api/schemas";
 import { getSession } from "@typebot.io/chat-session/queries/getSession";
 import { isDefined, isNotDefined } from "@typebot.io/lib/utils";
@@ -100,7 +101,9 @@ export const handleContinueChat = async ({
           (message) =>
             message.type === "custom-embed" ||
             (message.type === BubbleBlockType.EMBED &&
-              message.content.waitForEvent?.isEnabled),
+              message.content.waitForEvent?.isEnabled) ||
+            (message.type === BubbleBlockType.VIDEO &&
+              isVideoWatchTrackingActive(message.content)),
         ),
       });
 

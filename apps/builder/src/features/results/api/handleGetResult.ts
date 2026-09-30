@@ -76,6 +76,7 @@ export const handleGetResult = async ({
         select: {
           blockId: true,
           content: true,
+          otherTexts: true,
           createdAt: true,
         },
       },

@@ -38,7 +38,7 @@ describe("single choice with label/value", () => {
         structuredAnswer: reply.structuredAnswer,
         variable: { dataType: "number" },
       }),
-    ).toEqual({ value: 5, valueLabel: "Molto soddisfatto" });
+    ).toEqual({ value: 5, valueLabel: "Molto soddisfatto", otherTexts: null });
   });
 });
 

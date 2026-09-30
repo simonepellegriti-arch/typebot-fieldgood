@@ -106,6 +106,7 @@ export const handleGetResults = async ({
         select: {
           blockId: true,
           content: true,
+          otherTexts: true,
           createdAt: true,
         },
       },
@@ -126,9 +127,9 @@ export const handleGetResults = async ({
     results: z.array(resultWithAnswersSchema).parse(
       paginatedResults.map((r) => ({
         ...r,
-        answers: r.answersV2
-          .concat(r.answers)
-          .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
+        answers: [...r.answersV2, ...r.answers].sort(
+          (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+        ),
       })),
     ),
     nextCursor,

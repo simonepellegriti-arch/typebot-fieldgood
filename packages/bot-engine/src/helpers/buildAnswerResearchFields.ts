@@ -5,6 +5,7 @@ import {
   parseNumericLiteral,
 } from "@typebot.io/results/research/coerceResearchValue";
 import type {
+  AnswerOtherTexts,
   AnswerResearchValue,
   AnswerValueLabel,
 } from "@typebot.io/results/schemas/answers";
@@ -29,15 +30,27 @@ export const buildAnswerResearchFields = ({
 }): {
   value: AnswerResearchValue | null;
   valueLabel: AnswerValueLabel | null;
+  otherTexts: AnswerOtherTexts | null;
 } => {
   const rawValue = structuredAnswer
     ? structuredAnswer.value
     : deriveRawValueFromContent(block, content);
   return {
-    value: coerceResearchValue(rawValue, variable?.dataType),
+    // Objects (matrix rows, video watch results) are already typed per field.
+    value: isPlainObject(rawValue)
+      ? rawValue
+      : coerceResearchValue(rawValue, variable?.dataType),
     valueLabel: structuredAnswer?.label ?? null,
+    otherTexts: structuredAnswer?.otherTexts ?? null,
   };
 };
+
+const isPlainObject = (
+  value: unknown,
+): value is Exclude<
+  AnswerResearchValue,
+  string | number | boolean | string[] | number[]
+> => typeof value === "object" && value !== null && !Array.isArray(value);
 
 const deriveRawValueFromContent = (block: InputBlock, content: string) => {
   switch (block.type) {

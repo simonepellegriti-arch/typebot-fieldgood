@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
+import { isVideoWatchTrackingActive } from "@typebot.io/blocks-bubbles/video/watch/isVideoWatchTrackingActive";
 import {
   isForgedBlockType,
   isInputBlock,
@@ -36,6 +37,7 @@ import type {
   SetVariableHistoryItem,
   Variable,
 } from "@typebot.io/variables/schemas";
+import { saveVideoWatchResult } from "./blocks/bubbles/video/saveVideoWatchResult";
 import { saveDataInResponseVariableMapping } from "./blocks/integrations/httpRequest/saveDataInResponseVariableMapping";
 import { resumeChatCompletion } from "./blocks/integrations/legacy/openai/resumeChatCompletion";
 import { consumeWebhookResponse } from "./blocks/logic/webhook/consumeWebhookResponse";
@@ -365,6 +367,15 @@ const processNonInputBlock = async ({
       firstBubbleWasStreamed: false,
     };
 
+  if (
+    block.type === BubbleBlockType.VIDEO &&
+    isVideoWatchTrackingActive(block.content)
+  )
+    return {
+      ...(await saveVideoWatchResult({ block, reply, state })),
+      firstBubbleWasStreamed: false,
+    };
+
   const setVariableHistory: SetVariableHistoryItem[] = [];
   let variableToUpdate: Variable | undefined;
   let newSessionState = state;
@@ -620,11 +631,13 @@ const saveInputVarIfAny = ({
       {
         ...foundVariable,
         value:
-          isDeclaredAsList && Array.isArray(structuredAnswer?.value)
-            ? structuredAnswer.value.map((item) => String(item))
-            : Array.isArray(foundVariable.value) && reply.text
-              ? foundVariable.value.concat(reply.text)
-              : reply.text,
+          structuredAnswer?.variableValue !== undefined
+            ? structuredAnswer.variableValue
+            : isDeclaredAsList && Array.isArray(structuredAnswer?.value)
+              ? structuredAnswer.value.map((item) => String(item))
+              : Array.isArray(foundVariable.value) && reply.text
+                ? foundVariable.value.concat(reply.text)
+                : reply.text,
       },
     ],
     currentBlockId: undefined,
@@ -725,7 +738,7 @@ const saveAnswerInDb =
           (variable) => variable.id === block.options?.variableId,
         )
       : undefined;
-    const { value, valueLabel } = buildAnswerResearchFields({
+    const { value, valueLabel, otherTexts } = buildAnswerResearchFields({
       block,
       content: replyContent,
       structuredAnswer,
@@ -738,6 +751,7 @@ const saveAnswerInDb =
         attachedFileUrls,
         value: value ?? undefined,
         valueLabel: valueLabel ?? undefined,
+        otherTexts: otherTexts ?? undefined,
       },
       state,
     });

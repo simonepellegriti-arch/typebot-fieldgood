@@ -155,12 +155,13 @@ export const streamAllResultsToCsv = async (
                 answersV2: {
                   select: {
                     content: true,
+                    otherTexts: true,
                     blockId: true,
                   },
                 },
               },
             })
-          ).map((r) => ({ ...r, answers: r.answersV2.concat(r.answers) })),
+          ).map((r) => ({ ...r, answers: [...r.answersV2, ...r.answers] })),
         );
 
         const batch = rawBatch.filter((r) => !processedIds.has(r.id));

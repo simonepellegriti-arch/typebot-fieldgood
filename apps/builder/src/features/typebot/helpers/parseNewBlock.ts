@@ -29,10 +29,23 @@ const parseDefaultItems = (type: BlockWithItems["type"]): ItemV6[] => {
   }
 };
 
+/** A new matrix starts with 3 rows and a 5-point scale, all with codes. */
+const parseDefaultMatrixOptions = () => ({
+  rows: [1, 2, 3].map((code) => ({ id: createId(), value: String(code) })),
+  columns: [1, 2, 3, 4, 5].map((code) => ({
+    id: createId(),
+    label: String(code),
+    value: String(code),
+  })),
+});
+
 export const parseNewBlock = (type: BlockV6["type"]) =>
   ({
     id: createId(),
     type,
+    ...(type === InputBlockType.MATRIX
+      ? { options: parseDefaultMatrixOptions() }
+      : undefined),
 
     ...(blockTypeHasItems(type)
       ? { items: parseDefaultItems(type) }

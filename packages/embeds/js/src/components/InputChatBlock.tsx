@@ -4,6 +4,7 @@ import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import type { DateInputBlock } from "@typebot.io/blocks-inputs/date/schema";
 import type { EmailInputBlock } from "@typebot.io/blocks-inputs/email/schema";
 import type { FileInputBlock } from "@typebot.io/blocks-inputs/file/schema";
+import type { MatrixInputBlock } from "@typebot.io/blocks-inputs/matrix/schema";
 import type { NumberInputBlock } from "@typebot.io/blocks-inputs/number/schema";
 import { defaultPaymentInputOptions } from "@typebot.io/blocks-inputs/payment/constants";
 import type { PaymentInputBlock } from "@typebot.io/blocks-inputs/payment/schema";
@@ -27,6 +28,7 @@ import { CardsCaroussel } from "../features/blocks/inputs/cards/CardsCaroussel";
 import { DateForm } from "../features/blocks/inputs/date/components/DateForm";
 import { EmailInput } from "../features/blocks/inputs/email/components/EmailInput";
 import { FileUploadForm } from "../features/blocks/inputs/fileUpload/components/FileUploadForm";
+import { MatrixForm } from "../features/blocks/inputs/matrix/components/MatrixForm";
 import { NumberInput } from "../features/blocks/inputs/number/components/NumberInput";
 import { PaymentForm } from "../features/blocks/inputs/payment/components/PaymentForm";
 import { PhoneInput } from "../features/blocks/inputs/phone/components/PhoneInput";
@@ -257,6 +259,9 @@ const Input = (props: {
           onTransitionEnd={props.onTransitionEnd}
         />
       </Match>
+      <Match when={isMatrixBlock(props.block)} keyed>
+        {(block) => <MatrixForm block={block} onSubmit={props.onSubmit} />}
+      </Match>
       <Match when={props.block.type === InputBlockType.CARDS}>
         <CardsCaroussel
           block={props.block as CardsBlock}
@@ -277,3 +282,8 @@ const isPictureChoiceBlock = (
   block: ContinueChatResponse["input"],
 ): PictureChoiceBlock | undefined =>
   block?.type === InputBlockType.PICTURE_CHOICE ? block : undefined;
+
+const isMatrixBlock = (
+  block: ContinueChatResponse["input"],
+): MatrixInputBlock | undefined =>
+  block?.type === InputBlockType.MATRIX ? block : undefined;

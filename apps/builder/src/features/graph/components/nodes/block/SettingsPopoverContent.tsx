@@ -12,6 +12,7 @@ import { CardsBlockSettings } from "@/features/blocks/inputs/cards/components/Ca
 import { DateInputSettings } from "@/features/blocks/inputs/date/components/DateInputSettings";
 import { EmailInputSettings } from "@/features/blocks/inputs/emailInput/components/EmailInputSettings";
 import { FileInputSettings } from "@/features/blocks/inputs/fileUpload/components/FileInputSettings";
+import { MatrixInputSettings } from "@/features/blocks/inputs/matrix/components/MatrixInputSettings";
 import { NumberInputSettings } from "@/features/blocks/inputs/number/components/NumberInputSettings";
 import { PaymentSettings } from "@/features/blocks/inputs/payment/components/PaymentSettings";
 import { PhoneInputSettings } from "@/features/blocks/inputs/phone/components/PhoneInputSettings";
@@ -175,6 +176,14 @@ export const NodeSettings = ({
     case InputBlockType.TIME: {
       return (
         <TimeInputSettings
+          options={node.options}
+          onOptionsChange={updateOptions}
+        />
+      );
+    }
+    case InputBlockType.MATRIX: {
+      return (
+        <MatrixInputSettings
           options={node.options}
           onOptionsChange={updateOptions}
         />

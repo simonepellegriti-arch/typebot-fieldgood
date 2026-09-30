@@ -5,6 +5,11 @@ import type {
 import type { SessionState } from "@typebot.io/chat-session/schemas";
 import type { Prisma } from "@typebot.io/prisma/types";
 import type {
+  AnswerOtherTexts,
+  AnswerResearchValue,
+  AnswerValueLabel,
+} from "@typebot.io/results/schemas/answers";
+import type {
   SetVariableHistoryItem,
   VariableWithUnknowValue,
 } from "@typebot.io/variables/schemas";
@@ -29,8 +34,12 @@ export type ExecuteIntegrationResponse = {
  * Multiple choice replies are always arrays.
  */
 export type StructuredAnswer = {
-  value: string | number | boolean | string[] | number[];
-  label?: string | string[];
+  value: AnswerResearchValue;
+  label?: AnswerValueLabel;
+  /** "Other, please specify" open answers by option code. */
+  otherTexts?: AnswerOtherTexts;
+  /** Overrides what is stored in the block variable (e.g. JSON for matrices). */
+  variableValue?: string;
 };
 
 export type SuccessReply = {

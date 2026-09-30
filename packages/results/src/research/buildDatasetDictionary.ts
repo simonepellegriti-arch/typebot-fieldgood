@@ -1,6 +1,9 @@
 import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
+import type { VideoBubbleBlock } from "@typebot.io/blocks-bubbles/video/schema";
+import { isVideoWatchTrackingActive } from "@typebot.io/blocks-bubbles/video/watch/isVideoWatchTrackingActive";
 import { isInputBlock } from "@typebot.io/blocks-core/helpers";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
+import { getMatrixCode } from "@typebot.io/blocks-inputs/matrix/helpers/getMatrixCode";
 import type { InputBlock } from "@typebot.io/blocks-inputs/schema";
 import type { Group } from "@typebot.io/groups/schemas";
 import type { Variable, VariableDataType } from "@typebot.io/variables/schemas";
@@ -42,16 +45,32 @@ export const buildDatasetDictionary = (
     for (const variable of version.variables)
       variablesById.set(variable.id, variable);
 
-    for (const { block, precedingText, groupTitle } of listInputBlocks(
+    for (const { block, precedingText, groupTitle } of listQuestionBlocks(
       version.groups,
     )) {
-      const variable = block.options?.variableId
-        ? version.variables.find(
-            (variable) => variable.id === block.options?.variableId,
-          )
+      const variableId = getQuestionVariableId(block);
+      const variable = variableId
+        ? version.variables.find((variable) => variable.id === variableId)
         : undefined;
       if (variable) inputVariableIds.add(variable.id);
       const existingQuestion = questionsById.get(block.id);
+      if (block.type === BubbleBlockType.VIDEO) {
+        questionsById.set(block.id, {
+          id: block.id,
+          blockId: block.id,
+          blockType: BubbleBlockType.VIDEO,
+          kind: "video",
+          variableId: variable?.id,
+          variableName: variable?.name ?? `VIDEO_${block.id}`,
+          label: variable?.label ?? precedingText ?? groupTitle,
+          dataType: "number",
+          isMultiple: false,
+          options: [],
+          missingValues: [],
+          versionNumbers: mergeVersionNumbers(existingQuestion, version),
+        });
+        continue;
+      }
       const isMultiple = isMultipleChoiceBlock(block);
       const rawOptions = parseBlockOptions(block);
       const dataType =
@@ -65,21 +84,62 @@ export const buildDatasetDictionary = (
             : option.value,
         })),
       );
+      const matrixRows =
+        block.type === InputBlockType.MATRIX
+          ? mergeOptions(
+              existingQuestion?.matrixRows ?? [],
+              (block.options?.rows ?? []).map((row, rowIndex) => ({
+                value: getMatrixCode(row, rowIndex),
+                label: row.label ?? getMatrixCode(row, rowIndex),
+              })),
+            )
+          : undefined;
+      const isMultiplePerRow =
+        block.type === InputBlockType.MATRIX &&
+        block.options?.answerMode === "multiple";
+      const otherOptionValues =
+        block.type === InputBlockType.CHOICE
+          ? mergeCodes(
+              existingQuestion?.otherOptionValues ?? [],
+              block.items.flatMap((item) => {
+                const code = item.value ?? item.content;
+                if (!item.hasTextInput || code === undefined) return [];
+                return [
+                  isNumericDataType(dataType)
+                    ? (parseNumericLiteral(code) ?? code)
+                    : code,
+                ];
+              }),
+            )
+          : undefined;
       questionsById.set(block.id, {
         id: block.id,
         blockId: block.id,
         blockType: block.type,
+        kind: block.type === InputBlockType.MATRIX ? "matrix" : "standard",
         variableId: variable?.id,
         variableName: variable?.name ?? `Q_${block.id}`,
-        label: variable?.label ?? precedingText ?? groupTitle,
+        label:
+          variable?.label ??
+          (block.type === InputBlockType.MATRIX
+            ? block.options?.question?.trim() || undefined
+            : undefined) ??
+          precedingText ??
+          groupTitle,
         dataType,
         isMultiple,
         options,
         missingValues: variable?.missingValues ?? [],
-        versionNumbers: [
-          ...(existingQuestion?.versionNumbers ?? []),
-          ...(version.versionNumber !== null ? [version.versionNumber] : []),
-        ],
+        versionNumbers: mergeVersionNumbers(existingQuestion, version),
+        ...(matrixRows
+          ? {
+              matrixRows,
+              isMultiplePerRow,
+            }
+          : {}),
+        ...(otherOptionValues && otherOptionValues.length > 0
+          ? { otherOptionValues }
+          : {}),
       });
     }
   }
@@ -108,11 +168,12 @@ export const buildDatasetDictionary = (
   return { questions, variables };
 };
 
-const listInputBlocks = (groups: Group[]) =>
+/** Input blocks and tracked videos (which produce answers) with their preceding text. */
+const listQuestionBlocks = (groups: Group[]) =>
   groups.flatMap((group) => {
     let precedingText: string | undefined;
-    const inputBlocks: {
-      block: InputBlock;
+    const questionBlocks: {
+      block: InputBlock | VideoBubbleBlock;
       precedingText: string | undefined;
       groupTitle: string;
     }[] = [];
@@ -122,13 +183,41 @@ const listInputBlocks = (groups: Group[]) =>
         if (text) precedingText = text;
         continue;
       }
-      if (isInputBlock(block)) {
-        inputBlocks.push({ block, precedingText, groupTitle: group.title });
+      if (
+        (block.type === BubbleBlockType.VIDEO &&
+          isVideoWatchTrackingActive(block.content)) ||
+        isInputBlock(block)
+      ) {
+        questionBlocks.push({ block, precedingText, groupTitle: group.title });
         precedingText = undefined;
       }
     }
-    return inputBlocks;
+    return questionBlocks;
   });
+
+const getQuestionVariableId = (block: InputBlock | VideoBubbleBlock) =>
+  block.type === BubbleBlockType.VIDEO
+    ? block.content?.watchTracking?.variableId
+    : block.options?.variableId;
+
+const mergeVersionNumbers = (
+  existingQuestion: DictionaryQuestion | undefined,
+  version: QuestionnaireVersion,
+) => [
+  ...(existingQuestion?.versionNumbers ?? []),
+  ...(version.versionNumber !== null ? [version.versionNumber] : []),
+];
+
+const mergeCodes = (
+  previousCodes: (string | number)[],
+  newCodes: (string | number)[],
+) => [
+  ...previousCodes,
+  ...newCodes.filter(
+    (code) =>
+      !previousCodes.some((previous) => String(previous) === String(code)),
+  ),
+];
 
 const extractPlainText = (content: unknown): string | undefined => {
   if (!content || typeof content !== "object") return;
@@ -159,6 +248,11 @@ const isMultipleChoiceBlock = (block: InputBlock) =>
   Boolean(block.options?.isMultipleChoice);
 
 const parseBlockOptions = (block: InputBlock): QuestionOption[] => {
+  if (block.type === InputBlockType.MATRIX)
+    return (block.options?.columns ?? []).map((column, columnIndex) => ({
+      value: getMatrixCode(column, columnIndex),
+      label: column.label ?? getMatrixCode(column, columnIndex),
+    }));
   if (block.type === InputBlockType.CHOICE)
     return block.items.flatMap((item) => {
       const label = item.content ?? item.value;
@@ -187,6 +281,7 @@ const inferDataType = (
     case InputBlockType.NUMBER:
     case InputBlockType.RATING:
       return "number";
+    case InputBlockType.MATRIX:
     case InputBlockType.CHOICE:
     case InputBlockType.PICTURE_CHOICE: {
       const areAllOptionsNumeric =

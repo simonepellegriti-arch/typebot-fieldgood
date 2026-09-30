@@ -1,3 +1,4 @@
+import type { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
 import type { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import type { Prisma } from "@typebot.io/prisma/types";
 import { variableWithValueSchema } from "@typebot.io/variables/schemas";
@@ -60,7 +61,8 @@ export type ResultHeaderCell = {
     id: string;
     groupId: string;
   }[];
-  blockType?: InputBlockType;
+  /** Tracked videos produce answers too (watch results). */
+  blockType?: InputBlockType | BubbleBlockType.VIDEO;
   variableIds?: string[];
 };
 

@@ -1,3 +1,5 @@
+import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
+import { isVideoWatchTrackingActive } from "@typebot.io/blocks-bubbles/video/watch/isVideoWatchTrackingActive";
 import { isInputBlock } from "@typebot.io/blocks-core/helpers";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import type { InputBlock } from "@typebot.io/blocks-inputs/schema";
@@ -37,10 +39,16 @@ export const parseResultHeader = ({
       (linkedTypebot) => linkedTypebot.variables,
     ),
   ];
-  const inputsResultHeader = parseInputsResultHeader({
-    groups: parsedGroups,
-    variables: parsedVariables,
-  });
+  const inputsResultHeader = [
+    ...parseInputsResultHeader({
+      groups: parsedGroups,
+      variables: parsedVariables,
+    }),
+    ...parseTrackedVideosResultHeader({
+      groups: parsedGroups,
+      variables: parsedVariables,
+    }),
+  ];
   return [
     { label: "Submitted at", id: "date" },
     ...inputsResultHeader,
@@ -160,6 +168,37 @@ const parseInputsResultHeader = ({
     existingHeaders.push(newHeaderCell);
     return existingHeaders;
   }, []);
+
+/** Tracked videos save watch results as answers: one column per video. */
+const parseTrackedVideosResultHeader = ({
+  groups,
+  variables,
+}: {
+  groups: Group[];
+  variables: Variable[];
+}): ResultHeaderCellWithBlock[] =>
+  groups.flatMap((group) =>
+    group.blocks.flatMap((block) => {
+      if (
+        block.type !== BubbleBlockType.VIDEO ||
+        !isVideoWatchTrackingActive(block.content)
+      )
+        return [];
+      const variableId = block.content?.watchTracking?.variableId;
+      const variableName = variableId
+        ? variables.find(byId(variableId))?.name
+        : undefined;
+      return [
+        {
+          id: block.id,
+          label: variableName ?? `${group.title} (video)`,
+          blocks: [{ id: block.id, groupId: group.id }],
+          blockType: BubbleBlockType.VIDEO,
+          variableIds: variableId ? [variableId] : undefined,
+        },
+      ];
+    }),
+  );
 
 const parseVariablesHeaders = ({
   variables,

@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
+import { isVideoWatchTrackingActive } from "@typebot.io/blocks-bubbles/video/watch/isVideoWatchTrackingActive";
 import { getSession } from "@typebot.io/chat-session/queries/getSession";
 import { restartSession } from "@typebot.io/chat-session/queries/restartSession";
 import { createId } from "@typebot.io/lib/createId";
@@ -130,7 +131,9 @@ export const handleSendMessageV2 = async ({
               (message) =>
                 message.type === "custom-embed" ||
                 (message.type === BubbleBlockType.EMBED &&
-                  message.content.waitForEvent?.isEnabled),
+                  message.content.waitForEvent?.isEnabled) ||
+                (message.type === BubbleBlockType.VIDEO &&
+                  isVideoWatchTrackingActive(message.content)),
             ),
             setVariableHistory,
           });
@@ -196,7 +199,9 @@ export const handleSendMessageV2 = async ({
           (message) =>
             message.type === "custom-embed" ||
             (message.type === BubbleBlockType.EMBED &&
-              message.content.waitForEvent?.isEnabled),
+              message.content.waitForEvent?.isEnabled) ||
+            (message.type === BubbleBlockType.VIDEO &&
+              isVideoWatchTrackingActive(message.content)),
         ),
         setVariableHistory,
       });

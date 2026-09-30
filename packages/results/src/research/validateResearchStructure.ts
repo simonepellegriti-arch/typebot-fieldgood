@@ -1,4 +1,6 @@
 import { isInputBlock } from "@typebot.io/blocks-core/helpers";
+import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
+import { getMatrixCode } from "@typebot.io/blocks-inputs/matrix/helpers/getMatrixCode";
 import type { Group } from "@typebot.io/groups/schemas";
 import type { Variable } from "@typebot.io/variables/schemas";
 
@@ -12,6 +14,13 @@ export type ResearchStructureWarning =
       code: "variableSharedByInputBlocks";
       variableName: string;
       blockIds: string[];
+      message: string;
+    }
+  | {
+      code: "duplicateCode";
+      blockId: string;
+      groupTitle: string;
+      duplicatedCode: string;
       message: string;
     }
   | {
@@ -49,6 +58,26 @@ export const validateResearchStructure = ({
         variableName,
         message: `Variable name "${variableName}" is used ${occurrences} times: dataset columns would be ambiguous.`,
       });
+
+  for (const group of groups)
+    for (const block of group.blocks) {
+      for (const { codes, kind } of listBlockCodeLists(block)) {
+        const seenCodes = new Set<string>();
+        for (const code of codes) {
+          if (seenCodes.has(code)) {
+            warnings.push({
+              code: "duplicateCode",
+              blockId: block.id,
+              groupTitle: group.title,
+              duplicatedCode: code,
+              message: `Code "${code}" is used by several ${kind} of the same question in "${group.title}": their answers can't be told apart in the dataset.`,
+            });
+            break;
+          }
+          seenCodes.add(code);
+        }
+      }
+    }
 
   const isResearchTypebot = variables.some(
     (variable) =>
@@ -90,4 +119,35 @@ export const validateResearchStructure = ({
   }
 
   return warnings;
+};
+
+const listBlockCodeLists = (
+  block: Group["blocks"][number],
+): { codes: string[]; kind: string }[] => {
+  if (block.type === InputBlockType.CHOICE)
+    return [
+      {
+        kind: "options",
+        codes: block.items.flatMap((item) => {
+          const code = item.value ?? item.content;
+          return code ? [code.trim()] : [];
+        }),
+      },
+    ];
+  if (block.type === InputBlockType.MATRIX)
+    return [
+      {
+        kind: "rows",
+        codes: (block.options?.rows ?? []).map((row, index) =>
+          getMatrixCode(row, index),
+        ),
+      },
+      {
+        kind: "columns",
+        codes: (block.options?.columns ?? []).map((column, index) =>
+          getMatrixCode(column, index),
+        ),
+      },
+    ];
+  return [];
 };

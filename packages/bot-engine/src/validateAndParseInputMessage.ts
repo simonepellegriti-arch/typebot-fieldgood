@@ -1,3 +1,4 @@
+import { validateChoiceSelection } from "@typebot.io/blocks-inputs/choice/helpers/validateChoiceSelection";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import { defaultFileInputOptions } from "@typebot.io/blocks-inputs/file/constants";
 import type { InputBlock } from "@typebot.io/blocks-inputs/schema";
@@ -9,11 +10,13 @@ import type { SessionStore } from "@typebot.io/runtime-session-store";
 import type { Variable } from "@typebot.io/variables/schemas";
 import { parseCardsReply } from "./blocks/cards/parseCardsReply";
 import { injectVariableValuesInButtonsInputBlock } from "./blocks/inputs/buttons/injectVariableValuesInButtonsInputBlock";
+import { parseChoiceStructuredReply } from "./blocks/inputs/buttons/parseChoiceStructuredReply";
 import { parseMultipleChoiceReply } from "./blocks/inputs/buttons/parseMultipleChoiceReply";
 import { parseSingleChoiceReply } from "./blocks/inputs/buttons/parseSingleChoiceReply";
 import { parseDateInput } from "./blocks/inputs/date/parseDateInput";
 import { parseDateReply } from "./blocks/inputs/date/parseDateReply";
 import { formatEmail } from "./blocks/inputs/email/formatEmail";
+import { parseMatrixReply } from "./blocks/inputs/matrix/parseMatrixReply";
 import { parseNumber } from "./blocks/inputs/number/parseNumber";
 import { formatPhoneNumber } from "./blocks/inputs/phone/formatPhoneNumber";
 import { injectVariableValuesInPictureChoiceBlock } from "./blocks/inputs/pictureChoice/injectVariableValuesInPictureChoiceBlock";
@@ -70,14 +73,35 @@ export const validateAndParseInputMessage = (
         sessionStore,
         skipDisplayConditionCheck: skipValidation,
       }).items;
-      if (block.options?.isMultipleChoice)
-        return parseMultipleChoiceReply(message.text, {
+      if (message.structuredReply?.type === "choice")
+        return parseChoiceStructuredReply(message.structuredReply, {
           items: displayedItems,
+          options: block.options,
         });
+      if (block.options?.isMultipleChoice)
+        return enforceMultipleChoiceRules(
+          parseMultipleChoiceReply(message.text, {
+            items: displayedItems,
+          }),
+          { items: displayedItems, options: block.options },
+        );
       return parseSingleChoiceReply(message.text, {
         replyId: message.metadata?.replyId,
         items: displayedItems,
       });
+    }
+    case InputBlockType.MATRIX: {
+      if (!message || message.type !== "text") return { status: "fail" };
+      return parseMatrixReply(
+        {
+          text: message.text,
+          structuredReply:
+            message.structuredReply?.type === "matrix"
+              ? message.structuredReply
+              : undefined,
+        },
+        { block, variables },
+      );
     }
     case InputBlockType.NUMBER: {
       if (!message || message.type !== "text") return { status: "fail" };
@@ -204,4 +228,45 @@ export const validateAndParseInputMessage = (
       });
     }
   }
+};
+
+/**
+ * Plain text multiple choice replies (API, WhatsApp) follow the same exclusivity and
+ * min/max rules as the web client. Blocks without these settings are unaffected.
+ * Open texts can't be sent in plain text, so required "Other" texts aren't enforced here.
+ */
+const enforceMultipleChoiceRules = (
+  parsedReply: ParsedReply,
+  {
+    items,
+    options,
+  }: {
+    items: Extract<InputBlock, { type: InputBlockType.CHOICE }>["items"];
+    options: Extract<InputBlock, { type: InputBlockType.CHOICE }>["options"];
+  },
+): ParsedReply => {
+  if (parsedReply.status !== "success") return parsedReply;
+  const hasSelectionRules =
+    options?.minSelections !== undefined ||
+    options?.maxSelections !== undefined ||
+    items.some((item) => item.isExclusive);
+  if (!hasSelectionRules) return parsedReply;
+  const selectedValues = parsedReply.structuredAnswer?.value;
+  if (!Array.isArray(selectedValues)) return parsedReply;
+  const selectedItemIds = items
+    .filter((item) => {
+      const code = item.value ?? item.content?.trim();
+      return (
+        code !== undefined && selectedValues.some((v) => String(v) === code)
+      );
+    })
+    .map((item) => item.id);
+  const validation = validateChoiceSelection({
+    selectedItemIds,
+    items: items.map((item) => ({ ...item, textInputRequired: false })),
+    isMultipleChoice: true,
+    minSelections: options?.minSelections,
+    maxSelections: options?.maxSelections,
+  });
+  return validation.status === "valid" ? parsedReply : { status: "fail" };
 };

@@ -2,12 +2,22 @@ import { audioBubbleContentSchema } from "@typebot.io/blocks-bubbles/audio/schem
 import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
 import { embedBubbleContentSchema } from "@typebot.io/blocks-bubbles/embed/schema";
 import { imageBubbleContentSchema } from "@typebot.io/blocks-bubbles/image/schema";
-import { videoBubbleContentSchema } from "@typebot.io/blocks-bubbles/video/schema";
+import {
+  videoBubbleContentSchema,
+  videoStructuredReplySchema,
+} from "@typebot.io/blocks-bubbles/video/schema";
 import { cardsBlockSchema } from "@typebot.io/blocks-inputs/cards/schema";
-import { buttonsInputSchemas } from "@typebot.io/blocks-inputs/choice/schema";
+import {
+  buttonsInputSchemas,
+  choiceStructuredReplySchema,
+} from "@typebot.io/blocks-inputs/choice/schema";
 import { dateInputSchema } from "@typebot.io/blocks-inputs/date/schema";
 import { emailInputSchema } from "@typebot.io/blocks-inputs/email/schema";
 import { fileInputBlockSchemas } from "@typebot.io/blocks-inputs/file/schema";
+import {
+  matrixInputSchema,
+  matrixStructuredReplySchema,
+} from "@typebot.io/blocks-inputs/matrix/schema";
 import { numberInputSchema } from "@typebot.io/blocks-inputs/number/schema";
 import {
   paymentInputRuntimeOptionsSchema,
@@ -30,9 +40,26 @@ import {
 import { z } from "zod";
 import { clientSideActionSchema } from "./clientSideAction";
 
+/**
+ * Structured research reply. Sent by the web client next to the human readable
+ * `text` for matrix questions, choice questions with "Other, please specify"
+ * and tracked videos. Clients that only send `text` keep working.
+ */
+export const structuredReplySchema = z.discriminatedUnion("type", [
+  choiceStructuredReplySchema,
+  matrixStructuredReplySchema,
+  videoStructuredReplySchema,
+]);
+export type StructuredReply = z.infer<typeof structuredReplySchema>;
+
 export const textMessageSchema = z.object({
   type: z.literal("text"),
   text: z.string(),
+  structuredReply: structuredReplySchema
+    .optional()
+    .describe(
+      "Structured answer for matrix, choice (with 'Other, please specify') and tracked video blocks",
+    ),
   metadata: z.object({ replyId: z.string().optional() }).optional(),
   attachedFileUrls: z
     .array(z.string())
@@ -298,6 +325,7 @@ const chatResponseBaseSchema = z.object({
         fileInputBlockSchemas.v6,
         pictureChoiceBlockSchemas.v6,
         cardsBlockSchema,
+        matrixInputSchema,
       ]),
       z.discriminatedUnion("type", [
         buttonsInputSchemas.v5,

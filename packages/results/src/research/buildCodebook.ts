@@ -168,6 +168,22 @@ const buildQuestionCodebookVariable = (
       ? question.missingValues
       : undefined,
   };
+  if (column.otherText)
+    return { ...base, missingValues: undefined, measure: "nominal" };
+  if (column.videoMetric)
+    return {
+      ...base,
+      missingValues: undefined,
+      ...(column.videoMetric === "STARTED" || column.videoMetric === "COMPLETED"
+        ? {
+            measure: "nominal" as const,
+            valueLabels: [
+              { value: 0, label: "No" },
+              { value: 1, label: "Yes" },
+            ],
+          }
+        : { measure: "scale" as const }),
+    };
   if (column.optionValue !== undefined)
     return {
       ...base,
@@ -185,7 +201,8 @@ const buildQuestionCodebookVariable = (
   return {
     ...base,
     measure:
-      question?.blockType === InputBlockType.RATING
+      question?.blockType === InputBlockType.RATING ||
+      (question?.kind === "matrix" && column.type === "numeric")
         ? "ordinal"
         : column.type === "numeric" && !hasValueLabels
           ? "scale"

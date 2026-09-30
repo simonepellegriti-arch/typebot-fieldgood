@@ -1,4 +1,5 @@
 import { useTranslate } from "@tolgee/react";
+import { defaultChoiceItemResearchOptions } from "@typebot.io/blocks-inputs/choice/constants";
 import type { ButtonItem } from "@typebot.io/blocks-inputs/choice/schema";
 import { LogicalOperator } from "@typebot.io/conditions/constants";
 import type { Condition } from "@typebot.io/conditions/schemas";
@@ -39,6 +40,9 @@ export const ButtonsItemSettings = ({ item, onSettingsChange }: Props) => {
       ...item,
       value,
     });
+
+  const updateItem = (updates: Partial<Omit<ButtonItem, "content">>) =>
+    onSettingsChange({ ...item, ...updates });
 
   return (
     <div className="flex flex-col gap-4">
@@ -81,6 +85,71 @@ export const ButtonsItemSettings = ({ item, onSettingsChange }: Props) => {
           onValueChange={updateButtonValue}
         />
       </Field.Root>
+      <Field.Root className="flex-row items-center">
+        <Switch
+          checked={
+            item.isExclusive ?? defaultChoiceItemResearchOptions.isExclusive
+          }
+          onCheckedChange={(isExclusive) => updateItem({ isExclusive })}
+        />
+        <Field.Label>
+          {t("blocks.inputs.button.buttonSettings.exclusive.label")}
+          <MoreInfoTooltip>
+            {t("blocks.inputs.button.buttonSettings.exclusive.helperText")}
+          </MoreInfoTooltip>
+        </Field.Label>
+      </Field.Root>
+      <Field.Container>
+        <Field.Root className="flex-row items-center">
+          <Switch
+            checked={
+              item.hasTextInput ?? defaultChoiceItemResearchOptions.hasTextInput
+            }
+            onCheckedChange={(hasTextInput) => updateItem({ hasTextInput })}
+          />
+          <Field.Label>
+            {t("blocks.inputs.button.buttonSettings.otherText.label")}
+            <MoreInfoTooltip>
+              {t("blocks.inputs.button.buttonSettings.otherText.helperText")}
+            </MoreInfoTooltip>
+          </Field.Label>
+        </Field.Root>
+        {(item.hasTextInput ??
+          defaultChoiceItemResearchOptions.hasTextInput) && (
+          <>
+            <Field.Root className="flex-row items-center">
+              <Switch
+                checked={
+                  item.textInputRequired ??
+                  defaultChoiceItemResearchOptions.textInputRequired
+                }
+                onCheckedChange={(textInputRequired) =>
+                  updateItem({ textInputRequired })
+                }
+              />
+              <Field.Label>
+                {t(
+                  "blocks.inputs.button.buttonSettings.otherTextRequired.label",
+                )}
+              </Field.Label>
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>
+                {t("blocks.inputs.settings.input.placeholder.label")}
+              </Field.Label>
+              <DebouncedTextInputWithVariablesButton
+                defaultValue={
+                  item.textInputPlaceholder ??
+                  defaultChoiceItemResearchOptions.textInputPlaceholder
+                }
+                onValueChange={(textInputPlaceholder) =>
+                  updateItem({ textInputPlaceholder })
+                }
+              />
+            </Field.Root>
+          </>
+        )}
+      </Field.Container>
     </div>
   );
 };

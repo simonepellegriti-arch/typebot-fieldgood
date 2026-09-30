@@ -122,6 +122,13 @@ const getSampleValue = (block: InputBlock, userEmail?: string): string => {
       return block.options?.isMultipleChoice
         ? block.items.map((item) => item.content).join(", ")
         : (block.items[0]?.content ?? "Item");
+    case InputBlockType.MATRIX:
+      return (block.options?.rows ?? [])
+        .map(
+          (row) =>
+            `${row.label ?? row.value ?? ""}: ${block.options?.columns?.[0]?.label ?? ""}`,
+        )
+        .join("\n");
     case InputBlockType.CARDS:
       return block.items
         .map((item) => item.title ?? item.description)

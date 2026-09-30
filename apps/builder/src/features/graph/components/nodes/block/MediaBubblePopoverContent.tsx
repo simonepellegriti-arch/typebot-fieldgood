@@ -52,6 +52,7 @@ export const MediaBubbleContent = ({
       return (
         <VideoUploadContent
           content={block.content}
+          uploadFileProps={uploadFileProps}
           onSubmit={onContentChange}
         />
       );

@@ -1,7 +1,12 @@
+import type { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
 import type { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import type { VariableDataType } from "@typebot.io/variables/schemas";
 import { z } from "zod";
-import type { AnswerResearchValue, AnswerValueLabel } from "../schemas/answers";
+import type {
+  AnswerOtherTexts,
+  AnswerResearchValue,
+  AnswerValueLabel,
+} from "../schemas/answers";
 
 export const interviewStatuses = [
   "NOT_STARTED",
@@ -67,11 +72,22 @@ export type QuestionOption = {
   label: string;
 };
 
+export const videoMetrics = [
+  "STARTED",
+  "COMPLETED",
+  "WATCHED_SECONDS",
+  "WATCHED_PCT",
+  "PAUSES",
+] as const;
+export type VideoMetric = (typeof videoMetrics)[number];
+
 export type DictionaryQuestion = {
   /** Stable technical id (the block id). Never derived from visible texts. */
   id: string;
   blockId: string;
-  blockType: InputBlockType;
+  blockType: InputBlockType | BubbleBlockType.VIDEO;
+  /** standard: one value per answer. matrix: one value per row. video: watch metrics. */
+  kind: "standard" | "matrix" | "video";
   variableId?: string;
   /** Column base name. Comes from the variable name, never from labels. */
   variableName: string;
@@ -82,6 +98,11 @@ export type DictionaryQuestion = {
   options: QuestionOption[];
   missingValues: (string | number)[];
   versionNumbers: number[];
+  /** Matrix rows (codes + labels) in builder order. Options are the matrix columns. */
+  matrixRows?: QuestionOption[];
+  isMultiplePerRow?: boolean;
+  /** Codes of "Other, please specify" options (open text exported in its own column). */
+  otherOptionValues?: (string | number)[];
 };
 
 export type DatasetDictionary = {
@@ -102,6 +123,7 @@ export type NormalizedAnswer = {
   createdAt?: Date;
   value: AnswerResearchValue | null;
   valueLabel: AnswerValueLabel | null;
+  otherTexts: AnswerOtherTexts | null;
   content: string;
 };
 
@@ -115,6 +137,15 @@ export type DatasetColumn = {
   optionValue?: string | number;
   /** For repeated answers: 1-based execution index represented by the column. */
   executionIndex?: number;
+  /** Matrix: code of the row represented by the column. */
+  matrixRowValue?: string | number;
+  /** Tracked video: metric represented by the column. */
+  videoMetric?: VideoMetric;
+  /**
+   * "Other, please specify" open text column. `optionValue` is set for multiple choice
+   * (one text column per option); unset for single choice (text of the selected option).
+   */
+  otherText?: { optionValue?: string | number };
   isLabelColumn?: boolean;
   label: string;
   type: "numeric" | "string" | "datetime";

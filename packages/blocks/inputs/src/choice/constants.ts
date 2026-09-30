@@ -8,3 +8,10 @@ export const defaultChoiceInputOptions = {
   isSearchable: false,
   areInitialSearchButtonsVisible: true,
 } as const satisfies ChoiceInputBlock["options"];
+
+export const defaultChoiceItemResearchOptions = {
+  isExclusive: false,
+  hasTextInput: false,
+  textInputRequired: false,
+  textInputPlaceholder: "Please specify...",
+} as const;

@@ -2,6 +2,7 @@ import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
 import { defaultChoiceInputOptions } from "@typebot.io/blocks-inputs/choice/constants";
 import type { ButtonItem } from "@typebot.io/blocks-inputs/choice/schema";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
+import { getMatrixCode } from "@typebot.io/blocks-inputs/matrix/helpers/getMatrixCode";
 import { defaultPictureChoiceOptions } from "@typebot.io/blocks-inputs/pictureChoice/constants";
 import type { ContinueChatResponse } from "@typebot.io/chat-api/schemas";
 import { env } from "@typebot.io/env";
@@ -198,6 +199,36 @@ export const convertInputToWhatsAppMessages = async ({
           },
         },
       }));
+    }
+    case InputBlockType.MATRIX: {
+      // WhatsApp has no grid component: rows and scale are listed as text and the
+      // reply is parsed as "row=column" code pairs (see parseMatrixReply).
+      const rows = input.options?.rows ?? [];
+      const columns = input.options?.columns ?? [];
+      const body = [
+        lastMessageText ?? input.options?.question,
+        rows
+          .map(
+            (row, index) => `${getMatrixCode(row, index)}. ${row.label ?? ""}`,
+          )
+          .join("\n"),
+        columns
+          .map(
+            (column, index) =>
+              `${getMatrixCode(column, index)} = ${column.label ?? ""}`,
+          )
+          .join("\n"),
+        `Reply as row=value, e.g. ${rows
+          .slice(0, 2)
+          .map(
+            (row, index) =>
+              `${getMatrixCode(row, index)}=${columns[0] ? getMatrixCode(columns[0], 0) : "1"}`,
+          )
+          .join(", ")}`,
+      ]
+        .filter(isDefined)
+        .join("\n\n");
+      return [{ type: "text", text: { body } }];
     }
     case InputBlockType.CARDS: {
       const messages = [];

@@ -7,7 +7,7 @@ import { orpc } from "@/lib/queryClient";
 import { toast } from "@/lib/toast";
 
 type UploadButtonProps = {
-  fileType: "image" | "audio";
+  fileType: "image" | "audio" | "video";
   filePathProps: FilePathUploadProps;
   onFileUploaded: (url: string) => void;
   compressPreset?: CompressPreset;
@@ -47,7 +47,9 @@ export const UploadButton = ({
       accept={
         fileType === "image"
           ? "image/avif, image/png, image/jpeg, image/gif, image/webp, image/bmp, image/tiff"
-          : "audio/*"
+          : fileType === "video"
+            ? "video/mp4, video/webm"
+            : "audio/*"
       }
       variant={variant}
       size={size}

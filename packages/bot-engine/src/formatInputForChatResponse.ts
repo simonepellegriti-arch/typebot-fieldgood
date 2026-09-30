@@ -10,6 +10,7 @@ import type { Variable } from "@typebot.io/variables/schemas";
 import { injectVariableValuesInCardsBlock } from "./blocks/cards/injectVariableValuesInCardsBlock";
 import { injectVariableValuesInButtonsInputBlock } from "./blocks/inputs/buttons/injectVariableValuesInButtonsInputBlock";
 import { parseDateInput } from "./blocks/inputs/date/parseDateInput";
+import { formatMatrixInputForDisplay } from "./blocks/inputs/matrix/formatMatrixInputForDisplay";
 import { computePaymentInputRuntimeOptions } from "./blocks/inputs/payment/computePaymentInputRuntimeOptions";
 import { injectVariableValuesInPictureChoiceBlock } from "./blocks/inputs/pictureChoice/injectVariableValuesInPictureChoiceBlock";
 import { getPrefilledInputValue } from "./getPrefilledValue";
@@ -70,6 +71,12 @@ export const formatInputForChatResponse = async (
           sessionStore,
         },
       );
+    }
+    case InputBlockType.MATRIX: {
+      return formatMatrixInputForDisplay(block, {
+        variables,
+        sessionStore,
+      });
     }
     case InputBlockType.CARDS: {
       return injectVariableValuesInCardsBlock(block, {

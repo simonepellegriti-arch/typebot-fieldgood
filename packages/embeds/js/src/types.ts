@@ -1,6 +1,7 @@
 import type {
   ContinueChatResponse,
   StartChatResponse,
+  StructuredReply,
 } from "@typebot.io/chat-api/schemas";
 
 export type BotContext = {
@@ -45,6 +46,8 @@ export type TextInputSubmitContent = {
   type: "text";
   value: string;
   label?: string;
+  /** Research answer (matrix, "Other, please specify", tracked video) sent next to `value`. */
+  structuredReply?: StructuredReply;
   metadata?: {
     replyId?: string;
   };

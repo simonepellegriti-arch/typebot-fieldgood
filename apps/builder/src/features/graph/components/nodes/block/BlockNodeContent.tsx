@@ -17,6 +17,7 @@ import { CardsBlockNode } from "@/features/blocks/inputs/cards/components/CardsB
 import { DateNodeContent } from "@/features/blocks/inputs/date/components/DateNodeContent";
 import { EmailInputNodeContent } from "@/features/blocks/inputs/emailInput/components/EmailInputNodeContent";
 import { FileInputContent } from "@/features/blocks/inputs/fileUpload/components/FileInputContent";
+import { MatrixNodeContent } from "@/features/blocks/inputs/matrix/components/MatrixNodeContent";
 import { NumberNodeContent } from "@/features/blocks/inputs/number/components/NumberNodeContent";
 import { PaymentInputContent } from "@/features/blocks/inputs/payment/components/PaymentInputContent";
 import { PhoneNodeContent } from "@/features/blocks/inputs/phone/components/PhoneNodeContent";
@@ -99,6 +100,9 @@ export const BlockNodeContent = ({
     }
     case InputBlockType.TIME: {
       return <TimeNodeContent variableId={block.options?.variableId} />;
+    }
+    case InputBlockType.MATRIX: {
+      return <MatrixNodeContent options={block.options} />;
     }
     case InputBlockType.PAYMENT: {
       return <PaymentInputContent block={block} />;

@@ -169,13 +169,14 @@ export const streamResultsToCsvV2 = Effect.fn("streamResultsToCsvV2")(
                   answersV2: {
                     select: {
                       content: true,
+                      otherTexts: true,
                       blockId: true,
                     },
                   },
                 },
               })).map((r) => ({
                 ...r,
-                answers: r.answersV2.concat(r.answers),
+                answers: [...r.answersV2, ...r.answers],
               })),
             );
 

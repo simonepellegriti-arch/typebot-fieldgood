@@ -299,3 +299,11 @@ Verifica: il file generato viene riletto da pyreadstat (ReadStat) con etichette,
 
 ### Rebrand FIELDBOT
 Logo (bolla di chat con barre di risposta) in builder, viewer, badge e favicon; titoli pagina `| FIELDBOT`; testi dell'interfaccia in 9 lingue ("Typebot" → "FIELDBOT", "typebot" → "bot"); badge "Made with FIELDBOT" → fieldgood.it; email transazionali. Nomi interni del codice, API e licenza FSL invariati.
+
+## Research question blocks (matrix, exclusive options, other-specify, tracked video)
+
+- **Matrix** (`matrix input`, `packages/blocks/inputs/src/matrix`): rows and columns `{id, label, value}`; `answerMode` single|multiple; `requiredMode` all|none|custom (+ row `isRequired`); `minAnsweredRows`/`maxAnsweredRows`; row/column randomization done by the engine (display order only). Answer `value` = `{rowCode: columnCode | columnCode[]}`, `valueLabel` = same shape with labels, block variable = JSON of `value`, optional per-row variables. Export: `D10_<rowCode>` (value labels = columns, ordinal), multiple per row + dichotomous: `D10_<row>_<col>`.
+- **Choice options**: `isExclusive`, `hasTextInput`, `textInputRequired`, `textInputPlaceholder`; block `minSelections`/`maxSelections` (an exclusive answer is always valid). Rules shared by client and engine (`choice/helpers`). Open texts are sent as a structured reply and stored in `AnswerV2.otherTexts` (`{"98": "Brand XYZ"}`), never in `content`/labels. Export: `D5_OTHER` (single), `D5_<code>_TEXT` (multiple).
+- **Tracked video** (video bubble `watchTracking`, native files only): the flow waits on the bubble (not on WhatsApp); the client sends `{isStarted, isCompleted, watchedSeconds, watchedPercentage, durationSeconds, pauseCount, events[]}` computed from HTML5 `played` ranges; forward seeking can be blocked; saved as the block answer. Export: `<NAME>_STARTED`, `_COMPLETED`, `_WATCHED_SECONDS`, `_WATCHED_PCT`, `_PAUSES`.
+- Structured replies travel in `textMessageSchema.structuredReply` (`choice` | `matrix` | `video`); plain text replies keep working (matrix accepts JSON or `row=column` pairs).
+- Migration `20260930090000_answer_other_texts` (nullable JSONB column, additive).

@@ -1,3 +1,4 @@
+import { videoWatchResultSchema } from "@typebot.io/blocks-bubbles/video/schema";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import type {
   VariableDataType,
@@ -7,6 +8,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import type { ResearchAnswer } from "../schemas/answers";
 import { coerceResearchValue, isNumericLiteral } from "./coerceResearchValue";
 import { computeInterviewTiming } from "./computeInterviewTiming";
+import { isObjectResearchValue } from "./isObjectResearchValue";
 import { normalizeResultAnswers } from "./normalizeResultAnswers";
 import type {
   DatasetCell,
@@ -16,8 +18,9 @@ import type {
   NormalizedAnswer,
   ResearchDataset,
   ResearchExportOptions,
+  VideoMetric,
 } from "./schemas";
-import { systemColumns } from "./schemas";
+import { systemColumns, videoMetrics } from "./schemas";
 
 export type ResearchResultInput = {
   id: string;
@@ -305,20 +308,52 @@ const buildQuestionColumns = (
         ? `${question.label} (#${executionIndex})`
         : question.label;
 
+    if (options.repeatedAnswersMode !== "json") {
+      if (question.kind === "video")
+        return videoMetrics.map<DatasetColumn>((videoMetric) => ({
+          name: `${baseName}_${videoMetric}`,
+          kind: "question",
+          questionId: question.id,
+          executionIndex,
+          videoMetric,
+          label: `${baseLabel}: ${videoMetricLabels[videoMetric]}`,
+          type: "numeric",
+        }));
+      if (question.kind === "matrix")
+        return buildMatrixColumns(question, {
+          baseName,
+          baseLabel,
+          executionIndex,
+          options,
+        });
+    }
+
+    const otherTextColumns =
+      options.repeatedAnswersMode !== "json"
+        ? buildOtherTextColumns(question, {
+            baseName,
+            baseLabel,
+            executionIndex,
+          })
+        : [];
+
     if (
       question.isMultiple &&
       options.multipleChoiceMode === "dichotomous" &&
       options.repeatedAnswersMode !== "json"
     )
-      return question.options.map<DatasetColumn>((option, optionIndex) => ({
-        name: `${baseName}_${toOptionSuffix(option.value, optionIndex)}`,
-        kind: "question",
-        questionId: question.id,
-        optionValue: option.value,
-        executionIndex,
-        label: `${baseLabel}: ${option.label}`,
-        type: "numeric",
-      }));
+      return [
+        ...question.options.map<DatasetColumn>((option, optionIndex) => ({
+          name: `${baseName}_${toOptionSuffix(option.value, optionIndex)}`,
+          kind: "question",
+          questionId: question.id,
+          optionValue: option.value,
+          executionIndex,
+          label: `${baseLabel}: ${option.label}`,
+          type: "numeric",
+        })),
+        ...otherTextColumns,
+      ];
 
     const valueColumn: DatasetColumn = {
       name: baseName,
@@ -336,7 +371,7 @@ const buildQuestionColumns = (
     };
     // Label columns only make sense for questions with coded options.
     if (options.valueMode !== "both" || question.options.length === 0)
-      return [valueColumn];
+      return [valueColumn, ...otherTextColumns];
     return [
       valueColumn,
       {
@@ -346,7 +381,125 @@ const buildQuestionColumns = (
         label: `${baseLabel} (label)`,
         type: "string",
       },
+      ...otherTextColumns,
     ];
+  });
+};
+
+const videoMetricLabels: Record<VideoMetric, string> = {
+  STARTED: "video started",
+  COMPLETED: "video watched to the end",
+  WATCHED_SECONDS: "seconds watched",
+  WATCHED_PCT: "% of the video watched",
+  PAUSES: "number of pauses",
+};
+
+/**
+ * One column per matrix row (D10_1, D10_2...), named after row codes.
+ * With several columns per row and dichotomous mode: one 0/1 column per row x column.
+ */
+const buildMatrixColumns = (
+  question: DictionaryQuestion,
+  {
+    baseName,
+    baseLabel,
+    executionIndex,
+    options,
+  }: {
+    baseName: string;
+    baseLabel: string;
+    executionIndex: number | undefined;
+    options: ResearchExportOptions;
+  },
+): DatasetColumn[] =>
+  (question.matrixRows ?? []).flatMap((row, rowIndex) => {
+    const rowName = `${baseName}_${toOptionSuffix(row.value, rowIndex)}`;
+    const rowLabel = `${baseLabel}: ${row.label}`;
+    if (
+      question.isMultiplePerRow &&
+      options.multipleChoiceMode === "dichotomous"
+    )
+      return question.options.map<DatasetColumn>((option, optionIndex) => ({
+        name: `${rowName}_${toOptionSuffix(option.value, optionIndex)}`,
+        kind: "question",
+        questionId: question.id,
+        executionIndex,
+        matrixRowValue: row.value,
+        optionValue: option.value,
+        label: `${rowLabel}: ${option.label}`,
+        type: "numeric",
+      }));
+    const rowColumn: DatasetColumn = {
+      name: rowName,
+      kind: "question",
+      questionId: question.id,
+      executionIndex,
+      matrixRowValue: row.value,
+      isLabelColumn: options.valueMode === "label",
+      label: rowLabel,
+      type:
+        options.valueMode === "label" || question.isMultiplePerRow
+          ? "string"
+          : toColumnType(question.dataType),
+    };
+    if (options.valueMode !== "both") return [rowColumn];
+    return [
+      rowColumn,
+      {
+        ...rowColumn,
+        name: `${rowName}_LABEL`,
+        isLabelColumn: true,
+        label: `${rowLabel} (label)`,
+        type: "string",
+      },
+    ];
+  });
+
+/**
+ * "Other, please specify" open texts: D5_OTHER for single choice,
+ * D5_<code>_TEXT per "other" option for multiple choice. Never merged into codes.
+ */
+const buildOtherTextColumns = (
+  question: DictionaryQuestion,
+  {
+    baseName,
+    baseLabel,
+    executionIndex,
+  }: {
+    baseName: string;
+    baseLabel: string;
+    executionIndex: number | undefined;
+  },
+): DatasetColumn[] => {
+  const otherOptionValues = question.otherOptionValues ?? [];
+  if (otherOptionValues.length === 0) return [];
+  if (!question.isMultiple)
+    return [
+      {
+        name: `${baseName}_OTHER`,
+        kind: "question",
+        questionId: question.id,
+        executionIndex,
+        otherText: {},
+        label: `${baseLabel} (other, specify)`,
+        type: "string",
+      },
+    ];
+  return otherOptionValues.map<DatasetColumn>((optionValue) => {
+    const optionIndex = question.options.findIndex(
+      (option) => String(option.value) === String(optionValue),
+    );
+    const optionLabel =
+      question.options[optionIndex]?.label ?? String(optionValue);
+    return {
+      name: `${baseName}_${toOptionSuffix(optionValue, Math.max(optionIndex, 0))}_TEXT`,
+      kind: "question",
+      questionId: question.id,
+      executionIndex,
+      otherText: { optionValue },
+      label: `${baseLabel}: ${optionLabel} (text)`,
+      type: "string",
+    };
   });
 };
 
@@ -386,6 +539,50 @@ const computeQuestionCell = (
       : answers[answers.length - 1];
   if (!answer) return null;
 
+  if (column.otherText) return computeOtherTextCell(column.otherText, answer);
+
+  if (column.videoMetric) {
+    const parsedVideoResult = videoWatchResultSchema.safeParse(answer.value);
+    if (!parsedVideoResult.success) return null;
+    return computeVideoMetricCell(column.videoMetric, parsedVideoResult.data);
+  }
+
+  if (column.matrixRowValue !== undefined) {
+    if (
+      !isObjectResearchValue(answer.value) ||
+      videoWatchResultSchema.safeParse(answer.value).success
+    )
+      return null;
+    const rowKey = String(column.matrixRowValue);
+    const rowValue: unknown = Object.entries(answer.value).find(
+      ([key]) => key === rowKey,
+    )?.[1];
+    if (rowValue === undefined || rowValue === null) return null;
+    const rowValues = Array.isArray(rowValue) ? rowValue : [rowValue];
+    if (column.optionValue !== undefined)
+      return rowValues.some(
+        (value) => String(value) === String(column.optionValue),
+      )
+        ? 1
+        : 0;
+    if (column.isLabelColumn) {
+      const rowLabel =
+        answer.valueLabel &&
+        typeof answer.valueLabel === "object" &&
+        !Array.isArray(answer.valueLabel)
+          ? answer.valueLabel[rowKey]
+          : undefined;
+      if (rowLabel !== undefined)
+        return Array.isArray(rowLabel)
+          ? rowLabel.join(options.multipleChoiceSeparator)
+          : rowLabel;
+    }
+    const typedRowValue = coerceResearchValue(rowValue, question.dataType);
+    return Array.isArray(typedRowValue) || question.isMultiplePerRow
+      ? toListCell(typedRowValue, options.multipleChoiceSeparator)
+      : toCell(typedRowValue, options);
+  }
+
   if (column.optionValue !== undefined) {
     const values = Array.isArray(answer.value)
       ? answer.value
@@ -405,15 +602,52 @@ const computeQuestionCell = (
   return toCell(cellValue, options);
 };
 
-const toListCell = (
-  value: NormalizedAnswer["value"] | NormalizedAnswer["valueLabel"],
-  separator: string,
+const computeOtherTextCell = (
+  otherText: NonNullable<DatasetColumn["otherText"]>,
+  answer: NormalizedAnswer,
 ): DatasetCell => {
+  const otherTexts = answer.otherTexts;
+  if (!otherTexts) return null;
+  if (otherText.optionValue !== undefined)
+    return otherTexts[String(otherText.optionValue)] ?? null;
+  const selectedCode = Array.isArray(answer.value)
+    ? undefined
+    : String(answer.value);
+  return (
+    (selectedCode !== undefined ? otherTexts[selectedCode] : undefined) ??
+    Object.values(otherTexts)[0] ??
+    null
+  );
+};
+
+const computeVideoMetricCell = (
+  videoMetric: VideoMetric,
+  videoResult: ReturnType<typeof videoWatchResultSchema.parse>,
+): DatasetCell => {
+  switch (videoMetric) {
+    case "STARTED":
+      return videoResult.isStarted ? 1 : 0;
+    case "COMPLETED":
+      return videoResult.isCompleted ? 1 : 0;
+    case "WATCHED_SECONDS":
+      return videoResult.watchedSeconds;
+    case "WATCHED_PCT":
+      return videoResult.watchedPercentage;
+    case "PAUSES":
+      return videoResult.pauseCount;
+  }
+};
+
+const toListCell = (value: unknown, separator: string): DatasetCell => {
   if (value === null || value === undefined) return null;
-  const items: (string | number | boolean)[] = Array.isArray(value)
-    ? value
-    : [value];
-  return items.map((item) => String(item)).join(separator);
+  const items: unknown[] = Array.isArray(value) ? value : [value];
+  return items
+    .map((item) =>
+      typeof item === "object" && item !== null
+        ? JSON.stringify(item)
+        : String(item),
+    )
+    .join(separator);
 };
 
 const toCell = (
@@ -424,6 +658,7 @@ const toCell = (
   if (Array.isArray(value))
     return toListCell(value, options.multipleChoiceSeparator);
   if (typeof value === "boolean") return value ? 1 : 0;
+  if (typeof value === "object") return JSON.stringify(value);
   return value;
 };
 
@@ -466,6 +701,7 @@ const addQuestionsForUnknownBlocks = (
         id: blockId,
         blockId,
         blockType: InputBlockType.TEXT,
+        kind: "standard",
         variableName,
         label: "(block not found in the exported questionnaire versions)",
         dataType: areAllValuesNumeric ? "number" : "string",

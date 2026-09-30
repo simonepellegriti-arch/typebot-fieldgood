@@ -39,12 +39,14 @@ const warningSchema = z.discriminatedUnion("type", [
       "duplicateVariableName",
       "variableSharedByInputBlocks",
       "inputBlockWithoutVariable",
+      "duplicateCode",
     ]),
     message: z.string(),
     variableName: z.string().optional(),
     blockId: z.string().optional(),
     blockIds: z.array(z.string()).optional(),
     groupTitle: z.string().optional(),
+    duplicatedCode: z.string().optional(),
   }),
 ]);
 type Warning = z.infer<typeof warningSchema>;

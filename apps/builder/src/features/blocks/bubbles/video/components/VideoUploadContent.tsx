@@ -1,14 +1,21 @@
+import { useTranslate } from "@tolgee/react";
+import { VideoBubbleContentType } from "@typebot.io/blocks-bubbles/video/constants";
 import { parseVideoUrl } from "@typebot.io/blocks-bubbles/video/helpers";
 import type { VideoBubbleBlock } from "@typebot.io/blocks-bubbles/video/schema";
 import { Button } from "@typebot.io/ui/components/Button";
 import { useState } from "react";
+import { UploadButton } from "@/components/ImageUploadContent/UploadButton";
 import { PexelsPicker } from "@/components/VideoUploadContent/PexelsPicker";
 import { VideoLinkEmbedContent } from "@/components/VideoUploadContent/VideoLinkEmbedContent";
+import type { FilePathUploadProps } from "@/features/upload/api/generateUploadUrl";
+import { VideoResearchSettings } from "./VideoResearchSettings";
 
-type Tabs = "link" | "pexels";
+type Tabs = "link" | "upload" | "pexels";
 
 type Props = {
   content?: VideoBubbleBlock["content"];
+  /** Enables the upload tab (MP4/WebM stored with the bot's other media). */
+  uploadFileProps?: FilePathUploadProps;
   onSubmit: (content: VideoBubbleBlock["content"]) => void;
   initialTab?: Tabs;
 } & (
@@ -20,14 +27,16 @@ type Props = {
     }
 );
 
-const defaultDisplayedTabs: Tabs[] = ["link", "pexels"];
+const defaultDisplayedTabs: Tabs[] = ["link", "upload", "pexels"];
 
 export const VideoUploadContent = ({
   content,
+  uploadFileProps,
   onSubmit,
   initialTab,
   ...props
 }: Props) => {
+  const { t } = useTranslate();
   const includedTabs =
     "includedTabs" in props
       ? (props.includedTabs ?? defaultDisplayedTabs)
@@ -35,7 +44,10 @@ export const VideoUploadContent = ({
   const excludedTabs =
     "excludedTabs" in props ? (props.excludedTabs ?? []) : [];
   const displayedTabs = defaultDisplayedTabs.filter(
-    (tab) => !excludedTabs.includes(tab) && includedTabs.includes(tab),
+    (tab) =>
+      !excludedTabs.includes(tab) &&
+      includedTabs.includes(tab) &&
+      (tab !== "upload" || uploadFileProps !== undefined),
   );
 
   const [currentTab, setCurrentTab] = useState<Tabs>(
@@ -76,6 +88,15 @@ export const VideoUploadContent = ({
             Link
           </Button>
         )}
+        {displayedTabs.includes("upload") && (
+          <Button
+            variant={currentTab === "upload" ? "outline" : "ghost"}
+            onClick={() => setCurrentTab("upload")}
+            size="sm"
+          >
+            {t("video.upload.tab")}
+          </Button>
+        )}
         {displayedTabs.includes("pexels") && (
           <Button
             variant={currentTab === "pexels" ? "outline" : "ghost"}
@@ -94,7 +115,22 @@ export const VideoUploadContent = ({
           onSubmit={onSubmit}
         />
       )}
+      {currentTab === "upload" && uploadFileProps && (
+        <div className="flex flex-col items-center gap-2 py-2">
+          <UploadButton
+            fileType="video"
+            filePathProps={uploadFileProps}
+            onFileUploaded={updateUrl}
+          >
+            {t("video.upload.chooseFile")}
+          </UploadButton>
+          <p className="text-xs text-gray-9">{t("video.upload.helperText")}</p>
+        </div>
+      )}
       {currentTab === "pexels" && <PexelsPicker onVideoSelect={updateUrl} />}
+      {content?.url && content.type === VideoBubbleContentType.URL && (
+        <VideoResearchSettings content={content} onSubmit={onSubmit} />
+      )}
     </div>
   );
 };

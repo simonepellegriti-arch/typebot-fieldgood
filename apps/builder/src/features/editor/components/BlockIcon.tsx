@@ -17,6 +17,7 @@ import { ButtonsInputIcon } from "@/features/blocks/inputs/buttons/components/Bu
 import { DateInputIcon } from "@/features/blocks/inputs/date/components/DateInputIcon";
 import { EmailInputIcon } from "@/features/blocks/inputs/emailInput/components/EmailInputIcon";
 import { FileInputIcon } from "@/features/blocks/inputs/fileUpload/components/FileInputIcon";
+import { MatrixInputIcon } from "@/features/blocks/inputs/matrix/components/MatrixInputIcon";
 import { NumberInputIcon } from "@/features/blocks/inputs/number/components/NumberInputIcon";
 import { PaymentInputIcon } from "@/features/blocks/inputs/payment/components/PaymentInputIcon";
 import { PhoneInputIcon } from "@/features/blocks/inputs/phone/components/PhoneInputIcon";
@@ -92,6 +93,10 @@ export const BlockIcon = ({ type, className }: BlockIconProps): JSX.Element => {
     case InputBlockType.TIME:
       return (
         <TimeInputIcon className={cn("text-orange-9 stroke-2", className)} />
+      );
+    case InputBlockType.MATRIX:
+      return (
+        <MatrixInputIcon className={cn("text-orange-9 stroke-2", className)} />
       );
     case InputBlockType.DATE:
       return (

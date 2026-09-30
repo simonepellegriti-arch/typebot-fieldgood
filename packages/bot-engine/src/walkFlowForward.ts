@@ -1,6 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { createId } from "@paralleldrive/cuid2";
 import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
+import { isVideoWatchTrackingActive } from "@typebot.io/blocks-bubbles/video/watch/isVideoWatchTrackingActive";
 import {
   isBubbleBlock,
   isInputBlock,
@@ -222,8 +223,13 @@ const executeGroup = async (
       });
       messages.push(message);
       if (
-        message.type === BubbleBlockType.EMBED &&
-        message.content.waitForEvent?.isEnabled
+        (message.type === BubbleBlockType.EMBED &&
+          message.content.waitForEvent?.isEnabled) ||
+        // Tracked videos wait for the respondent to continue (viewing data is the reply).
+        // WhatsApp can't report playback: the flow never waits there.
+        (message.type === BubbleBlockType.VIDEO &&
+          isVideoWatchTrackingActive(message.content) &&
+          !newSessionState.whatsApp)
       ) {
         return {
           messages,

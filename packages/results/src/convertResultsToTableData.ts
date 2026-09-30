@@ -1,3 +1,4 @@
+import type { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import { isDefined } from "@typebot.io/lib/utils";
 import type { VariableWithValue } from "@typebot.io/variables/schemas";
@@ -11,7 +12,7 @@ import type {
 
 type CellParser = (
   content: VariableWithValue["value"],
-  blockType?: InputBlockType,
+  blockType?: InputBlockType | BubbleBlockType.VIDEO,
 ) => { element?: JSX.Element; plainText: string };
 
 const defaultCellParser: CellParser = (content, blockType) => {
@@ -50,7 +51,8 @@ export const convertResultsToTableData = ({
         const answer = answerOrVariable satisfies Pick<
           Answer,
           "blockId" | "content"
-        >;
+        > &
+          Partial<Pick<Answer, "otherTexts">>;
         const answerVariableId = blockIdVariableIdMap[answer.blockId];
         const header = answerVariableId
           ? headerCells.find((headerCell) =>
@@ -60,7 +62,10 @@ export const convertResultsToTableData = ({
               headerCell.blocks?.some((block) => block.id === answer.blockId),
             );
         if (!header || !header.blocks || !header.blockType) return tableData;
-        tableData[header.id] = cellParser(answer.content, header.blockType);
+        tableData[header.id] = cellParser(
+          appendOtherTexts(answer.content, answer.otherTexts),
+          header.blockType,
+        );
         return tableData;
       }
       const variable = answerOrVariable satisfies VariableWithValue;
@@ -74,6 +79,17 @@ export const convertResultsToTableData = ({
       return tableData;
     }, {}),
   }));
+
+/** "Other, please specify" texts are stored apart from codes; the table shows both. */
+const appendOtherTexts = (
+  content: string,
+  otherTexts: Answer["otherTexts"] | undefined,
+) => {
+  if (!otherTexts || Object.keys(otherTexts).length === 0) return content;
+  return `${content} — ${Object.entries(otherTexts)
+    .map(([code, text]) => `${code}: ${text}`)
+    .join("; ")}`;
+};
 
 const convertDateToReadable = (date: Date): string => {
   const isThisYear = new Date().getFullYear() === date.getFullYear();
