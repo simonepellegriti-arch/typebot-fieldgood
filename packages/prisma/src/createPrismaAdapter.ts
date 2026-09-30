@@ -9,6 +9,36 @@ const getSchemaFromUrl = (url: string): string | undefined => {
   }
 };
 
+/**
+ * Serverless instances (Vercel) are frozen with their idle connections still open:
+ * with a session-mode pooler (e.g. Supabase Supavisor, 15 connections) a few
+ * instances holding pg's default pool of 10 exhaust it and every query fails.
+ * Keep the per-instance pool small and release idle connections quickly.
+ * `connection_limit` in the URL (Prisma convention) overrides the default.
+ */
+const getPoolOptions = (url: string) => {
+  const connectionLimit = Number(
+    (() => {
+      try {
+        return new URL(url).searchParams.get("connection_limit");
+      } catch {
+        return null;
+      }
+    })(),
+  );
+  const isServerless = Boolean(process.env.VERCEL);
+  const max =
+    Number.isInteger(connectionLimit) && connectionLimit > 0
+      ? connectionLimit
+      : isServerless
+        ? 2
+        : undefined;
+  return {
+    ...(max !== undefined ? { max } : {}),
+    ...(isServerless ? { idleTimeoutMillis: 5_000 } : {}),
+  };
+};
+
 export const createPrismaAdapter = (databaseUrl: string | undefined) => {
   if (!databaseUrl) throw new Error("DATABASE_URL is not set");
 
@@ -21,7 +51,7 @@ export const createPrismaAdapter = (databaseUrl: string | undefined) => {
     // explicitly. Without this, runtime queries default to the `public` schema
     // even when the tables live in a custom schema.
     return new PrismaPg(
-      { connectionString: databaseUrl },
+      { connectionString: databaseUrl, ...getPoolOptions(databaseUrl) },
       { schema: getSchemaFromUrl(databaseUrl) },
     );
 
