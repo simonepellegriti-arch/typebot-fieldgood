@@ -193,6 +193,17 @@ describe("handleCreateWorkspaceInvitation", () => {
     expect(sendWorkspaceMemberInvitationEmail).toHaveBeenCalledTimes(1);
     expectWorkspaceLocks();
   });
+
+  it("keeps the invitation when the email can't be sent (no SMTP)", async () => {
+    sendWorkspaceMemberInvitationEmail.mockRejectedValue(
+      new Error("SMTP not configured"),
+    );
+    const result = await createInvitation("guest@example.com");
+    expect(result).toMatchObject({
+      invitation: { email: "guest@example.com" },
+    });
+    expect(invitations).toHaveLength(1);
+  });
 });
 
 const expectWorkspaceLocks = () => {

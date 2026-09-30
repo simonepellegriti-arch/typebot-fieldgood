@@ -95,13 +95,18 @@ export const handleCreateInvitation = async ({
     });
   }
 
-  await sendGuestInvitationEmail({
-    hostEmail: user.email ?? "",
-    url: `${env.NEXTAUTH_URL}/typebots?workspaceId=${typebot.workspaceId}`,
-    guestEmail: email.toLowerCase(),
-    typebotName: typebot.name,
-    workspaceName: typebot.workspace?.name ?? "",
-  });
+  // The invitation is already saved: an email failure must not become an error.
+  try {
+    await sendGuestInvitationEmail({
+      hostEmail: user.email ?? "",
+      url: `${env.NEXTAUTH_URL}/typebots?workspaceId=${typebot.workspaceId}`,
+      guestEmail: email.toLowerCase(),
+      typebotName: typebot.name,
+      workspaceName: typebot.workspace?.name ?? "",
+    });
+  } catch (error) {
+    console.error("Could not send typebot invitation email", error);
+  }
 
   return { message: "success" };
 };

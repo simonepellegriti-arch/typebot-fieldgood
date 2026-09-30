@@ -95,12 +95,18 @@ export const handleCreateWorkspaceInvitation = async ({
     },
   );
 
-  await sendWorkspaceMemberInvitationEmail({
-    workspaceName: workspace.name,
-    guestEmail: email,
-    url: `${env.NEXTAUTH_URL}/typebots?redirectPath=${encodeURIComponent(`/w/${workspace.id}/typebots`)}`,
-    hostEmail: user.email ?? "",
-  });
+  // The invitation is already saved: a missing or failing SMTP server must not
+  // turn it into an error (the invited person can still sign in with that email).
+  try {
+    await sendWorkspaceMemberInvitationEmail({
+      workspaceName: workspace.name,
+      guestEmail: email,
+      url: `${env.NEXTAUTH_URL}/typebots?redirectPath=${encodeURIComponent(`/w/${workspace.id}/typebots`)}`,
+      hostEmail: user.email ?? "",
+    });
+  } catch (error) {
+    console.error("Could not send workspace invitation email", error);
+  }
 
   return createdMemberOrInvitation;
 };
