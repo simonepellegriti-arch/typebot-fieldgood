@@ -54,7 +54,7 @@ export const codeStyle = {
 export const primaryButton = {
   rounded: "8px",
   borderRadius: "8px",
-  backgroundColor: "#ff5924",
+  backgroundColor: "#0F5081",
   padding: "12px",
   fontSize: "15px",
   fontWeight: "600",

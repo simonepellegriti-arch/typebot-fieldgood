@@ -12,7 +12,7 @@ export const BubbleIllustration = () => {
     >
       <title>Bubble Illustration</title>
       <rect width="500" height="500" rx="20" className="fill-gray-6" />
-      <rect x="164" y="59" width="287" height="305" rx="10" fill="#0042DA" />
+      <rect x="164" y="59" width="287" height="305" rx="10" fill="#0F5081" />
       <motion.rect
         x="227"
         y="91"
@@ -65,7 +65,7 @@ export const BubbleIllustration = () => {
         variants={animationVariants}
       />
 
-      <circle cx="411" cy="430" r="40" fill="#0042DA" />
+      <circle cx="411" cy="430" r="40" fill="#0F5081" />
     </svg>
   );
 };

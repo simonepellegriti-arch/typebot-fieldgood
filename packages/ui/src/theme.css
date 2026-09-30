@@ -42,17 +42,17 @@
   --color-neutral-900: oklch(22.645% 0.00003 271.152);
   --color-neutral-950: oklch(15.907% 0.00002 271.152);
 
-  --color-orange-50: oklch(0.964 0.018 34.37);
-  --color-orange-100: oklch(0.921 0.042 38.21);
-  --color-orange-200: oklch(0.854 0.082 38.39);
-  --color-orange-300: oklch(0.784 0.13 38.34);
-  --color-orange-400: oklch(0.73 0.171 37.85);
-  --color-orange-500: oklch(0.682 0.211 36.62); /* Brand */
-  --color-orange-600: oklch(0.615 0.22 34.14);
-  --color-orange-700: oklch(0.491 0.173 34.71);
-  --color-orange-800: oklch(0.373 0.128 36.02);
-  --color-orange-900: oklch(0.232 0.073 40.01);
-  --color-orange-950: oklch(0.169 0.047 46.01);
+  --color-orange-50: #eef5fb;
+  --color-orange-100: #d5e6f3;
+  --color-orange-200: #aecde6;
+  --color-orange-300: #7fb0d7;
+  --color-orange-400: #4b8cc2;
+  --color-orange-500: #0f5081; /* Brand */
+  --color-orange-600: #0c4571;
+  --color-orange-700: #0a3a60;
+  --color-orange-800: #082e4c;
+  --color-orange-900: #062238;
+  --color-orange-950: #041726;
 
   --color-stone-250: oklch(0.896 0.004 52.5);
 }
@@ -94,7 +94,7 @@
   --card-foreground: var(--color-stone-100);
   --popover: var(--color-stone-900);
   --popover-foreground: var(--color-stone-100);
-  --primary: var(--color-orange-600);
+  --primary: var(--color-orange-400);
   --primary-foreground: var(--color-white);
   --secondary: var(--color-stone-800);
   --secondary-foreground: var(--color-stone-50);

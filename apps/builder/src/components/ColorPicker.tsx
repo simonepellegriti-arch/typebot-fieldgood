@@ -22,6 +22,11 @@ const colorsSelection: `#${string}`[] = [
   "#9B74B7",
   "#C75F96",
   "#0042DA",
+  // Fieldgood palette
+  "#0F5081",
+  "#1D70B7",
+  "#60A8D8",
+  "#E2461E",
 ];
 
 type Props = {

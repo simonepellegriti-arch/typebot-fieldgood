@@ -9,7 +9,7 @@ const alertVariants = cva(
       variant: {
         info: "border-blue-6 bg-blue-2 [&>svg]:text-blue-10",
         success: "border-green-6 bg-green-2 [&>svg]:text-green-10",
-        warning: "border-orange-6 bg-orange-2 [&>svg]:text-orange-10",
+        warning: "border-coral-6 bg-coral-2 [&>svg]:text-coral-10",
         error: "border-red-6 bg-red-2 [&>svg]:text-red-10",
       },
     },

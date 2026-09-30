@@ -1,30 +1,45 @@
+/* FIELDBOT palette (Fieldgood): orange = primary navy #0F5081,
+   blue = Fieldgood blue #1D70B7, coral = Fieldgood accent #E2461E (warnings). */
 :root,
 .light {
-  --blue-1: rgb(252 253 254);
-  --blue-2: rgb(246 249 255);
-  --blue-3: rgb(235 242 255);
-  --blue-4: rgb(221 234 255);
-  --blue-5: rgb(204 223 255);
-  --blue-6: rgb(183 210 255);
-  --blue-7: rgb(160 191 255);
-  --blue-8: rgb(127 165 253);
-  --blue-9: rgb(53 102 252);
-  --blue-10: rgb(47 91 225);
-  --blue-11: rgb(44 87 221);
-  --blue-12: rgb(23 44 101);
+  --blue-1: rgb(251 253 254);
+  --blue-2: rgb(244 249 253);
+  --blue-3: rgb(230 242 251);
+  --blue-4: rgb(214 234 248);
+  --blue-5: rgb(196 224 244);
+  --blue-6: rgb(173 211 238);
+  --blue-7: rgb(143 193 230);
+  --blue-8: rgb(96 168 216);
+  --blue-9: rgb(29 112 183);
+  --blue-10: rgb(25 100 166);
+  --blue-11: rgb(23 94 152);
+  --blue-12: rgb(15 53 86);
 
-  --orange-1: rgb(254 252 251);
-  --orange-2: rgb(255 244 240);
-  --orange-3: rgb(255 232 222);
-  --orange-4: rgb(255 214 199);
-  --orange-5: rgb(255 200 181);
-  --orange-6: rgb(255 184 160);
-  --orange-7: rgb(255 162 134);
-  --orange-8: rgb(249 136 104);
-  --orange-9: rgb(255 89 36);
-  --orange-10: rgb(242 73 5);
-  --orange-11: rgb(220 59 0);
-  --orange-12: rgb(91 42 28);
+  --orange-1: rgb(251 253 255);
+  --orange-2: rgb(243 248 252);
+  --orange-3: rgb(229 240 248);
+  --orange-4: rgb(213 230 243);
+  --orange-5: rgb(195 219 238);
+  --orange-6: rgb(174 205 230);
+  --orange-7: rgb(145 185 218);
+  --orange-8: rgb(106 157 201);
+  --orange-9: rgb(15 80 129);
+  --orange-10: rgb(12 69 113);
+  --orange-11: rgb(10 59 98);
+  --orange-12: rgb(10 38 64);
+
+  --coral-1: rgb(255 252 251);
+  --coral-2: rgb(255 244 241);
+  --coral-3: rgb(255 230 223);
+  --coral-4: rgb(253 213 202);
+  --coral-5: rgb(249 195 180);
+  --coral-6: rgb(243 174 155);
+  --coral-7: rgb(235 147 123);
+  --coral-8: rgb(226 116 85);
+  --coral-9: rgb(226 70 30);
+  --coral-10: rgb(211 59 20);
+  --coral-11: rgb(191 53 16);
+  --coral-12: rgb(90 34 21);
 
   --purple-1: rgb(252 252 255);
   --purple-2: rgb(249 248 255);
@@ -80,31 +95,44 @@
 }
 
 .dark {
-  --blue-1: rgb(7 13 26);
-  --blue-2: rgb(15 22 39);
-  --blue-3: rgb(18 35 78);
-  --blue-4: rgb(22 44 106);
-  --blue-5: rgb(29 55 126);
-  --blue-6: rgb(37 66 143);
-  --blue-7: rgb(46 78 164);
-  --blue-8: rgb(54 91 193);
-  --blue-9: rgb(53 102 252);
-  --blue-10: rgb(42 87 236);
-  --blue-11: rgb(141 180 255);
-  --blue-12: rgb(209 226 255);
+  --blue-1: rgb(7 16 26);
+  --blue-2: rgb(13 24 38);
+  --blue-3: rgb(15 37 64);
+  --blue-4: rgb(16 48 86);
+  --blue-5: rgb(19 60 105);
+  --blue-6: rgb(24 73 124);
+  --blue-7: rgb(31 88 146);
+  --blue-8: rgb(38 105 173);
+  --blue-9: rgb(29 112 183);
+  --blue-10: rgb(42 124 195);
+  --blue-11: rgb(140 196 236);
+  --blue-12: rgb(212 233 248);
 
-  --orange-1: rgb(18 11 9);
-  --orange-2: rgb(31 20 17);
-  --orange-3: rgb(55 24 16);
-  --orange-4: rgb(78 22 6);
-  --orange-5: rgb(94 30 11);
-  --orange-6: rgb(110 44 24);
-  --orange-7: rgb(135 60 38);
-  --orange-8: rgb(173 77 49);
-  --orange-9: rgb(255 89 36);
-  --orange-10: rgb(241 75 15);
-  --orange-11: rgb(255 151 118);
-  --orange-12: rgb(255 215 202);
+  --orange-1: rgb(8 14 20);
+  --orange-2: rgb(14 23 32);
+  --orange-3: rgb(15 35 53);
+  --orange-4: rgb(14 45 70);
+  --orange-5: rgb(17 55 83);
+  --orange-6: rgb(22 66 98);
+  --orange-7: rgb(28 80 120);
+  --orange-8: rgb(34 99 149);
+  --orange-9: rgb(29 112 183);
+  --orange-10: rgb(42 127 198);
+  --orange-11: rgb(134 191 232);
+  --orange-12: rgb(210 232 248);
+
+  --coral-1: rgb(21 11 8);
+  --coral-2: rgb(33 20 16);
+  --coral-3: rgb(58 23 16);
+  --coral-4: rgb(79 23 10);
+  --coral-5: rgb(95 31 16);
+  --coral-6: rgb(112 45 28);
+  --coral-7: rgb(138 62 41);
+  --coral-8: rgb(176 78 51);
+  --coral-9: rgb(226 70 30);
+  --coral-10: rgb(214 61 21);
+  --coral-11: rgb(255 155 127);
+  --coral-12: rgb(255 216 204);
 
   --purple-1: rgb(13 10 27);
   --purple-2: rgb(23 19 42);
@@ -185,6 +213,19 @@
   --color-orange-10: var(--orange-10);
   --color-orange-11: var(--orange-11);
   --color-orange-12: var(--orange-12);
+
+  --color-coral-1: var(--coral-1);
+  --color-coral-2: var(--coral-2);
+  --color-coral-3: var(--coral-3);
+  --color-coral-4: var(--coral-4);
+  --color-coral-5: var(--coral-5);
+  --color-coral-6: var(--coral-6);
+  --color-coral-7: var(--coral-7);
+  --color-coral-8: var(--coral-8);
+  --color-coral-9: var(--coral-9);
+  --color-coral-10: var(--coral-10);
+  --color-coral-11: var(--coral-11);
+  --color-coral-12: var(--coral-12);
 
   --color-purple-1: var(--purple-1);
   --color-purple-2: var(--purple-2);
