@@ -16,6 +16,7 @@ import {
   pickVideoRecordingFormat,
   type VideoRecordingFormat,
 } from "../../../../../components/media/pickVideoRecordingFormat";
+import { readIsoMediaDurationSeconds } from "../../../../../components/media/readIsoMediaDurationSeconds";
 import { withInferredMediaFileType } from "../../../../../components/media/withInferredMediaFileType";
 
 type Props = {
@@ -164,7 +165,7 @@ export const VideoRecorder = (props: Props) => {
     showClip({ file, blobUrl: URL.createObjectURL(file), source: "recorded" });
   };
 
-  const handlePickedFile = (pickedFile: File | undefined) => {
+  const handlePickedFile = async (pickedFile: File | undefined) => {
     if (!pickedFile) return;
     const file = withInferredMediaFileType(pickedFile);
     setError(undefined);
@@ -177,6 +178,20 @@ export const VideoRecorder = (props: Props) => {
     if (problem === "tooLarge")
       return setError(
         labels.tooLarge.replace("{size}", String(props.maxFileSizeMB)),
+      );
+    // Duration from the file header, also for videos this browser can't play.
+    const durationSeconds = await readIsoMediaDurationSeconds(file).catch(
+      () => undefined,
+    );
+    if (
+      durationSeconds !== undefined &&
+      durationSeconds > props.maxDurationSeconds + 1
+    )
+      return setError(
+        labels.tooLong.replace(
+          "{duration}",
+          formatVideoTime(props.maxDurationSeconds),
+        ),
       );
     showClip({ file, blobUrl: URL.createObjectURL(file), source: "uploaded" });
   };
@@ -249,12 +264,16 @@ export const VideoRecorder = (props: Props) => {
         <Switch>
           <Match when={cameraStatus() === "unsupported"}>
             <p class="text-sm" role="alert">
-              {labels.unsupported}
+              {props.isFileUploadAllowed
+                ? labels.unsupported
+                : labels.unsupportedNoUpload}
             </p>
           </Match>
           <Match when={cameraStatus() === "permissionDenied"}>
             <p class="text-sm" role="alert">
-              {labels.permissionDenied}
+              {props.isFileUploadAllowed
+                ? labels.permissionDenied
+                : labels.permissionDeniedNoUpload}
             </p>
           </Match>
         </Switch>
@@ -307,7 +326,7 @@ export const VideoRecorder = (props: Props) => {
         class="hidden"
         aria-label={labels.uploadVideo}
         onChange={(event) => {
-          handlePickedFile(event.currentTarget.files?.[0]);
+          void handlePickedFile(event.currentTarget.files?.[0]);
           event.currentTarget.value = "";
         }}
       />

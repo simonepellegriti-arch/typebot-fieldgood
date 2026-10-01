@@ -11,7 +11,9 @@ export type MediaAnswerLabels = Record<
   | "chooseAnother"
   | "requesting"
   | "permissionDenied"
+  | "permissionDeniedNoUpload"
   | "unsupported"
+  | "unsupportedNoUpload"
   | "tooLarge"
   | "tooLong"
   | "wrongVideoType"
@@ -36,8 +38,12 @@ const labels: Record<"en" | "it", MediaAnswerLabels> = {
     requesting: "Allow access to the camera and microphone…",
     permissionDenied:
       "Camera or microphone not available. Check the browser permissions, upload a video or answer in writing.",
+    permissionDeniedNoUpload:
+      "Camera or microphone not available. Check the browser permissions or answer in writing.",
     unsupported:
       "This browser can't record videos. Upload a video or answer in writing.",
+    unsupportedNoUpload:
+      "This browser can't record videos. Please answer in writing.",
     tooLarge: "The file is too large (maximum {size} MB).",
     tooLong: "The video is too long (maximum {duration}).",
     wrongVideoType: "Choose a video file.",
@@ -59,8 +65,12 @@ const labels: Record<"en" | "it", MediaAnswerLabels> = {
     requesting: "Consenti l'accesso a fotocamera e microfono…",
     permissionDenied:
       "Fotocamera o microfono non disponibili. Controlla i permessi del browser, carica un video oppure rispondi per iscritto.",
+    permissionDeniedNoUpload:
+      "Fotocamera o microfono non disponibili. Controlla i permessi del browser oppure rispondi per iscritto.",
     unsupported:
       "Questo browser non può registrare video. Carica un video oppure rispondi per iscritto.",
+    unsupportedNoUpload:
+      "Questo browser non può registrare video. Rispondi per iscritto.",
     tooLarge: "Il file è troppo pesante (massimo {size} MB).",
     tooLong: "Il video è troppo lungo (massimo {duration}).",
     wrongVideoType: "Scegli un file video.",
