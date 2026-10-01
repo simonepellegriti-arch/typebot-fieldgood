@@ -23,6 +23,7 @@ import { formatPhoneNumber } from "./blocks/inputs/phone/formatPhoneNumber";
 import { injectVariableValuesInPictureChoiceBlock } from "./blocks/inputs/pictureChoice/injectVariableValuesInPictureChoiceBlock";
 import { validateRatingReply } from "./blocks/inputs/rating/validateRatingReply";
 import { parseTime } from "./blocks/inputs/time/parseTime";
+import { getReplyContent } from "./helpers/getReplyContent";
 import type { ParsedReply } from "./types";
 
 export const validateAndParseInputMessage = (
@@ -131,7 +132,7 @@ export const validateAndParseInputMessage = (
           ? { status: "fail" }
           : { status: "skip" };
 
-      const replyValue = message.type === "audio" ? message.url : message.text;
+      const replyValue = getReplyContent(message);
       const urls = replyValue.split(", ");
       const isTrustedHost = (url: string) => {
         try {
@@ -216,9 +217,12 @@ export const validateAndParseInputMessage = (
     }
     case InputBlockType.TEXT: {
       if (!message) return { status: "fail" };
+      // Video answers are only accepted where the question allows them.
+      if (message.type === "video" && !block.options?.videoClip?.isEnabled)
+        return { status: "fail" };
       return {
         status: "success",
-        content: message.type === "audio" ? message.url : message.text,
+        content: getReplyContent(message),
       };
     }
     case InputBlockType.CARDS: {

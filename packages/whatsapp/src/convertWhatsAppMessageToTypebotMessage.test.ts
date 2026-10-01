@@ -91,6 +91,30 @@ describe("convertWhatsAppMessageToTypebotMessage", () => {
     });
   });
 
+  it("turns a WhatsApp video into the video answer of an open question", async () => {
+    const block = {
+      id: "text-input",
+      type: InputBlockType.TEXT,
+      options: {
+        videoClip: { isEnabled: true, visibility: "Auto" },
+      },
+    } satisfies TextInputBlock;
+
+    const result = await convertWhatsAppMessageToTypebotMessage({
+      messages: [createVideoMessage("video-media-id")],
+      workspaceId: "workspace-id",
+      credentials,
+      typebotId: "typebot-id",
+      resultId: "result-id",
+      block,
+    });
+
+    expect(result).toEqual({
+      type: "video",
+      url: "http://localhost:3000/api/typebots/typebot-id/whatsapp/media/video-media-id.mp4",
+    });
+  });
+
   it("keeps audio messages as audio replies for other input blocks", async () => {
     const block = {
       id: "text-input",
@@ -199,5 +223,17 @@ const createAudioMessage = (mediaId: string, mimeType = "audio/ogg") =>
     audio: {
       id: mediaId,
       mime_type: mimeType,
+    },
+  }) satisfies WhatsAppIncomingMessage;
+
+const createVideoMessage = (mediaId: string) =>
+  ({
+    id: "message-id",
+    from: "33612345678",
+    timestamp: "1767225600",
+    type: "video",
+    video: {
+      id: mediaId,
+      mime_type: "video/mp4",
     },
   }) satisfies WhatsAppIncomingMessage;

@@ -48,6 +48,7 @@ import { formatInputForChatResponse } from "./formatInputForChatResponse";
 import { getReplyOutgoingEdge } from "./getReplyOutgoingEdge";
 import { buildAnswerResearchFields } from "./helpers/buildAnswerResearchFields";
 import { getAnswerLoopContext } from "./helpers/getAnswerLoopContext";
+import { getReplyContent } from "./helpers/getReplyContent";
 import { saveScoreVarsIfAny } from "./helpers/saveScoreVarsIfAny";
 import { saveAnswer } from "./queries/saveAnswer";
 import { resetSessionState } from "./resetSessionState";
@@ -517,6 +518,11 @@ const saveVariablesValueIfAny =
       reply,
       state: newSessionState,
     });
+    newSessionState = saveVideoClipVarIfAny({
+      block,
+      reply,
+      state: newSessionState,
+    });
     newSessionState = saveScoreVarsIfAny({
       block,
       state: newSessionState,
@@ -608,6 +614,37 @@ const saveAudioClipVarIfAny = ({
     state,
   });
 
+  return updatedState;
+};
+
+/** Video answer of an open question: the clip URL goes to its own variable. */
+const saveVideoClipVarIfAny = ({
+  block,
+  reply,
+  state,
+}: {
+  block: InputBlock;
+  reply: Message;
+  state: SessionState;
+}): SessionState => {
+  if (
+    reply.type !== "video" ||
+    block.type !== InputBlockType.TEXT ||
+    !block.options?.videoClip?.isEnabled ||
+    !block.options.videoClip.saveVariableId
+  )
+    return state;
+
+  const variable = state.typebotsQueue[0].typebot.variables.find(
+    (variable) => variable.id === block.options?.videoClip?.saveVariableId,
+  );
+  if (!variable) return state;
+
+  const { updatedState } = updateVariablesInSession({
+    newVariables: [{ id: variable.id, name: variable.name, value: reply.url }],
+    currentBlockId: undefined,
+    state,
+  });
   return updatedState;
 };
 
@@ -737,7 +774,7 @@ const saveAnswerInDb =
   ) =>
   async (reply: InputMessage): Promise<SessionState> => {
     let newSessionState = state;
-    const replyContent = reply.type === "audio" ? reply.url : reply.text;
+    const replyContent = getReplyContent(reply);
     const attachedFileUrls =
       reply.type === "text" ? reply.attachedFileUrls : undefined;
     const answerVariable = block.options?.variableId

@@ -5,6 +5,10 @@ import {
 import { z } from "zod";
 import { InputBlockType } from "../constants";
 import { fileVisibilityOptions } from "../file/constants";
+import {
+  maxVideoClipDurationSeconds,
+  minVideoClipDurationSeconds,
+} from "./videoClipConstants";
 
 export const textInputOptionsBaseSchema = z.object({
   labels: z
@@ -36,6 +40,20 @@ export const textInputOptionsSchema = textInputOptionsBaseSchema
           isEnabled: z.boolean().optional(),
           saveVariableId: z.string().optional(),
           visibility: z.enum(fileVisibilityOptions).optional(),
+        })
+        .optional(),
+      /** Video answer recorded with the camera (open questions). */
+      videoClip: z
+        .object({
+          isEnabled: z.boolean().optional(),
+          saveVariableId: z.string().optional(),
+          visibility: z.enum(fileVisibilityOptions).optional(),
+          maxDurationSeconds: z
+            .number()
+            .int()
+            .min(minVideoClipDurationSeconds)
+            .max(maxVideoClipDurationSeconds)
+            .optional(),
         })
         .optional(),
       attachments: z

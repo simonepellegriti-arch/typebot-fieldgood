@@ -752,5 +752,8 @@
   "editor.coding.import.applyDeclared": "Apply scores / exclusive / other specify from Word",
   "editor.coding.import.changes": "{count} changes will be applied to the draft",
   "editor.coding.import.apply": "Apply to draft",
-  "editor.coding.import.applied": "{count} coding changes applied to the draft"
+  "editor.coding.import.applied": "{count} coding changes applied to the draft",
+  "blocks.inputs.text.settings.videoClip.label": "Allow video answer",
+  "blocks.inputs.text.settings.videoClip.helperText": "Respondents can record their answer with the camera (MP4 on Safari/iPhone and recent Chrome, WebM elsewhere). The clip URL is the answer; recordings need file storage (S3) to be configured.",
+  "blocks.inputs.text.settings.videoClip.maxDuration": "Maximum duration (seconds)"
 }

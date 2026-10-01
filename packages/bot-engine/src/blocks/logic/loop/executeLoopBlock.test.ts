@@ -157,7 +157,7 @@ describe("Loop block", () => {
   });
 
   it("loops on a list variable and stops on the break condition", async () => {
-    const { inputBlockIds, transcript, answers } = await runInterview(
+    const { inputBlockIds, transcript } = await runInterview(
       {
         sourceType: "list",
         sourceVariableId: "v_list",
@@ -218,7 +218,7 @@ describe("Loop block", () => {
   });
 
   it("leaves through the next block when there is nothing to loop on", async () => {
-    const { inputBlockIds, answers } = await runInterview(
+    const { inputBlockIds } = await runInterview(
       { sourceType: "list", sourceVariableId: "v_brands_missing" },
       ["Nike"],
     );

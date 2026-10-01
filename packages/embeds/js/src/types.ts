@@ -58,6 +58,8 @@ export type RecordingInputSubmitContent = {
   type: "recording";
   url: string;
   blobUrl?: string;
+  /** Voice message (default) or video answer. */
+  mediaType?: "audio" | "video";
 };
 
 export type ClientSideResult = {

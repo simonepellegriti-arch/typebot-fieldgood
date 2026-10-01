@@ -35,6 +35,16 @@ export const GuestBubble = (props: Props) => {
         <Match when={props.answer?.type === "text"}>
           <TextGuestBubble answer={props.answer as TextInputSubmitContent} />
         </Match>
+        <Match
+          when={
+            props.answer?.type === "recording" &&
+            props.answer.mediaType === "video"
+          }
+        >
+          <VideoGuestBubble
+            answer={props.answer as RecordingInputSubmitContent}
+          />
+        </Match>
         <Match when={props.answer?.type === "recording"}>
           <AudioGuestBubble
             answer={props.answer as RecordingInputSubmitContent}
@@ -148,3 +158,20 @@ const AudioGuestBubble = (props: { answer: RecordingInputSubmitContent }) => {
     </div>
   );
 };
+
+const VideoGuestBubble = (props: { answer: RecordingInputSubmitContent }) => (
+  <div class="flex flex-col gap-1 items-end">
+    <div
+      class="p-2 w-full max-w-[350px] typebot-guest-bubble flex flex-col"
+      data-testid="guest-bubble"
+    >
+      {/* biome-ignore lint/a11y/useMediaCaption: Captions are not available for user-submitted recordings. */}
+      <video
+        controls
+        playsinline
+        class="w-full rounded-md"
+        src={props.answer.blobUrl ?? props.answer.url}
+      />
+    </div>
+  </div>
+);

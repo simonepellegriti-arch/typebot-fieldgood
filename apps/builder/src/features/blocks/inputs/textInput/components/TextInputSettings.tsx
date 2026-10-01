@@ -3,10 +3,15 @@ import { fileVisibilityOptions } from "@typebot.io/blocks-inputs/file/constants"
 import { defaultTextInputOptions } from "@typebot.io/blocks-inputs/text/constants";
 import type { TextInputBlock } from "@typebot.io/blocks-inputs/text/schema";
 import { inputModeOptions } from "@typebot.io/blocks-inputs/text/schema";
+import {
+  maxVideoClipDurationSeconds,
+  minVideoClipDurationSeconds,
+} from "@typebot.io/blocks-inputs/text/videoClipConstants";
 import { Field } from "@typebot.io/ui/components/Field";
 import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
 import { Switch } from "@typebot.io/ui/components/Switch";
 import type { Variable } from "@typebot.io/variables/schemas";
+import { BasicNumberInput } from "@/components/inputs/BasicNumberInput";
 import { BasicSelect } from "@/components/inputs/BasicSelect";
 import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
 import { VariablesCombobox } from "@/components/inputs/VariablesCombobox";
@@ -71,6 +76,14 @@ export const TextInputSettings = ({ options, onOptionsChange }: Props) => {
     onOptionsChange({
       ...options,
       audioClip: { ...options?.audioClip, visibility },
+    });
+
+  const updateVideoClip = (
+    updates: Partial<NonNullable<NonNullable<typeof options>["videoClip"]>>,
+  ) =>
+    onOptionsChange({
+      ...options,
+      videoClip: { ...options?.videoClip, ...updates },
     });
 
   const updateInputMode = (inputMode?: string) =>
@@ -158,6 +171,72 @@ export const TextInputSettings = ({ options, onOptionsChange }: Props) => {
                 value={options?.audioClip?.visibility}
                 defaultValue={defaultTextInputOptions.audioClip.visibility}
                 onChange={updateAudioClipVisibility}
+                items={fileVisibilityOptions}
+              />
+            </Field.Root>
+          </>
+        )}
+      </Field.Container>
+      <Field.Container>
+        <Field.Root className="flex-row items-center">
+          <Switch
+            checked={
+              options?.videoClip?.isEnabled ??
+              defaultTextInputOptions.videoClip.isEnabled
+            }
+            onCheckedChange={(isEnabled) => updateVideoClip({ isEnabled })}
+          />
+          <Field.Label className="font-medium">
+            {t("blocks.inputs.text.settings.videoClip.label")}
+            <MoreInfoTooltip>
+              {t("blocks.inputs.text.settings.videoClip.helperText")}
+            </MoreInfoTooltip>
+          </Field.Label>
+        </Field.Root>
+        {(options?.videoClip?.isEnabled ??
+          defaultTextInputOptions.videoClip.isEnabled) && (
+          <>
+            <Field.Root>
+              <Field.Label>
+                {t("blocks.inputs.text.settings.videoClip.maxDuration")}
+              </Field.Label>
+              <BasicNumberInput
+                withVariableButton={false}
+                min={minVideoClipDurationSeconds}
+                max={maxVideoClipDurationSeconds}
+                defaultValue={
+                  options?.videoClip?.maxDurationSeconds ??
+                  defaultTextInputOptions.videoClip.maxDurationSeconds
+                }
+                onValueChange={(maxDurationSeconds) =>
+                  updateVideoClip({ maxDurationSeconds })
+                }
+              />
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>Save the URL in a variable:</Field.Label>
+              <VariablesCombobox
+                initialVariableId={options?.videoClip?.saveVariableId}
+                onSelectVariable={(variable?: Pick<Variable, "id">) =>
+                  updateVideoClip({ saveVariableId: variable?.id })
+                }
+              />
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>
+                Visibility:
+                <MoreInfoTooltip>
+                  This setting determines who can see the uploaded files.
+                  "Public" means that anyone who has the link can see the files.
+                  "Private" means that only a members of this workspace can see
+                  the files.
+                </MoreInfoTooltip>
+              </Field.Label>
+              <BasicSelect
+                className="w-full"
+                value={options?.videoClip?.visibility}
+                defaultValue={defaultTextInputOptions.videoClip.visibility}
+                onChange={(visibility) => updateVideoClip({ visibility })}
                 items={fileVisibilityOptions}
               />
             </Field.Root>

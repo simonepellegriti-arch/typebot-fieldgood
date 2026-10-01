@@ -18,6 +18,10 @@ export const TextInputNodeContent = ({ options }: Props) => {
     typebot &&
     options?.audioClip?.isEnabled &&
     options?.audioClip.saveVariableId;
+  const videoClipVariableId =
+    typebot &&
+    options?.videoClip?.isEnabled &&
+    options?.videoClip.saveVariableId;
   return (
     <div className="flex flex-col gap-2">
       <p
@@ -45,6 +49,12 @@ export const TextInputNodeContent = ({ options }: Props) => {
         <SetVariableLabel
           variables={typebot?.variables}
           variableId={audioClipVariableId}
+        />
+      )}
+      {videoClipVariableId && (
+        <SetVariableLabel
+          variables={typebot?.variables}
+          variableId={videoClipVariableId}
         />
       )}
     </div>

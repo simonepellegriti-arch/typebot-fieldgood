@@ -8,6 +8,11 @@ export const defaultTextInputOptions = {
     isEnabled: false,
     visibility: "Auto",
   },
+  videoClip: {
+    isEnabled: false,
+    visibility: "Auto",
+    maxDurationSeconds: 60,
+  },
   attachments: {
     isEnabled: false,
     visibility: "Auto",

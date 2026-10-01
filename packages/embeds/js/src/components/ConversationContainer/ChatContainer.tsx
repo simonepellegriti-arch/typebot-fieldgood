@@ -570,7 +570,10 @@ const convertSubmitContentToMessage = (
       metadata: answer.metadata,
       structuredReply: answer.structuredReply,
     };
-  if (answer.type === "recording") return { type: "audio", url: answer.url };
+  if (answer.type === "recording")
+    return answer.mediaType === "video"
+      ? { type: "video", url: answer.url }
+      : { type: "audio", url: answer.url };
 };
 
 const updateIsInputHiddenOnLastChunk = (

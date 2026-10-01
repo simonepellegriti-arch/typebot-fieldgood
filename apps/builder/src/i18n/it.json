@@ -593,5 +593,8 @@
   "editor.coding.import.applyDeclared": "Applica punteggi / esclusive / altro specificare dal Word",
   "editor.coding.import.changes": "{count} modifiche verranno applicate alla bozza",
   "editor.coding.import.apply": "Applica alla bozza",
-  "editor.coding.import.applied": "{count} modifiche di codifica applicate alla bozza"
+  "editor.coding.import.applied": "{count} modifiche di codifica applicate alla bozza",
+  "blocks.inputs.text.settings.videoClip.label": "Consenti risposta video",
+  "blocks.inputs.text.settings.videoClip.helperText": "Il rispondente può registrare la risposta con la fotocamera (MP4 su Safari/iPhone e Chrome recente, WebM altrove). L'URL del video è la risposta; serve uno storage file (S3) configurato.",
+  "blocks.inputs.text.settings.videoClip.maxDuration": "Durata massima (secondi)"
 }

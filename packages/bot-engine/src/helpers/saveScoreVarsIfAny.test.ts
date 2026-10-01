@@ -170,7 +170,7 @@ describe("scores", () => {
   });
 
   it("routes with a condition on the score", async () => {
-    const { transcript, answers } = await runTestInterview(scoreBot, [
+    const { transcript } = await runTestInterview(scoreBot, [
       "Molto",
       "Nike, Adidas",
       matrixReply({ r1: ["c2"], r2: ["c2"] }),

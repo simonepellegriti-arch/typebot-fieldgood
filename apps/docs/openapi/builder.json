@@ -3766,6 +3766,30 @@
                   }
                 }
               },
+              "videoClip": {
+                "type": "object",
+                "properties": {
+                  "isEnabled": {
+                    "type": "boolean"
+                  },
+                  "saveVariableId": {
+                    "type": "string"
+                  },
+                  "visibility": {
+                    "enum": [
+                      "Auto",
+                      "Public",
+                      "Private"
+                    ],
+                    "type": "string"
+                  },
+                  "maxDurationSeconds": {
+                    "type": "integer",
+                    "minimum": 5,
+                    "maximum": 90
+                  }
+                }
+              },
               "attachments": {
                 "type": "object",
                 "properties": {
@@ -78726,6 +78750,22 @@
                             "type": "object",
                             "properties": {
                               "type": {
+                                "const": "video"
+                              },
+                              "url": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "url"
+                            ],
+                            "description": "Can only be provided if current input block is a text input block that allows video answers"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
                                 "const": "command"
                               },
                               "command": {
@@ -81109,6 +81149,22 @@
                           "url"
                         ],
                         "description": "Can only be provided if current input block is a text input block that allows audio clips"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "video"
+                          },
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "url"
+                        ],
+                        "description": "Can only be provided if current input block is a text input block that allows video answers"
                       },
                       {
                         "type": "object",
@@ -84101,6 +84157,22 @@
                           "url"
                         ],
                         "description": "Can only be provided if current input block is a text input block that allows audio clips"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "video"
+                          },
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "url"
+                        ],
+                        "description": "Can only be provided if current input block is a text input block that allows video answers"
                       },
                       {
                         "type": "object",

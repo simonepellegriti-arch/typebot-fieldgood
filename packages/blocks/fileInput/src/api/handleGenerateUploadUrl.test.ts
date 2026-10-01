@@ -115,6 +115,85 @@ describe("handleGenerateUploadUrl", () => {
   });
 });
 
+describe("video answers of open questions", () => {
+  beforeEach(() => {
+    getSessionMock.mockReset();
+    publicTypebotFindFirstMock.mockReset();
+    getSessionMock.mockResolvedValue(buildSession());
+  });
+
+  it("accepts the recorded video with its own visibility and a size cap", async () => {
+    publicTypebotFindFirstMock.mockResolvedValue(
+      buildTextInputTypebot({ isEnabled: true, visibility: "Public" }),
+    );
+    const response = await handleGenerateUploadUrl({
+      input: {
+        sessionId,
+        blockId: blockIdFromSession,
+        fileName: "video-answer.mp4",
+        fileType: "video/mp4",
+        fileSize: 1024 * 1024,
+      },
+      context: { apiOrigin: "http://localhost:3001" },
+    });
+    const filePath = parseSignedUploadFilePath(response.presignedUrl);
+    expect(filePath.startsWith("public/")).toBe(true);
+    expect(filePath.endsWith(".mp4")).toBe(true);
+    expect(response.maxFileSize).toBe(4);
+    await expect(
+      handleGenerateUploadUrl({
+        input: {
+          sessionId,
+          blockId: blockIdFromSession,
+          fileName: "too-long.mp4",
+          fileType: "video/mp4",
+          fileSize: 6 * 1024 * 1024,
+        },
+        context: { apiOrigin: "http://localhost:3001" },
+      }),
+    ).rejects.toThrow("File size exceeds the 4MB limit");
+  });
+
+  it("refuses uploads when the open question allows no recording", async () => {
+    publicTypebotFindFirstMock.mockResolvedValue(
+      buildTextInputTypebot({ isEnabled: false }),
+    );
+    await expect(
+      handleGenerateUploadUrl({
+        input: {
+          sessionId,
+          blockId: blockIdFromSession,
+          fileName: "video-answer.webm",
+          fileType: "video/webm",
+        },
+        context: { apiOrigin: "http://localhost:3001" },
+      }),
+    ).rejects.toThrow("Current block does not expect file upload");
+  });
+});
+
+const buildTextInputTypebot = (videoClip: {
+  isEnabled: boolean;
+  visibility?: "Public" | "Private";
+}) => ({
+  version: "6",
+  groups: [
+    {
+      id: "group",
+      title: "Group",
+      graphCoordinates: { x: 0, y: 0 },
+      blocks: [
+        {
+          id: blockIdFromSession,
+          type: InputBlockType.TEXT,
+          options: { videoClip },
+        },
+      ],
+    },
+  ],
+  typebot: { workspaceId: workspaceIdFromPublicTypebot },
+});
+
 const buildSession = () => ({
   state: {
     currentBlockId: blockIdFromSession,

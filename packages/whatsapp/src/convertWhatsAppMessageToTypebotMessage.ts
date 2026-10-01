@@ -87,13 +87,19 @@ export const convertWhatsAppMessageToTypebotMessage = async ({
           block?.type === InputBlockType.TEXT &&
           block.options?.audioClip?.isEnabled &&
           message.type === "audio";
+        const isVideoClipInput =
+          block?.type === InputBlockType.TEXT &&
+          block.options?.videoClip?.isEnabled &&
+          message.type === "video";
         const fileVisibility = isAudioClipInput
           ? block.options?.audioClip?.visibility
-          : block?.type === InputBlockType.FILE
-            ? block.options?.visibility
-            : block?.type === InputBlockType.TEXT
-              ? block.options?.attachments?.visibility
-              : undefined;
+          : isVideoClipInput
+            ? block.options?.videoClip?.visibility
+            : block?.type === InputBlockType.FILE
+              ? block.options?.visibility
+              : block?.type === InputBlockType.TEXT
+                ? block.options?.attachments?.visibility
+                : undefined;
         let fileUrl: string;
         if (fileVisibility !== "Public") {
           const extension = getExtensionFromMimeType(mimeType);
@@ -121,6 +127,12 @@ export const convertWhatsAppMessageToTypebotMessage = async ({
         if (message.type === "audio" && block?.type !== InputBlockType.FILE)
           return {
             type: "audio",
+            url: fileUrl,
+          };
+        // A video sent on WhatsApp is the video answer when the question allows it.
+        if (isVideoClipInput)
+          return {
+            type: "video",
             url: fileUrl,
           };
         if (block?.type === InputBlockType.FILE) {

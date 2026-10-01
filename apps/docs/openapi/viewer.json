@@ -325,6 +325,22 @@
                         "$ref": "#/components/schemas/Audio"
                       },
                       {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "video"
+                          },
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "url"
+                        ],
+                        "description": "Can only be provided if current input block is a text input block that allows video answers"
+                      },
+                      {
                         "$ref": "#/components/schemas/Command"
                       }
                     ],
@@ -1361,6 +1377,30 @@
                                                 "Private"
                                               ],
                                               "type": "string"
+                                            }
+                                          }
+                                        },
+                                        "videoClip": {
+                                          "type": "object",
+                                          "properties": {
+                                            "isEnabled": {
+                                              "type": "boolean"
+                                            },
+                                            "saveVariableId": {
+                                              "type": "string"
+                                            },
+                                            "visibility": {
+                                              "enum": [
+                                                "Auto",
+                                                "Public",
+                                                "Private"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "maxDurationSeconds": {
+                                              "type": "integer",
+                                              "minimum": 5,
+                                              "maximum": 90
                                             }
                                           }
                                         },
@@ -4231,6 +4271,22 @@
                             "$ref": "#/components/schemas/Audio"
                           },
                           {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "video"
+                              },
+                              "url": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "url"
+                            ],
+                            "description": "Can only be provided if current input block is a text input block that allows video answers"
+                          },
+                          {
                             "$ref": "#/components/schemas/Command"
                           }
                         ]
@@ -4654,6 +4710,30 @@
                                                 "Private"
                                               ],
                                               "type": "string"
+                                            }
+                                          }
+                                        },
+                                        "videoClip": {
+                                          "type": "object",
+                                          "properties": {
+                                            "isEnabled": {
+                                              "type": "boolean"
+                                            },
+                                            "saveVariableId": {
+                                              "type": "string"
+                                            },
+                                            "visibility": {
+                                              "enum": [
+                                                "Auto",
+                                                "Public",
+                                                "Private"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "maxDurationSeconds": {
+                                              "type": "integer",
+                                              "minimum": 5,
+                                              "maximum": 90
                                             }
                                           }
                                         },
@@ -7912,6 +7992,22 @@
                         "$ref": "#/components/schemas/Audio"
                       },
                       {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "video"
+                          },
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "url"
+                        ],
+                        "description": "Can only be provided if current input block is a text input block that allows video answers"
+                      },
+                      {
                         "$ref": "#/components/schemas/Command"
                       }
                     ],
@@ -8949,6 +9045,30 @@
                                                 "Private"
                                               ],
                                               "type": "string"
+                                            }
+                                          }
+                                        },
+                                        "videoClip": {
+                                          "type": "object",
+                                          "properties": {
+                                            "isEnabled": {
+                                              "type": "boolean"
+                                            },
+                                            "saveVariableId": {
+                                              "type": "string"
+                                            },
+                                            "visibility": {
+                                              "enum": [
+                                                "Auto",
+                                                "Public",
+                                                "Private"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "maxDurationSeconds": {
+                                              "type": "integer",
+                                              "minimum": 5,
+                                              "maximum": 90
                                             }
                                           }
                                         },
@@ -11836,6 +11956,22 @@
                         "$ref": "#/components/schemas/Audio"
                       },
                       {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "video"
+                          },
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "url"
+                        ],
+                        "description": "Can only be provided if current input block is a text input block that allows video answers"
+                      },
+                      {
                         "$ref": "#/components/schemas/Command"
                       }
                     ],
@@ -12869,6 +13005,30 @@
                                                 "Private"
                                               ],
                                               "type": "string"
+                                            }
+                                          }
+                                        },
+                                        "videoClip": {
+                                          "type": "object",
+                                          "properties": {
+                                            "isEnabled": {
+                                              "type": "boolean"
+                                            },
+                                            "saveVariableId": {
+                                              "type": "string"
+                                            },
+                                            "visibility": {
+                                              "enum": [
+                                                "Auto",
+                                                "Public",
+                                                "Private"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "maxDurationSeconds": {
+                                              "type": "integer",
+                                              "minimum": 5,
+                                              "maximum": 90
                                             }
                                           }
                                         },

@@ -78,12 +78,25 @@ export const audioMessageSchema = z
     "Can only be provided if current input block is a text input block that allows audio clips",
   );
 
+export const videoMessageSchema = z
+  .object({
+    type: z.literal("video"),
+    url: z.string(),
+  })
+  .describe(
+    "Can only be provided if current input block is a text input block that allows video answers",
+  );
+
 export const commandMessageSchema = z.object({
   type: z.literal("command"),
   command: z.string(),
 });
 
-const inputMessageSchemas = [textMessageSchema, audioMessageSchema] as const;
+const inputMessageSchemas = [
+  textMessageSchema,
+  audioMessageSchema,
+  videoMessageSchema,
+] as const;
 
 export const messageSchema = z.preprocess(
   (val) => (typeof val === "string" ? { type: "text", text: val } : val),

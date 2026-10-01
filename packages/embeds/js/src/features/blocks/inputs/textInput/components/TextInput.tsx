@@ -15,9 +15,11 @@ import {
   Switch,
 } from "solid-js";
 import { Button } from "../../../../../components/Button";
+import { CameraIcon } from "../../../../../components/icons/CameraIcon";
 import { MicrophoneIcon } from "../../../../../components/icons/MicrophoneIcon";
 import { ShortTextInput } from "../../../../../components/inputs/ShortTextInput";
 import { Textarea } from "../../../../../components/inputs/Textarea";
+import { getVideoRecorderLabels } from "../../../../../components/media/getVideoRecorderLabels";
 import { SendButton } from "../../../../../components/SendButton";
 import { TextInputAddFileButton } from "../../../../../components/TextInputAddFileButton";
 import type {
@@ -31,6 +33,7 @@ import type { CommandData } from "../../../../commands/types";
 import { SelectedFile } from "../../fileUpload/components/SelectedFile";
 import { sanitizeNewFile } from "../../fileUpload/helpers/sanitizeSelectedFiles";
 import { uploadFiles } from "../../fileUpload/helpers/uploadFiles";
+import { VideoRecorder } from "./VideoRecorder";
 import { VoiceRecorder } from "./VoiceRecorder";
 
 type Props = {
@@ -51,6 +54,8 @@ export const TextInput = (props: Props) => {
   const [recordingStatus, setRecordingStatus] = createSignal<
     "started" | "asking" | "stopped"
   >("stopped");
+  const [isVideoRecorderOpen, setIsVideoRecorderOpen] = createSignal(false);
+  const videoRecorderLabels = getVideoRecorderLabels();
   let inputRef: HTMLInputElement | HTMLTextAreaElement | undefined;
   let mediaRecorder: MediaRecorder | undefined;
   let recordedChunks: Blob[] = [];
@@ -296,6 +301,49 @@ export const TextInput = (props: Props) => {
     setRecordingStatus("started");
   };
 
+  const submitVideoAnswer = async (videoFile: File) => {
+    try {
+      setIsUploading(true);
+      const result = await uploadFiles({
+        apiHost:
+          props.context.apiHost ?? guessApiHost({ ignoreChatApiUrl: true }),
+        files: [
+          {
+            file: videoFile,
+            input: {
+              blockId: props.block.id,
+              sessionId: props.context.sessionId,
+              fileName: videoFile.name,
+            },
+          },
+        ],
+      }).finally(() => setIsUploading(false));
+      const url =
+        result.type === "success"
+          ? result.urls.find(isDefined)?.url
+          : undefined;
+      if (!url) {
+        toaster.create({
+          description:
+            result.type === "error" ? result.error : "Could not upload video",
+        });
+        return;
+      }
+      props.onSubmit({
+        type: "recording",
+        mediaType: "video",
+        url,
+        blobUrl: URL.createObjectURL(videoFile),
+      });
+    } catch (error) {
+      setIsUploading(false);
+      toaster.create({
+        description:
+          error instanceof Error ? error.message : "Could not upload video",
+      });
+    }
+  };
+
   const handleRecordingAbort = () => {
     if (mediaRecorder && mediaRecorder.state !== "inactive")
       mediaRecorder.stop();
@@ -304,132 +352,175 @@ export const TextInput = (props: Props) => {
     recordedChunks = [];
   };
 
-  return (
-    <form
-      class={cx(
-        "typebot-input-form flex w-full gap-2 items-end",
-        props.block.options?.isLong && recordingStatus() !== "started"
-          ? "max-w-full"
-          : "max-w-[350px]",
-      )}
-      onSubmit={handleSubmit}
-      onDrop={handleDropFile}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-    >
-      <div
-        class={cx(
-          "relative typebot-input flex-col w-full",
-          isDraggingOver() && "filter brightness-95",
-        )}
+  const VideoAnswerButton = () => (
+    <Show when={props.block.options?.videoClip?.isEnabled}>
+      <Button
+        type="button"
+        isDisabled={isUploading()}
+        class="h-14 flex items-center"
+        on:click={() => setIsVideoRecorderOpen(true)}
+        aria-label={videoRecorderLabels.openCamera}
       >
-        <VoiceRecorder
-          recordingStatus={recordingStatus()}
-          buttonsTheme={props.context.typebot.theme.chat?.buttons}
-          context={props.context}
-          isAbortDisabled={isUploading()}
-          onRecordingConfirmed={handleRecordingConfirmed}
-          onAbortRecording={handleRecordingAbort}
-        />
-        <Show when={recordingStatus() !== "started"}>
-          <Show when={selectedFiles().length}>
+        <CameraIcon class="flex w-6 h-6" />
+      </Button>
+    </Show>
+  );
+
+  return (
+    <Show
+      when={!isVideoRecorderOpen()}
+      fallback={
+        <div class="typebot-input flex w-full max-w-[350px] p-2">
+          <VideoRecorder
+            maxDurationSeconds={
+              props.block.options?.videoClip?.maxDurationSeconds ??
+              defaultTextInputOptions.videoClip.maxDurationSeconds
+            }
+            isUploading={isUploading()}
+            onSubmit={(videoFile) => void submitVideoAnswer(videoFile)}
+            onCancel={() => setIsVideoRecorderOpen(false)}
+          />
+        </div>
+      }
+    >
+      <form
+        class={cx(
+          "typebot-input-form flex w-full gap-2 items-end",
+          props.block.options?.isLong && recordingStatus() !== "started"
+            ? "max-w-full"
+            : "max-w-[350px]",
+        )}
+        onSubmit={handleSubmit}
+        onDrop={handleDropFile}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+      >
+        <div
+          class={cx(
+            "relative typebot-input flex-col w-full",
+            isDraggingOver() && "filter brightness-95",
+          )}
+        >
+          <VoiceRecorder
+            recordingStatus={recordingStatus()}
+            buttonsTheme={props.context.typebot.theme.chat?.buttons}
+            context={props.context}
+            isAbortDisabled={isUploading()}
+            onRecordingConfirmed={handleRecordingConfirmed}
+            onAbortRecording={handleRecordingAbort}
+          />
+          <Show when={recordingStatus() !== "started"}>
+            <Show when={selectedFiles().length}>
+              <div
+                class="p-2 flex gap-2 border-input-border overflow-auto"
+                style={{ "border-bottom-width": "1px" }}
+              >
+                <For each={selectedFiles()}>
+                  {(file, index) => (
+                    <SelectedFile
+                      file={file}
+                      uploadProgressPercent={
+                        uploadProgress()
+                          ? uploadProgress()?.fileIndex === index()
+                            ? 20
+                            : index() < (uploadProgress()?.fileIndex ?? 0)
+                              ? 100
+                              : 0
+                          : undefined
+                      }
+                      onRemoveClick={() => removeSelectedFile(index())}
+                    />
+                  )}
+                </For>
+              </div>
+            </Show>
             <div
-              class="p-2 flex gap-2 border-input-border overflow-auto"
-              style={{ "border-bottom-width": "1px" }}
+              class={cx(
+                "flex justify-between px-2",
+                props.block.options?.isLong ? "items-end" : "items-center",
+              )}
             >
-              <For each={selectedFiles()}>
-                {(file, index) => (
-                  <SelectedFile
-                    file={file}
-                    uploadProgressPercent={
-                      uploadProgress()
-                        ? uploadProgress()?.fileIndex === index()
-                          ? 20
-                          : index() < (uploadProgress()?.fileIndex ?? 0)
-                            ? 100
-                            : 0
-                        : undefined
-                    }
-                    onRemoveClick={() => removeSelectedFile(index())}
-                  />
-                )}
-              </For>
+              {props.block.options?.isLong ? (
+                <Textarea
+                  ref={inputRef as HTMLTextAreaElement}
+                  onInput={handleInput}
+                  onKeyDown={submitIfCtrlEnter}
+                  value={inputValue()}
+                  inputmode={props.block.options?.inputMode}
+                  placeholder={
+                    props.block.options?.labels?.placeholder ??
+                    defaultTextInputOptions.labels.placeholder
+                  }
+                />
+              ) : (
+                <ShortTextInput
+                  ref={inputRef as HTMLInputElement}
+                  onInput={handleInput}
+                  value={inputValue()}
+                  inputmode={props.block.options?.inputMode}
+                  placeholder={
+                    props.block.options?.labels?.placeholder ??
+                    defaultTextInputOptions.labels.placeholder
+                  }
+                />
+              )}
+              <Show
+                when={
+                  (props.block.options?.attachments?.isEnabled ??
+                    defaultTextInputOptions.attachments.isEnabled) &&
+                  props.block.options?.attachments?.saveVariableId
+                }
+              >
+                <TextInputAddFileButton
+                  onNewFiles={onNewFiles}
+                  class={cx(props.block.options?.isLong ? "ml-2" : undefined)}
+                />
+              </Show>
             </div>
           </Show>
-          <div
-            class={cx(
-              "flex justify-between px-2",
-              props.block.options?.isLong ? "items-end" : "items-center",
-            )}
+        </div>
+        <Switch>
+          <Match
+            when={
+              !inputValue() &&
+              recordingStatus() !== "started" &&
+              props.block.options?.audioClip?.isEnabled
+            }
           >
-            {props.block.options?.isLong ? (
-              <Textarea
-                ref={inputRef as HTMLTextAreaElement}
-                onInput={handleInput}
-                onKeyDown={submitIfCtrlEnter}
-                value={inputValue()}
-                inputmode={props.block.options?.inputMode}
-                placeholder={
-                  props.block.options?.labels?.placeholder ??
-                  defaultTextInputOptions.labels.placeholder
-                }
-              />
-            ) : (
-              <ShortTextInput
-                ref={inputRef as HTMLInputElement}
-                onInput={handleInput}
-                value={inputValue()}
-                inputmode={props.block.options?.inputMode}
-                placeholder={
-                  props.block.options?.labels?.placeholder ??
-                  defaultTextInputOptions.labels.placeholder
-                }
-              />
-            )}
-            <Show
-              when={
-                (props.block.options?.attachments?.isEnabled ??
-                  defaultTextInputOptions.attachments.isEnabled) &&
-                props.block.options?.attachments?.saveVariableId
-              }
+            <div class="flex gap-2">
+              <VideoAnswerButton />
+              <Button
+                type="button"
+                isDisabled={isUploading()}
+                class="h-14 flex items-center"
+                on:click={recordVoice}
+                aria-label="Record voice"
+              >
+                <MicrophoneIcon class="flex w-6 h-6" />
+              </Button>
+            </div>
+          </Match>
+          <Match
+            when={
+              !inputValue() &&
+              recordingStatus() !== "started" &&
+              props.block.options?.videoClip?.isEnabled
+            }
+          >
+            <VideoAnswerButton />
+          </Match>
+          <Match when={true}>
+            <SendButton
+              type="button"
+              isDisabled={isUploading()}
+              class="h-14"
+              on:click={submit}
             >
-              <TextInputAddFileButton
-                onNewFiles={onNewFiles}
-                class={cx(props.block.options?.isLong ? "ml-2" : undefined)}
-              />
-            </Show>
-          </div>
-        </Show>
-      </div>
-      <Switch>
-        <Match
-          when={
-            !inputValue() &&
-            recordingStatus() !== "started" &&
-            props.block.options?.audioClip?.isEnabled
-          }
-        >
-          <Button
-            type="button"
-            isDisabled={isUploading()}
-            class="h-14 flex items-center"
-            on:click={recordVoice}
-            aria-label="Record voice"
-          >
-            <MicrophoneIcon class="flex w-6 h-6" />
-          </Button>
-        </Match>
-        <Match when={true}>
-          <SendButton
-            type="button"
-            isDisabled={isUploading()}
-            class="h-14"
-            on:click={submit}
-          >
-            {props.block.options?.labels?.button}
-          </SendButton>
-        </Match>
-      </Switch>
-    </form>
+              {props.block.options?.labels?.button}
+            </SendButton>
+          </Match>
+        </Switch>
+      </form>
+    </Show>
   );
 };

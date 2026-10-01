@@ -2,6 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import type { FileInputBlock } from "@typebot.io/blocks-inputs/file/schema";
 import type { TextInputBlock } from "@typebot.io/blocks-inputs/text/schema";
+import { maxVideoClipUploadBytes } from "@typebot.io/blocks-inputs/text/videoClipConstants";
 import { getSession } from "@typebot.io/chat-session/queries/getSession";
 import { env } from "@typebot.io/env";
 import { getBlockById } from "@typebot.io/groups/helpers/getBlockById";
@@ -80,7 +81,9 @@ export const handleGenerateUploadUrl = async ({
       (block.type !== InputBlockType.TEXT ||
         !block.options?.attachments?.isEnabled) &&
       (block.type !== InputBlockType.TEXT ||
-        !block.options?.audioClip?.isEnabled))
+        !block.options?.audioClip?.isEnabled) &&
+      (block.type !== InputBlockType.TEXT ||
+        !block.options?.videoClip?.isEnabled))
   )
     throw new ORPCError("BAD_REQUEST", {
       message: "Current block does not expect file upload",
@@ -108,7 +111,10 @@ export const handleGenerateUploadUrl = async ({
       message: `File type ${resolvedFileType} not allowed`,
     });
 
-  const { visibility, maxFileSize } = parseFileUploadParams(block);
+  const { visibility, maxFileSize } = parseFileUploadParams(
+    block,
+    resolvedFileType,
+  );
 
   if (maxFileSize && fileSize && fileSize > maxFileSize * 1024 * 1024)
     throw new ORPCError("BAD_REQUEST", {
@@ -177,6 +183,7 @@ const getAndParsePublicTypebot = async (typebotId: string) => {
 
 const parseFileUploadParams = (
   block: FileInputBlock | TextInputBlock,
+  fileType: string,
 ): { visibility: "Public" | "Private"; maxFileSize: number | undefined } => {
   if (block.type === InputBlockType.FILE) {
     return {
@@ -189,9 +196,21 @@ const parseFileUploadParams = (
     };
   }
 
+  // Recorded answers follow the visibility of their own setting.
+  const recordingOptions = fileType.startsWith("video/")
+    ? block.options?.videoClip
+    : fileType.startsWith("audio/")
+      ? block.options?.audioClip
+      : undefined;
+  if (fileType.startsWith("video/") && block.options?.videoClip?.isEnabled)
+    return {
+      visibility:
+        block.options.videoClip.visibility === "Private" ? "Private" : "Public",
+      maxFileSize: maxVideoClipUploadBytes / 1024 / 1024,
+    };
   return {
     visibility:
-      block.options?.attachments?.visibility === "Private"
+      (recordingOptions ?? block.options?.attachments)?.visibility === "Private"
         ? "Private"
         : "Public",
     maxFileSize: env.NEXT_PUBLIC_BOT_FILE_UPLOAD_MAX_SIZE,
