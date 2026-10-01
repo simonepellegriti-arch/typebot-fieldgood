@@ -64,6 +64,8 @@ export type ResultHeaderCell = {
   /** Tracked videos produce answers too (watch results). */
   blockType?: InputBlockType | BubbleBlockType.VIDEO;
   variableIds?: string[];
+  /** Column of a question answered inside a loop: one per loop item / iteration. */
+  loopSlot?: { loopBlockId: string; key: string };
 };
 
 export type CellValueType = { element?: JSX.Element; plainText: string };

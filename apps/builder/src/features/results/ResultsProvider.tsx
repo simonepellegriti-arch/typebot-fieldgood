@@ -100,13 +100,14 @@ export const ResultsProvider = ({
       publishedTypebot
         ? parseResultHeader({
             typebot: publishedTypebot,
+            results: flatResults,
             linkedTypebots: linkedTypebotsData?.typebots as Pick<
               Typebot,
               "groups" | "variables"
             >[],
           })
         : [],
-    [linkedTypebotsData?.typebots, publishedTypebot],
+    [linkedTypebotsData?.typebots, publishedTypebot, flatResults],
   );
 
   const tableData = useMemo(

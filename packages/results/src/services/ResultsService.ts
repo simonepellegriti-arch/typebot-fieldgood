@@ -11,6 +11,19 @@ export class ResultsService extends ServiceMap.Service<
       typebotId: string;
       createdAt?: Prisma.Prisma.DateTimeFilter;
     }) => Effect.Effect<string[], PrismaFindError>;
+    /** Questions answered inside loops, with their loop items / iterations (one row per column). */
+    findDistinctLoopAnswerSlots: (input: {
+      typebotId: string;
+      createdAt?: Prisma.Prisma.DateTimeFilter;
+    }) => Effect.Effect<
+      {
+        blockId: string;
+        loopBlockId: string | null;
+        loopIteration: number | null;
+        loopItem: string | null;
+      }[],
+      PrismaFindError
+    >;
   }
 >()("@typebot/ResultsService") {
   static readonly layer = Layer.effect(
@@ -48,6 +61,29 @@ export class ResultsService extends ServiceMap.Service<
               ...answerBlockIds.map((a) => a.blockId),
             ]);
             return [...allBlockIds];
+          },
+        ),
+        findDistinctLoopAnswerSlots: Effect.fn("findDistinctLoopAnswerSlots")(
+          function* ({
+            typebotId,
+            createdAt,
+          }: {
+            typebotId: string;
+            createdAt?: Prisma.Prisma.DateTimeFilter;
+          }) {
+            return yield* prisma.answerV2.findMany({
+              where: {
+                result: { typebotId, createdAt },
+                loopBlockId: { not: null },
+              },
+              distinct: ["blockId", "loopBlockId", "loopIteration", "loopItem"],
+              select: {
+                blockId: true,
+                loopBlockId: true,
+                loopIteration: true,
+                loopItem: true,
+              },
+            });
           },
         ),
       });

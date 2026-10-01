@@ -6,6 +6,7 @@ import type { InputBlock } from "@typebot.io/blocks-inputs/schema";
 import type { Group } from "@typebot.io/groups/schemas";
 import { byId, isNotEmpty } from "@typebot.io/lib/utils";
 import type { Variable } from "@typebot.io/variables/schemas";
+import { expandLoopResultHeaders } from "./expandLoopResultHeaders";
 import type { ResultHeaderCell, ResultWithAnswers } from "./schemas/results";
 
 export const parseResultHeader = ({
@@ -51,7 +52,11 @@ export const parseResultHeader = ({
   ];
   return [
     { label: "Submitted at", id: "date" },
-    ...inputsResultHeader,
+    ...expandLoopResultHeaders({
+      headers: inputsResultHeader,
+      answers: (results ?? []).flatMap((result) => result.answers),
+      groups: parsedGroups,
+    }),
     ...parseVariablesHeaders({
       variables: parsedVariables,
       existingInputResultHeaders: inputsResultHeader,

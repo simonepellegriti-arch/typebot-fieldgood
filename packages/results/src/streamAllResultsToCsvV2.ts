@@ -9,6 +9,7 @@ import { Effect, Ref, Schema, ServiceMap, Stream } from "effect";
 import * as Papaparse from "papaparse";
 import { z } from "zod";
 import { convertResultsToTableData } from "./convertResultsToTableData";
+import { expandLoopResultHeaders } from "./expandLoopResultHeaders";
 import { parseBlockIdVariableIdMap } from "./parseBlockIdVariableIdMap";
 import { parseColumnsOrder } from "./parseColumnsOrder";
 import { parseResultHeader } from "./parseResultHeader";
@@ -84,7 +85,20 @@ export const streamResultsToCsvV2 = Effect.fn("streamResultsToCsvV2")(
         })
       : [];
 
-    const resultHeader = [...baseResultHeader, ...deletedBlockHeaders];
+    // One column per loop item for questions answered inside loops (like the table).
+    const loopAnswerSlots = yield* resultsService.findDistinctLoopAnswerSlots({
+      typebotId: typebot.id,
+      createdAt: createCreatedAtFilter({ fromDate, toDate }),
+    });
+
+    const resultHeader = [
+      ...expandLoopResultHeaders({
+        headers: baseResultHeader,
+        answers: loopAnswerSlots,
+        groups: typebot.groups,
+      }),
+      ...deletedBlockHeaders,
+    ];
 
     const blockIdVariableIdMap = parseBlockIdVariableIdMap(typebot.groups);
 
@@ -171,6 +185,9 @@ export const streamResultsToCsvV2 = Effect.fn("streamResultsToCsvV2")(
                       content: true,
                       otherTexts: true,
                       blockId: true,
+                      loopBlockId: true,
+                      loopIteration: true,
+                      loopItem: true,
                     },
                   },
                 },

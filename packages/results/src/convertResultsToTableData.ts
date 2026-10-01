@@ -3,6 +3,7 @@ import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import { isDefined } from "@typebot.io/lib/utils";
 import type { VariableWithValue } from "@typebot.io/variables/schemas";
 import type { JSX } from "react";
+import { parseLoopSlot } from "./parseLoopSlot";
 import type { Answer } from "./schemas/answers";
 import type {
   ResultHeaderCell,
@@ -52,15 +53,31 @@ export const convertResultsToTableData = ({
           Answer,
           "blockId" | "content"
         > &
-          Partial<Pick<Answer, "otherTexts">>;
+          Partial<
+            Pick<
+              Answer,
+              "otherTexts" | "loopBlockId" | "loopIteration" | "loopItem"
+            >
+          >;
         const answerVariableId = blockIdVariableIdMap[answer.blockId];
-        const header = answerVariableId
-          ? headerCells.find((headerCell) =>
-              headerCell.variableIds?.includes(answerVariableId),
+        const loopSlot = parseLoopSlot(answer);
+        const loopHeader = loopSlot
+          ? headerCells.find(
+              (headerCell) =>
+                headerCell.loopSlot?.loopBlockId === loopSlot.loopBlockId &&
+                headerCell.loopSlot.key === loopSlot.key &&
+                headerCell.blocks?.some((block) => block.id === answer.blockId),
             )
-          : headerCells.find((headerCell) =>
-              headerCell.blocks?.some((block) => block.id === answer.blockId),
-            );
+          : undefined;
+        const header = loopHeader
+          ? loopHeader
+          : answerVariableId
+            ? headerCells.find((headerCell) =>
+                headerCell.variableIds?.includes(answerVariableId),
+              )
+            : headerCells.find((headerCell) =>
+                headerCell.blocks?.some((block) => block.id === answer.blockId),
+              );
         if (!header || !header.blocks || !header.blockType) return tableData;
         tableData[header.id] = cellParser(
           appendOtherTexts(answer.content, answer.otherTexts),

@@ -209,16 +209,24 @@ export const ExportAllResultsDialog = ({
 
     if (!results.length) return setIsExportLoading(false);
 
+    // Parsed with all the results: loop columns of every exported answer.
+    const allResultsHeader = parseResultHeader({
+      typebot: publishedTypebot,
+      linkedTypebots: linkedTypebotsData?.typebots as Pick<
+        Typebot,
+        "groups" | "variables"
+      >[],
+      results,
+    });
     const resultHeader = areDeletedBlocksIncluded
-      ? parseResultHeader({
-          typebot: publishedTypebot,
-          linkedTypebots: linkedTypebotsData?.typebots as Pick<
-            Typebot,
-            "groups" | "variables"
-          >[],
-          results,
-        })
-      : existingResultHeader;
+      ? allResultsHeader
+      : allResultsHeader.filter(
+          (header) =>
+            header.loopSlot ||
+            existingResultHeader.some(
+              (existingHeader) => existingHeader.id === header.id,
+            ),
+        );
 
     const dataToUnparse = convertResultsToTableData({
       results,
