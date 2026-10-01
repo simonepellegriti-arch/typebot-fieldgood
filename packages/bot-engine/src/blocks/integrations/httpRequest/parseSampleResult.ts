@@ -129,6 +129,20 @@ const getSampleValue = (block: InputBlock, userEmail?: string): string => {
             `${row.label ?? row.value ?? ""}: ${block.options?.columns?.[0]?.label ?? ""}`,
         )
         .join("\n");
+    case InputBlockType.SLIDER:
+      return "75";
+    case InputBlockType.CONSTANT_SUM: {
+      const items = block.options?.items ?? [];
+      const total = block.options?.total ?? 100;
+      return items
+        .map(
+          (item, index) =>
+            `${item.label ?? item.value ?? ""}: ${index === 0 ? total : 0}`,
+        )
+        .join("\n");
+    }
+    case InputBlockType.SIGNATURE:
+      return "https://domain.com/signature.jpg";
     case InputBlockType.CARDS:
       return block.items
         .map((item) => item.title ?? item.description)

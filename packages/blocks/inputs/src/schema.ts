@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { cardsBlockSchema } from "./cards/schema";
 import { buttonsInputSchemas } from "./choice/schema";
+import { constantSumInputSchema } from "./constantSum/schema";
 import { dateInputSchema } from "./date/schema";
 import { emailInputSchema } from "./email/schema";
 import { fileInputBlockSchemas } from "./file/schema";
@@ -10,6 +11,8 @@ import { paymentInputSchema } from "./payment/schema";
 import { phoneNumberInputBlockSchema } from "./phone/schema";
 import { pictureChoiceBlockSchemas } from "./pictureChoice/schema";
 import { ratingInputBlockSchema } from "./rating/schema";
+import { signatureInputSchema } from "./signature/schema";
+import { sliderInputSchema } from "./slider/schema";
 import { textInputSchema } from "./text/schema";
 import { timeInputSchema } from "./time/schema";
 import { urlInputSchema } from "./url/schema";
@@ -26,6 +29,9 @@ const inputBlockSchemas = [
   ratingInputBlockSchema,
   cardsBlockSchema,
   matrixInputSchema,
+  sliderInputSchema,
+  constantSumInputSchema,
+  signatureInputSchema,
 ] as const;
 
 export const inputBlockV5Schema = z.discriminatedUnion("type", [

@@ -63,6 +63,9 @@ export const getInputBlockLabel = (
   [InputBlockType.TIME]: "Time",
   [InputBlockType.CARDS]: "Cards",
   [InputBlockType.MATRIX]: t("editor.sidebarBlock.matrix.label"),
+  [InputBlockType.SLIDER]: t("editor.sidebarBlock.slider.label"),
+  [InputBlockType.CONSTANT_SUM]: t("editor.sidebarBlock.constantSum.label"),
+  [InputBlockType.SIGNATURE]: t("editor.sidebarBlock.signature.label"),
 });
 
 export const getLogicBlockLabel = (

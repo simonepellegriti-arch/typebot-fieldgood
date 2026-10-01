@@ -10,10 +10,12 @@ import type { Variable } from "@typebot.io/variables/schemas";
 import { injectVariableValuesInCardsBlock } from "./blocks/cards/injectVariableValuesInCardsBlock";
 import { injectVariableValuesInButtonsInputBlock } from "./blocks/inputs/buttons/injectVariableValuesInButtonsInputBlock";
 import { randomizeChoiceItems } from "./blocks/inputs/buttons/randomizeChoiceItems";
+import { formatConstantSumInputForDisplay } from "./blocks/inputs/constantSum/formatConstantSumInputForDisplay";
 import { parseDateInput } from "./blocks/inputs/date/parseDateInput";
 import { formatMatrixInputForDisplay } from "./blocks/inputs/matrix/formatMatrixInputForDisplay";
 import { computePaymentInputRuntimeOptions } from "./blocks/inputs/payment/computePaymentInputRuntimeOptions";
 import { injectVariableValuesInPictureChoiceBlock } from "./blocks/inputs/pictureChoice/injectVariableValuesInPictureChoiceBlock";
+import { formatSliderInputForDisplay } from "./blocks/inputs/slider/formatSliderInputForDisplay";
 import { getPrefilledInputValue } from "./getPrefilledValue";
 
 export const formatInputForChatResponse = async (
@@ -77,6 +79,15 @@ export const formatInputForChatResponse = async (
     }
     case InputBlockType.MATRIX: {
       return formatMatrixInputForDisplay(block, {
+        variables,
+        sessionStore,
+      });
+    }
+    case InputBlockType.SLIDER: {
+      return formatSliderInputForDisplay(block, { variables, sessionStore });
+    }
+    case InputBlockType.CONSTANT_SUM: {
+      return formatConstantSumInputForDisplay(block, {
         variables,
         sessionStore,
       });

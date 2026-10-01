@@ -39,12 +39,20 @@ const parseDefaultMatrixOptions = () => ({
   })),
 });
 
+/** Three categories coded 1-3, to be renamed in the settings. */
+const parseDefaultConstantSumOptions = () => ({
+  items: [1, 2, 3].map((code) => ({ id: createId(), value: String(code) })),
+});
+
 export const parseNewBlock = (type: BlockV6["type"]) =>
   ({
     id: createId(),
     type,
     ...(type === InputBlockType.MATRIX
       ? { options: parseDefaultMatrixOptions() }
+      : undefined),
+    ...(type === InputBlockType.CONSTANT_SUM
+      ? { options: parseDefaultConstantSumOptions() }
       : undefined),
 
     ...(blockTypeHasItems(type)

@@ -1,5 +1,6 @@
 import type { CardsBlock } from "@typebot.io/blocks-inputs/cards/schema";
 import type { ChoiceInputBlock } from "@typebot.io/blocks-inputs/choice/schema";
+import type { ConstantSumInputBlock } from "@typebot.io/blocks-inputs/constantSum/schema";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import type { DateInputBlock } from "@typebot.io/blocks-inputs/date/schema";
 import type { EmailInputBlock } from "@typebot.io/blocks-inputs/email/schema";
@@ -11,6 +12,8 @@ import type { PaymentInputBlock } from "@typebot.io/blocks-inputs/payment/schema
 import type { PhoneNumberInputBlock } from "@typebot.io/blocks-inputs/phone/schema";
 import type { PictureChoiceBlock } from "@typebot.io/blocks-inputs/pictureChoice/schema";
 import type { RatingInputBlock } from "@typebot.io/blocks-inputs/rating/schema";
+import type { SignatureInputBlock } from "@typebot.io/blocks-inputs/signature/schema";
+import type { SliderInputBlock } from "@typebot.io/blocks-inputs/slider/schema";
 import type { TextInputBlock } from "@typebot.io/blocks-inputs/text/schema";
 import type { TimeInputBlock } from "@typebot.io/blocks-inputs/time/schema";
 import type { UrlInputBlock } from "@typebot.io/blocks-inputs/url/schema";
@@ -26,6 +29,7 @@ import { Buttons } from "../features/blocks/inputs/buttons/components/Buttons";
 import { MediaChoiceForm } from "../features/blocks/inputs/buttons/components/MediaChoiceForm";
 import { MultipleChoicesForm } from "../features/blocks/inputs/buttons/components/MultipleChoicesForm";
 import { CardsCaroussel } from "../features/blocks/inputs/cards/CardsCaroussel";
+import { ConstantSumForm } from "../features/blocks/inputs/constantSum/components/ConstantSumForm";
 import { DateForm } from "../features/blocks/inputs/date/components/DateForm";
 import { EmailInput } from "../features/blocks/inputs/email/components/EmailInput";
 import { FileUploadForm } from "../features/blocks/inputs/fileUpload/components/FileUploadForm";
@@ -36,6 +40,8 @@ import { PhoneInput } from "../features/blocks/inputs/phone/components/PhoneInpu
 import { MultiplePictureChoice } from "../features/blocks/inputs/pictureChoice/MultiplePictureChoice";
 import { SinglePictureChoice } from "../features/blocks/inputs/pictureChoice/SinglePictureChoice";
 import { RatingForm } from "../features/blocks/inputs/rating/components/RatingForm";
+import { SignatureForm } from "../features/blocks/inputs/signature/components/SignatureForm";
+import { SliderForm } from "../features/blocks/inputs/slider/components/SliderForm";
 import { TextInput } from "../features/blocks/inputs/textInput/components/TextInput";
 import { TimeForm } from "../features/blocks/inputs/time/components/TimeForm";
 import { UrlInput } from "../features/blocks/inputs/url/components/UrlInput";
@@ -266,6 +272,22 @@ const Input = (props: {
       <Match when={isMatrixBlock(props.block)} keyed>
         {(block) => <MatrixForm block={block} onSubmit={props.onSubmit} />}
       </Match>
+      <Match when={isSliderBlock(props.block)} keyed>
+        {(block) => <SliderForm block={block} onSubmit={props.onSubmit} />}
+      </Match>
+      <Match when={isConstantSumBlock(props.block)} keyed>
+        {(block) => <ConstantSumForm block={block} onSubmit={props.onSubmit} />}
+      </Match>
+      <Match when={isSignatureBlock(props.block)} keyed>
+        {(block) => (
+          <SignatureForm
+            context={props.context}
+            block={block}
+            onSubmit={props.onSubmit}
+            onSkip={props.onSkip}
+          />
+        )}
+      </Match>
       <Match when={props.block.type === InputBlockType.CARDS}>
         <CardsCaroussel
           block={props.block as CardsBlock}
@@ -291,3 +313,18 @@ const isMatrixBlock = (
   block: ContinueChatResponse["input"],
 ): MatrixInputBlock | undefined =>
   block?.type === InputBlockType.MATRIX ? block : undefined;
+
+const isSliderBlock = (
+  block: ContinueChatResponse["input"],
+): SliderInputBlock | undefined =>
+  block?.type === InputBlockType.SLIDER ? block : undefined;
+
+const isConstantSumBlock = (
+  block: ContinueChatResponse["input"],
+): ConstantSumInputBlock | undefined =>
+  block?.type === InputBlockType.CONSTANT_SUM ? block : undefined;
+
+const isSignatureBlock = (
+  block: ContinueChatResponse["input"],
+): SignatureInputBlock | undefined =>
+  block?.type === InputBlockType.SIGNATURE ? block : undefined;

@@ -307,6 +307,15 @@
                             "$ref": "#/components/schemas/MatrixInput"
                           },
                           {
+                            "$ref": "#/components/schemas/SliderInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/ConstantSumInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/SignatureInput"
+                          },
+                          {
                             "$ref": "#/components/schemas/ChoiceInput"
                           },
                           {
@@ -1999,6 +2008,15 @@
                           },
                           {
                             "$ref": "#/components/schemas/MatrixInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/SliderInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/ConstantSumInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/SignatureInput"
                           },
                           {
                             "$ref": "#/components/schemas/ChoiceInput"
@@ -4711,6 +4729,226 @@
                     "id"
                   ]
                 }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "SliderInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "outgoingEdgeId": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "slider input"
+            ],
+            "type": "string"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "variableId": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "variableId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              },
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "step": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "startValue": {
+                "type": "number"
+              },
+              "minLabel": {
+                "type": "string"
+              },
+              "middleLabel": {
+                "type": "string"
+              },
+              "maxLabel": {
+                "type": "string"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "isValueVisible": {
+                "type": "boolean"
+              },
+              "isInteractionRequired": {
+                "type": "boolean"
+              },
+              "areRowsRandomized": {
+                "type": "boolean"
+              },
+              "buttonLabel": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "ConstantSumInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "outgoingEdgeId": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "constant sum input"
+            ],
+            "type": "string"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "variableId": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "variableId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "exclusiveMinimum": 0
+              },
+              "unit": {
+                "type": "string"
+              },
+              "areItemsRandomized": {
+                "type": "boolean"
+              },
+              "totalLabel": {
+                "type": "string"
+              },
+              "buttonLabel": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "SignatureInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "outgoingEdgeId": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "signature input"
+            ],
+            "type": "string"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "variableId": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              },
+              "placeholder": {
+                "type": "string"
+              },
+              "clearLabel": {
+                "type": "string"
+              },
+              "buttonLabel": {
+                "type": "string"
+              },
+              "isRequired": {
+                "type": "boolean"
+              },
+              "skipLabel": {
+                "type": "string"
+              },
+              "visibility": {
+                "enum": [
+                  "Auto",
+                  "Public",
+                  "Private"
+                ],
+                "type": "string"
               }
             }
           }
@@ -13241,6 +13479,15 @@
                             "$ref": "#/components/schemas/MatrixInput"
                           },
                           {
+                            "$ref": "#/components/schemas/SliderInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/ConstantSumInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/SignatureInput"
+                          },
+                          {
                             "type": "object",
                             "properties": {
                               "id": {
@@ -15640,6 +15887,15 @@
                             "$ref": "#/components/schemas/MatrixInput"
                           },
                           {
+                            "$ref": "#/components/schemas/SliderInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/ConstantSumInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/SignatureInput"
+                          },
+                          {
                             "type": "object",
                             "properties": {
                               "id": {
@@ -18037,6 +18293,15 @@
                           },
                           {
                             "$ref": "#/components/schemas/MatrixInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/SliderInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/ConstantSumInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/SignatureInput"
                           },
                           {
                             "type": "object",
@@ -20457,6 +20722,15 @@
                             "$ref": "#/components/schemas/MatrixInput"
                           },
                           {
+                            "$ref": "#/components/schemas/SliderInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/ConstantSumInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/SignatureInput"
+                          },
+                          {
                             "type": "object",
                             "properties": {
                               "id": {
@@ -22746,6 +23020,15 @@
                             "$ref": "#/components/schemas/MatrixInput"
                           },
                           {
+                            "$ref": "#/components/schemas/SliderInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/ConstantSumInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/SignatureInput"
+                          },
+                          {
                             "$ref": "#/components/schemas/ChoiceInput"
                           },
                           {
@@ -24485,6 +24768,15 @@
                                                 "$ref": "#/components/schemas/MatrixInput"
                                               },
                                               {
+                                                "$ref": "#/components/schemas/SliderInput"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/ConstantSumInput"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SignatureInput"
+                                              },
+                                              {
                                                 "type": "object",
                                                 "properties": {
                                                   "id": {
@@ -25315,6 +25607,15 @@
                                               },
                                               {
                                                 "$ref": "#/components/schemas/MatrixInput"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SliderInput"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/ConstantSumInput"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/SignatureInput"
                                               },
                                               {
                                                 "$ref": "#/components/schemas/ChoiceInput"
@@ -30469,6 +30770,15 @@
                                         "$ref": "#/components/schemas/MatrixInput"
                                       },
                                       {
+                                        "$ref": "#/components/schemas/SliderInput"
+                                      },
+                                      {
+                                        "$ref": "#/components/schemas/ConstantSumInput"
+                                      },
+                                      {
+                                        "$ref": "#/components/schemas/SignatureInput"
+                                      },
+                                      {
                                         "$ref": "#/components/schemas/ChoiceInput"
                                       },
                                       {
@@ -32562,6 +32872,15 @@
                                         },
                                         {
                                           "$ref": "#/components/schemas/MatrixInput"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/SliderInput"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/ConstantSumInput"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/SignatureInput"
                                         },
                                         {
                                           "$ref": "#/components/schemas/ChoiceInput"
@@ -36293,6 +36612,15 @@
                                               "$ref": "#/components/schemas/MatrixInput"
                                             },
                                             {
+                                              "$ref": "#/components/schemas/SliderInput"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/ConstantSumInput"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SignatureInput"
+                                            },
+                                            {
                                               "$ref": "#/components/schemas/ChoiceInput"
                                             },
                                             {
@@ -38387,6 +38715,15 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/MatrixInput"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SliderInput"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/ConstantSumInput"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/SignatureInput"
                                             },
                                             {
                                               "type": "object",
@@ -40593,6 +40930,15 @@
                                             "$ref": "#/components/schemas/MatrixInput"
                                           },
                                           {
+                                            "$ref": "#/components/schemas/SliderInput"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/ConstantSumInput"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/SignatureInput"
+                                          },
+                                          {
                                             "$ref": "#/components/schemas/ChoiceInput"
                                           },
                                           {
@@ -42090,6 +42436,15 @@
                                           },
                                           {
                                             "$ref": "#/components/schemas/MatrixInput"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/SliderInput"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/ConstantSumInput"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/SignatureInput"
                                           },
                                           {
                                             "type": "object",
@@ -44362,6 +44717,15 @@
                                         },
                                         {
                                           "$ref": "#/components/schemas/MatrixInput"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/SliderInput"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/ConstantSumInput"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/SignatureInput"
                                         },
                                         {
                                           "$ref": "#/components/schemas/ChoiceInput"
@@ -49064,6 +49428,15 @@
                                                   "$ref": "#/components/schemas/MatrixInput"
                                                 },
                                                 {
+                                                  "$ref": "#/components/schemas/SliderInput"
+                                                },
+                                                {
+                                                  "$ref": "#/components/schemas/ConstantSumInput"
+                                                },
+                                                {
+                                                  "$ref": "#/components/schemas/SignatureInput"
+                                                },
+                                                {
                                                   "$ref": "#/components/schemas/ChoiceInput"
                                                 },
                                                 {
@@ -51230,6 +51603,15 @@
                                                 },
                                                 {
                                                   "$ref": "#/components/schemas/MatrixInput"
+                                                },
+                                                {
+                                                  "$ref": "#/components/schemas/SliderInput"
+                                                },
+                                                {
+                                                  "$ref": "#/components/schemas/ConstantSumInput"
+                                                },
+                                                {
+                                                  "$ref": "#/components/schemas/SignatureInput"
                                                 },
                                                 {
                                                   "type": "object",
@@ -53488,6 +53870,15 @@
                                             "$ref": "#/components/schemas/MatrixInput"
                                           },
                                           {
+                                            "$ref": "#/components/schemas/SliderInput"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/ConstantSumInput"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/SignatureInput"
+                                          },
+                                          {
                                             "$ref": "#/components/schemas/ChoiceInput"
                                           },
                                           {
@@ -54764,6 +55155,15 @@
                                           },
                                           {
                                             "$ref": "#/components/schemas/MatrixInput"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/SliderInput"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/ConstantSumInput"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/SignatureInput"
                                           },
                                           {
                                             "type": "object",
@@ -57025,6 +57425,15 @@
                                         },
                                         {
                                           "$ref": "#/components/schemas/MatrixInput"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/SliderInput"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/ConstantSumInput"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/SignatureInput"
                                         },
                                         {
                                           "$ref": "#/components/schemas/ChoiceInput"
@@ -78728,9 +79137,51 @@
                                       "type",
                                       "result"
                                     ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "const": "slider"
+                                      },
+                                      "values": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                          "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                          "type": "number"
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "values"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "const": "constantSum"
+                                      },
+                                      "values": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                          "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                          "type": "number"
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "values"
+                                    ]
                                   }
                                 ],
-                                "description": "Structured answer for matrix, choice (with 'Other, please specify') and tracked video blocks"
+                                "description": "Structured answer for matrix, slider, constant sum, choice (with 'Other, please specify') and tracked video blocks"
                               },
                               "metadata": {
                                 "type": "object",
@@ -79370,6 +79821,15 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/MatrixInput"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SliderInput"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/ConstantSumInput"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SignatureInput"
                                 }
                               ]
                             },
@@ -81132,9 +81592,51 @@
                                   "type",
                                   "result"
                                 ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "const": "slider"
+                                  },
+                                  "values": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "number"
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "values"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "const": "constantSum"
+                                  },
+                                  "values": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "number"
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "values"
+                                ]
                               }
                             ],
-                            "description": "Structured answer for matrix, choice (with 'Other, please specify') and tracked video blocks"
+                            "description": "Structured answer for matrix, slider, constant sum, choice (with 'Other, please specify') and tracked video blocks"
                           },
                           "metadata": {
                             "type": "object",
@@ -82377,6 +82879,15 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/MatrixInput"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SliderInput"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/ConstantSumInput"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SignatureInput"
                                 }
                               ]
                             },
@@ -84140,9 +84651,51 @@
                                   "type",
                                   "result"
                                 ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "const": "slider"
+                                  },
+                                  "values": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "number"
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "values"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "const": "constantSum"
+                                  },
+                                  "values": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                      "type": "number"
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "values"
+                                ]
                               }
                             ],
-                            "description": "Structured answer for matrix, choice (with 'Other, please specify') and tracked video blocks"
+                            "description": "Structured answer for matrix, slider, constant sum, choice (with 'Other, please specify') and tracked video blocks"
                           },
                           "metadata": {
                             "type": "object",
@@ -85381,6 +85934,15 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/MatrixInput"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SliderInput"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/ConstantSumInput"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/SignatureInput"
                                 }
                               ]
                             },

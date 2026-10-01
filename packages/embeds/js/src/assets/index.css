@@ -741,3 +741,53 @@ select option {
     opacity: 1;
   }
 }
+
+/* Slider question (FIELDBOT) */
+.typebot-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 28px;
+  background: transparent;
+  cursor: pointer;
+  accent-color: rgb(var(--typebot-button-bg-rgb));
+}
+.typebot-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(var(--typebot-button-bg-rgb), 0.25);
+}
+.typebot-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(var(--typebot-button-bg-rgb), 0.25);
+}
+.typebot-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -9px;
+  border-radius: 9999px;
+  background: rgb(var(--typebot-button-bg-rgb));
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+.typebot-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: rgb(var(--typebot-button-bg-rgb));
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+/* Not answered yet: faded thumb on the start position. */
+.typebot-slider.untouched::-webkit-slider-thumb {
+  opacity: 0.45;
+}
+.typebot-slider.untouched::-moz-range-thumb {
+  opacity: 0.45;
+}
+.typebot-slider:focus-visible {
+  outline: 2px solid rgb(var(--typebot-button-bg-rgb));
+  outline-offset: 2px;
+}

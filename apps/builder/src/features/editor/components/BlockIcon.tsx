@@ -14,6 +14,7 @@ import { ImageBubbleIcon } from "@/features/blocks/bubbles/image/components/Imag
 import { TextBubbleIcon } from "@/features/blocks/bubbles/textBubble/components/TextBubbleIcon";
 import { VideoBubbleIcon } from "@/features/blocks/bubbles/video/components/VideoBubbleIcon";
 import { ButtonsInputIcon } from "@/features/blocks/inputs/buttons/components/ButtonsIcon";
+import { ConstantSumInputIcon } from "@/features/blocks/inputs/constantSum/components/ConstantSumInputIcon";
 import { DateInputIcon } from "@/features/blocks/inputs/date/components/DateInputIcon";
 import { EmailInputIcon } from "@/features/blocks/inputs/emailInput/components/EmailInputIcon";
 import { FileInputIcon } from "@/features/blocks/inputs/fileUpload/components/FileInputIcon";
@@ -23,6 +24,8 @@ import { PaymentInputIcon } from "@/features/blocks/inputs/payment/components/Pa
 import { PhoneInputIcon } from "@/features/blocks/inputs/phone/components/PhoneInputIcon";
 import { PictureChoiceIcon } from "@/features/blocks/inputs/pictureChoice/components/PictureChoiceIcon";
 import { RatingInputIcon } from "@/features/blocks/inputs/rating/components/RatingInputIcon";
+import { SignatureInputIcon } from "@/features/blocks/inputs/signature/components/SignatureInputIcon";
+import { SliderInputIcon } from "@/features/blocks/inputs/slider/components/SliderInputIcon";
 import { TextInputIcon } from "@/features/blocks/inputs/textInput/components/TextInputIcon";
 import { TimeInputIcon } from "@/features/blocks/inputs/time/components/TimeInputIcon";
 import { UrlInputIcon } from "@/features/blocks/inputs/url/components/UrlInputIcon";
@@ -98,6 +101,22 @@ export const BlockIcon = ({ type, className }: BlockIconProps): JSX.Element => {
     case InputBlockType.MATRIX:
       return (
         <MatrixInputIcon className={cn("text-orange-9 stroke-2", className)} />
+      );
+    case InputBlockType.SLIDER:
+      return (
+        <SliderInputIcon className={cn("text-orange-9 stroke-2", className)} />
+      );
+    case InputBlockType.CONSTANT_SUM:
+      return (
+        <ConstantSumInputIcon
+          className={cn("text-orange-9 stroke-2", className)}
+        />
+      );
+    case InputBlockType.SIGNATURE:
+      return (
+        <SignatureInputIcon
+          className={cn("text-orange-9 stroke-2", className)}
+        />
       );
     case InputBlockType.DATE:
       return (

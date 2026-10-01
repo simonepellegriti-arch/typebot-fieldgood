@@ -11,6 +11,10 @@ import {
   buttonsInputSchemas,
   choiceStructuredReplySchema,
 } from "@typebot.io/blocks-inputs/choice/schema";
+import {
+  constantSumInputSchema,
+  constantSumStructuredReplySchema,
+} from "@typebot.io/blocks-inputs/constantSum/schema";
 import { dateInputSchema } from "@typebot.io/blocks-inputs/date/schema";
 import { emailInputSchema } from "@typebot.io/blocks-inputs/email/schema";
 import { fileInputBlockSchemas } from "@typebot.io/blocks-inputs/file/schema";
@@ -26,6 +30,11 @@ import {
 import { phoneNumberInputBlockSchema } from "@typebot.io/blocks-inputs/phone/schema";
 import { pictureChoiceBlockSchemas } from "@typebot.io/blocks-inputs/pictureChoice/schema";
 import { ratingInputBlockSchema } from "@typebot.io/blocks-inputs/rating/schema";
+import { signatureInputSchema } from "@typebot.io/blocks-inputs/signature/schema";
+import {
+  sliderInputSchema,
+  sliderStructuredReplySchema,
+} from "@typebot.io/blocks-inputs/slider/schema";
 import { textInputSchema } from "@typebot.io/blocks-inputs/text/schema";
 import { timeInputSchema } from "@typebot.io/blocks-inputs/time/schema";
 import { urlInputSchema } from "@typebot.io/blocks-inputs/url/schema";
@@ -49,6 +58,8 @@ export const structuredReplySchema = z.discriminatedUnion("type", [
   choiceStructuredReplySchema,
   matrixStructuredReplySchema,
   videoStructuredReplySchema,
+  sliderStructuredReplySchema,
+  constantSumStructuredReplySchema,
 ]);
 export type StructuredReply = z.infer<typeof structuredReplySchema>;
 
@@ -58,7 +69,7 @@ export const textMessageSchema = z.object({
   structuredReply: structuredReplySchema
     .optional()
     .describe(
-      "Structured answer for matrix, choice (with 'Other, please specify') and tracked video blocks",
+      "Structured answer for matrix, slider, constant sum, choice (with 'Other, please specify') and tracked video blocks",
     ),
   metadata: z.object({ replyId: z.string().optional() }).optional(),
   attachedFileUrls: z
@@ -339,6 +350,9 @@ const chatResponseBaseSchema = z.object({
         pictureChoiceBlockSchemas.v6,
         cardsBlockSchema,
         matrixInputSchema,
+        sliderInputSchema,
+        constantSumInputSchema,
+        signatureInputSchema,
       ]),
       z.discriminatedUnion("type", [
         buttonsInputSchemas.v5,

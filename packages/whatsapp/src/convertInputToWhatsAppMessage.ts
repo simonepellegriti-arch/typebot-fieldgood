@@ -4,6 +4,8 @@ import type { ButtonItem } from "@typebot.io/blocks-inputs/choice/schema";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import { getMatrixCode } from "@typebot.io/blocks-inputs/matrix/helpers/getMatrixCode";
 import { defaultPictureChoiceOptions } from "@typebot.io/blocks-inputs/pictureChoice/constants";
+import { getSliderRows } from "@typebot.io/blocks-inputs/slider/helpers/getSliderRows";
+import { resolveSliderScale } from "@typebot.io/blocks-inputs/slider/helpers/resolveSliderScale";
 import type { ContinueChatResponse } from "@typebot.io/chat-api/schemas";
 import { env } from "@typebot.io/env";
 import { isDefined, isEmpty } from "@typebot.io/lib/utils";
@@ -225,6 +227,68 @@ export const convertInputToWhatsAppMessages = async ({
               `${getMatrixCode(row, index)}=${columns[0] ? getMatrixCode(columns[0], 0) : "1"}`,
           )
           .join(", ")}`,
+      ]
+        .filter(isDefined)
+        .join("\n\n");
+      return [{ type: "text", text: { body } }];
+    }
+    case InputBlockType.SLIDER: {
+      // No slider on WhatsApp: the value is typed as a number (see parseSliderReply).
+      const rows = getSliderRows(input.options);
+      const { min, max } = resolveSliderScale(input.options);
+      const scale = [
+        `${min}${input.options?.minLabel ? ` = ${input.options.minLabel}` : ""}`,
+        `${max}${input.options?.maxLabel ? ` = ${input.options.maxLabel}` : ""}`,
+      ].join("\n");
+      const body = [
+        lastMessageText ?? input.options?.question,
+        rows.length > 1
+          ? rows
+              .map(
+                (row, index) =>
+                  `${getMatrixCode(row, index)}. ${row.label ?? ""}`,
+              )
+              .join("\n")
+          : undefined,
+        scale,
+        rows.length > 1
+          ? `Reply as statement=value, e.g. ${rows
+              .slice(0, 2)
+              .map((row, index) => `${getMatrixCode(row, index)}=${max}`)
+              .join(", ")}`
+          : `Reply with a number from ${min} to ${max}`,
+      ]
+        .filter(isDefined)
+        .join("\n\n");
+      return [{ type: "text", text: { body } }];
+    }
+    case InputBlockType.CONSTANT_SUM: {
+      const items = input.options?.items ?? [];
+      const total = input.options?.total ?? 100;
+      const body = [
+        lastMessageText ?? input.options?.question,
+        items
+          .map(
+            (item, index) =>
+              `${getMatrixCode(item, index)}. ${item.label ?? ""}`,
+          )
+          .join("\n"),
+        `Split ${total} between the categories. Reply as category=amount, e.g. ${items
+          .slice(0, 2)
+          .map(
+            (item, index) =>
+              `${getMatrixCode(item, index)}=${index === 0 ? total : 0}`,
+          )
+          .join(", ")}`,
+      ]
+        .filter(isDefined)
+        .join("\n\n");
+      return [{ type: "text", text: { body } }];
+    }
+    case InputBlockType.SIGNATURE: {
+      const body = [
+        lastMessageText ?? input.options?.question,
+        "Signatures can only be collected in the web version of this survey.",
       ]
         .filter(isDefined)
         .join("\n\n");

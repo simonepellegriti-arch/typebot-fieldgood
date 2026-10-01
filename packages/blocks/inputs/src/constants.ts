@@ -15,6 +15,9 @@ export enum InputBlockType {
   FILE = "file input",
   CARDS = "cards",
   MATRIX = "matrix input",
+  SLIDER = "slider input",
+  CONSTANT_SUM = "constant sum input",
+  SIGNATURE = "signature input",
 }
 
 export const replyEventInputTypeFromEnum = {
@@ -32,4 +35,7 @@ export const replyEventInputTypeFromEnum = {
   [InputBlockType.FILE]: "file",
   [InputBlockType.CARDS]: "cards",
   [InputBlockType.MATRIX]: "matrix",
+  [InputBlockType.SLIDER]: "slider",
+  [InputBlockType.CONSTANT_SUM]: "constant sum",
+  [InputBlockType.SIGNATURE]: "signature",
 };

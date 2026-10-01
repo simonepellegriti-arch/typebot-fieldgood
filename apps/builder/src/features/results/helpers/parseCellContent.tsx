@@ -27,6 +27,19 @@ export const parseCellContent = (
       plainText: content.join(", "),
     };
   }
+  if (blockType === InputBlockType.SIGNATURE && typeof content === "string")
+    return {
+      element: (
+        <a href={content} target="_blank" rel="noreferrer">
+          <img
+            src={content}
+            alt="Signature"
+            className="h-10 w-auto rounded border border-gray-6 bg-white"
+          />
+        </a>
+      ),
+      plainText: content,
+    };
   return blockType === InputBlockType.FILE
     ? { element: <FileLinks fileNamesStr={content} />, plainText: content }
     : { plainText: content.toString() };

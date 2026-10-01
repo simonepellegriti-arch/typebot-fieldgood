@@ -14,6 +14,7 @@ import { TextBubbleContent } from "@/features/blocks/bubbles/textBubble/componen
 import { VideoBubbleContent } from "@/features/blocks/bubbles/video/components/VideoBubbleContent";
 import { ButtonsBlockNode } from "@/features/blocks/inputs/buttons/components/ButtonsBlockNode";
 import { CardsBlockNode } from "@/features/blocks/inputs/cards/components/CardsBlockNode";
+import { ConstantSumNodeContent } from "@/features/blocks/inputs/constantSum/components/ConstantSumNodeContent";
 import { DateNodeContent } from "@/features/blocks/inputs/date/components/DateNodeContent";
 import { EmailInputNodeContent } from "@/features/blocks/inputs/emailInput/components/EmailInputNodeContent";
 import { FileInputContent } from "@/features/blocks/inputs/fileUpload/components/FileInputContent";
@@ -23,6 +24,8 @@ import { PaymentInputContent } from "@/features/blocks/inputs/payment/components
 import { PhoneNodeContent } from "@/features/blocks/inputs/phone/components/PhoneNodeContent";
 import { PictureChoiceNode } from "@/features/blocks/inputs/pictureChoice/components/PictureChoiceNode";
 import { RatingInputContent } from "@/features/blocks/inputs/rating/components/RatingInputContent";
+import { SignatureNodeContent } from "@/features/blocks/inputs/signature/components/SignatureNodeContent";
+import { SliderNodeContent } from "@/features/blocks/inputs/slider/components/SliderNodeContent";
 import { TextInputNodeContent } from "@/features/blocks/inputs/textInput/components/TextInputNodeContent";
 import { TimeNodeContent } from "@/features/blocks/inputs/time/components/TimeNodeContent";
 import { UrlNodeContent } from "@/features/blocks/inputs/url/components/UrlNodeContent";
@@ -104,6 +107,15 @@ export const BlockNodeContent = ({
     }
     case InputBlockType.MATRIX: {
       return <MatrixNodeContent options={block.options} />;
+    }
+    case InputBlockType.SLIDER: {
+      return <SliderNodeContent options={block.options} />;
+    }
+    case InputBlockType.CONSTANT_SUM: {
+      return <ConstantSumNodeContent options={block.options} />;
+    }
+    case InputBlockType.SIGNATURE: {
+      return <SignatureNodeContent options={block.options} />;
     }
     case InputBlockType.PAYMENT: {
       return <PaymentInputContent block={block} />;

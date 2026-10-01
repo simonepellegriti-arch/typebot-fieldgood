@@ -210,10 +210,22 @@ const buildQuestionCodebookVariable = (
         { value: 1, label: "Selected" },
       ],
     };
+  if (column.isMatrixTotal) return { ...base, measure: "scale" };
   const hasValueLabels =
     !column.isLabelColumn &&
     question !== undefined &&
     question.options.length > 0;
+  if (question?.isScale)
+    return {
+      ...base,
+      measure: "scale",
+      valueLabels: hasValueLabels
+        ? question.options.map((option) => ({
+            value: option.value,
+            label: option.label,
+          }))
+        : undefined,
+    };
   return {
     ...base,
     measure:

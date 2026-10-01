@@ -5,6 +5,8 @@ import { isInputBlock } from "@typebot.io/blocks-core/helpers";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import { getMatrixCode } from "@typebot.io/blocks-inputs/matrix/helpers/getMatrixCode";
 import type { InputBlock } from "@typebot.io/blocks-inputs/schema";
+import { getSliderRows } from "@typebot.io/blocks-inputs/slider/helpers/getSliderRows";
+import { resolveSliderScale } from "@typebot.io/blocks-inputs/slider/helpers/resolveSliderScale";
 import { LogicBlockType } from "@typebot.io/blocks-logic/constants";
 import type { Group } from "@typebot.io/groups/schemas";
 import type { Variable, VariableDataType } from "@typebot.io/variables/schemas";
@@ -85,16 +87,19 @@ export const buildDatasetDictionary = (
             : option.value,
         })),
       );
-      const matrixRows =
-        block.type === InputBlockType.MATRIX
-          ? mergeOptions(
-              existingQuestion?.matrixRows ?? [],
-              (block.options?.rows ?? []).map((row, rowIndex) => ({
-                value: getMatrixCode(row, rowIndex),
-                label: row.label ?? getMatrixCode(row, rowIndex),
-              })),
-            )
-          : undefined;
+      const rowEntries = listRowEntries(block);
+      const matrixRows = rowEntries
+        ? mergeOptions(
+            existingQuestion?.matrixRows ?? [],
+            rowEntries.map((row, rowIndex) => ({
+              value: getMatrixCode(row, rowIndex),
+              label: row.label ?? getMatrixCode(row, rowIndex),
+            })),
+          )
+        : undefined;
+      const isScale =
+        block.type === InputBlockType.SLIDER ||
+        block.type === InputBlockType.CONSTANT_SUM;
       const isMultiplePerRow =
         block.type === InputBlockType.MATRIX &&
         block.options?.answerMode === "multiple";
@@ -117,14 +122,12 @@ export const buildDatasetDictionary = (
         id: block.id,
         blockId: block.id,
         blockType: block.type,
-        kind: block.type === InputBlockType.MATRIX ? "matrix" : "standard",
+        kind: matrixRows ? "matrix" : "standard",
         variableId: variable?.id,
         variableName: variable?.name ?? `Q_${block.id}`,
         label:
           variable?.label ??
-          (block.type === InputBlockType.MATRIX
-            ? block.options?.question?.trim() || undefined
-            : undefined) ??
+          getBlockQuestionText(block) ??
           precedingText ??
           groupTitle,
         dataType,
@@ -137,6 +140,10 @@ export const buildDatasetDictionary = (
               matrixRows,
               isMultiplePerRow,
             }
+          : {}),
+        ...(isScale ? { isScale: true } : {}),
+        ...(block.type === InputBlockType.CONSTANT_SUM
+          ? { hasTotalColumn: true }
           : {}),
         ...(otherOptionValues && otherOptionValues.length > 0
           ? { otherOptionValues }
@@ -281,12 +288,60 @@ const collectText = (node: unknown): string => {
   return "";
 };
 
+/**
+ * Questions exported with one column per row: matrix rows, slider statements
+ * (when there are several) and constant sum categories.
+ */
+const listRowEntries = (
+  block: InputBlock,
+): { label?: string; value?: string }[] | undefined => {
+  if (block.type === InputBlockType.MATRIX) return block.options?.rows ?? [];
+  if (block.type === InputBlockType.CONSTANT_SUM)
+    return block.options?.items ?? [];
+  if (block.type === InputBlockType.SLIDER) {
+    const rows = getSliderRows(block.options);
+    return rows.length > 1 ? rows : undefined;
+  }
+};
+
+/** Question text written in the block itself (matrix, slider, constant sum, signature). */
+const getBlockQuestionText = (block: InputBlock) => {
+  if (
+    block.type !== InputBlockType.MATRIX &&
+    block.type !== InputBlockType.SLIDER &&
+    block.type !== InputBlockType.CONSTANT_SUM &&
+    block.type !== InputBlockType.SIGNATURE
+  )
+    return;
+  const singleSliderLabel =
+    block.type === InputBlockType.SLIDER &&
+    getSliderRows(block.options).length === 1
+      ? block.options?.rows?.[0]?.label?.trim()
+      : undefined;
+  return block.options?.question?.trim() || singleSliderLabel || undefined;
+};
+
 const isMultipleChoiceBlock = (block: InputBlock) =>
   (block.type === InputBlockType.CHOICE ||
     block.type === InputBlockType.PICTURE_CHOICE) &&
   Boolean(block.options?.isMultipleChoice);
 
 const parseBlockOptions = (block: InputBlock): QuestionOption[] => {
+  if (block.type === InputBlockType.SLIDER) {
+    const { min, max } = resolveSliderScale(block.options);
+    const middle = (min + max) / 2;
+    return [
+      { value: min, label: block.options?.minLabel },
+      ...(Number.isInteger(middle)
+        ? [{ value: middle, label: block.options?.middleLabel }]
+        : []),
+      { value: max, label: block.options?.maxLabel },
+    ].flatMap((option) =>
+      option.label?.trim()
+        ? [{ value: option.value, label: option.label.trim() }]
+        : [],
+    );
+  }
   if (block.type === InputBlockType.MATRIX)
     return (block.options?.columns ?? []).map((column, columnIndex) => ({
       value: getMatrixCode(column, columnIndex),
@@ -319,6 +374,8 @@ const inferDataType = (
   switch (block.type) {
     case InputBlockType.NUMBER:
     case InputBlockType.RATING:
+    case InputBlockType.SLIDER:
+    case InputBlockType.CONSTANT_SUM:
       return "number";
     case InputBlockType.MATRIX:
     case InputBlockType.CHOICE:

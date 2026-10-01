@@ -264,6 +264,71 @@ describe("voice / video answers of open questions", () => {
   });
 });
 
+describe("signatures", () => {
+  beforeEach(() => {
+    getSessionMock.mockReset();
+    publicTypebotFindFirstMock.mockReset();
+    getSessionMock.mockResolvedValue(buildSession());
+    publicTypebotFindFirstMock.mockResolvedValue({
+      version: "6",
+      groups: [
+        {
+          id: "group",
+          title: "Group",
+          graphCoordinates: { x: 0, y: 0 },
+          blocks: [
+            {
+              id: blockIdFromSession,
+              type: InputBlockType.SIGNATURE,
+              options: { visibility: "Private" },
+            },
+          ],
+        },
+      ],
+      typebot: { workspaceId: workspaceIdFromPublicTypebot },
+    });
+  });
+
+  const generateSignatureUploadUrl = (input: {
+    fileType?: string;
+    fileSize?: number;
+  }) =>
+    handleGenerateUploadUrl({
+      input: {
+        sessionId,
+        blockId: blockIdFromSession,
+        fileName: "signature.jpg",
+        ...input,
+      },
+      context: { apiOrigin: "http://localhost:3001" },
+    });
+
+  it("signs a direct upload of the JPEG with the block visibility", async () => {
+    const response = await generateSignatureUploadUrl({
+      fileType: "image/jpeg",
+      fileSize: 40_000,
+    });
+    const presignedUrl = new URL(response.presignedUrl);
+    expect(presignedUrl.pathname.startsWith("/typebot/private/")).toBe(true);
+    expect(presignedUrl.pathname.endsWith(".jpeg")).toBe(true);
+    expect(
+      response.fileUrl.startsWith("http://localhost:3000/api/typebots/"),
+    ).toBe(true);
+  });
+
+  it("refuses other file types and files over 2 MB", async () => {
+    await expect(
+      generateSignatureUploadUrl({ fileType: "image/png", fileSize: 1000 }),
+    ).rejects.toThrow("File type image/png not allowed");
+    await expect(
+      generateSignatureUploadUrl({
+        fileType: "image/jpeg",
+        fileSize: 3 * 1024 * 1024,
+      }),
+    ).rejects.toThrow("File size exceeds the 2MB limit");
+  });
+});
+
 type MediaAnswerOptions = {
   isEnabled: boolean;
   visibility?: "Public" | "Private";

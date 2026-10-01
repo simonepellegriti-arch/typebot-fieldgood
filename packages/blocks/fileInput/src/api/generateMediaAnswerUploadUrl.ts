@@ -2,13 +2,8 @@ import { ORPCError } from "@orpc/server";
 import { defaultTextInputOptions } from "@typebot.io/blocks-inputs/text/constants";
 import type { MediaAnswerUploadPurpose } from "@typebot.io/blocks-inputs/text/mediaAnswerConstants";
 import type { TextInputBlock } from "@typebot.io/blocks-inputs/text/schema";
-import { env } from "@typebot.io/env";
-import {
-  createUploadFileName,
-  parseUploadPathSegment,
-  resolveUploadFileType,
-} from "@typebot.io/lib/s3/createUploadFilePath";
-import { generatePresignedPutUrl } from "@typebot.io/lib/s3/generatePresignedPutUrl";
+import { resolveUploadFileType } from "@typebot.io/lib/s3/createUploadFilePath";
+import { generateDirectAnswerUploadUrl } from "./generateDirectAnswerUploadUrl";
 
 type Props = {
   purpose: MediaAnswerUploadPurpose;
@@ -58,36 +53,16 @@ export const generateMediaAnswerUploadUrl = ({
       message: `File size exceeds the ${maxFileSizeMB}MB limit`,
     });
 
-  const visibility =
-    mediaOptions.visibility === "Private" ? "Private" : "Public";
-  const uploadFileName = createUploadFileName(resolvedFileType);
-  const typebotPathSegment = parseUploadPathSegment(typebotId);
-  const blockPathSegment = parseUploadPathSegment(currentBlockId);
-  const filePath =
-    workspaceId && resultId
-      ? `${visibility === "Private" ? "private" : "public"}/workspaces/${parseUploadPathSegment(
-          workspaceId,
-        )}/typebots/${typebotPathSegment}/results/${parseUploadPathSegment(
-          resultId,
-        )}/blocks/${blockPathSegment}/${uploadFileName}`
-      : `public/tmp/typebots/${typebotPathSegment}/blocks/${blockPathSegment}/${uploadFileName}`;
-
-  const { presignedUrl, publicFileUrl } = generatePresignedPutUrl({
-    filePath,
-    contentType: resolvedFileType,
-    contentLength: fileSize,
-  });
-
-  return {
-    presignedUrl,
-    formData: {},
+  return generateDirectAnswerUploadUrl({
+    visibility: mediaOptions.visibility === "Private" ? "Private" : "Public",
     fileType: resolvedFileType,
-    maxFileSize: maxFileSizeMB,
-    fileUrl:
-      visibility === "Private" && resultId
-        ? `${env.NEXTAUTH_URL}/api/typebots/${typebotId}/results/${resultId}/blocks/${currentBlockId}/${uploadFileName}`
-        : publicFileUrl,
-  };
+    fileSize,
+    maxFileSizeMB,
+    typebotId,
+    workspaceId,
+    resultId,
+    currentBlockId,
+  });
 };
 
 /**

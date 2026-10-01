@@ -498,17 +498,21 @@ const buildSlotColumns = (
     kind: "question",
     questionId: question.id,
     ...slotFields,
-    isLabelColumn: options.valueMode === "label",
+    isLabelColumn: options.valueMode === "label" && !question.isScale,
     label: baseLabel,
     type:
-      options.valueMode === "label" ||
+      (options.valueMode === "label" && !question.isScale) ||
       question.isMultiple ||
       options.repeatedAnswersMode === "json"
         ? "string"
         : toColumnType(question.dataType),
   };
-  // Label columns only make sense for questions with coded options.
-  if (options.valueMode !== "both" || question.options.length === 0)
+  // Label columns only make sense for questions with coded options (not scales).
+  if (
+    options.valueMode !== "both" ||
+    question.options.length === 0 ||
+    question.isScale
+  )
     return [valueColumn, ...otherTextColumns];
   return [
     valueColumn,
@@ -597,6 +601,41 @@ const buildMatrixColumns = (
     slotFields: SlotFields;
     options: ResearchExportOptions;
   },
+): DatasetColumn[] => [
+  ...buildMatrixRowColumns(question, {
+    baseName,
+    baseLabel,
+    slotFields,
+    options,
+  }),
+  ...(question.hasTotalColumn
+    ? [
+        {
+          name: `${baseName}_TOT`,
+          kind: "question" as const,
+          questionId: question.id,
+          ...slotFields,
+          isMatrixTotal: true,
+          label: `${baseLabel}: total`,
+          type: "numeric" as const,
+        },
+      ]
+    : []),
+];
+
+const buildMatrixRowColumns = (
+  question: DictionaryQuestion,
+  {
+    baseName,
+    baseLabel,
+    slotFields,
+    options,
+  }: {
+    baseName: string;
+    baseLabel: string;
+    slotFields: SlotFields;
+    options: ResearchExportOptions;
+  },
 ): DatasetColumn[] =>
   (question.matrixRows ?? []).flatMap((row, rowIndex) => {
     const rowName = `${baseName}_${toOptionSuffix(row.value, rowIndex)}`;
@@ -621,14 +660,16 @@ const buildMatrixColumns = (
       questionId: question.id,
       ...slotFields,
       matrixRowValue: row.value,
-      isLabelColumn: options.valueMode === "label",
+      isLabelColumn: options.valueMode === "label" && !question.isScale,
       label: rowLabel,
       type:
-        options.valueMode === "label" || question.isMultiplePerRow
+        (options.valueMode === "label" && !question.isScale) ||
+        question.isMultiplePerRow
           ? "string"
           : toColumnType(question.dataType),
     };
-    if (options.valueMode !== "both") return [rowColumn];
+    // Scales (sliders, constant sums) are plain numbers: no label column.
+    if (options.valueMode !== "both" || question.isScale) return [rowColumn];
     return [
       rowColumn,
       {
@@ -731,6 +772,18 @@ const computeQuestionCell = (
     const parsedVideoResult = videoWatchResultSchema.safeParse(answer.value);
     if (!parsedVideoResult.success) return null;
     return computeVideoMetricCell(column.videoMetric, parsedVideoResult.data);
+  }
+
+  if (column.isMatrixTotal) {
+    if (
+      !isObjectResearchValue(answer.value) ||
+      videoWatchResultSchema.safeParse(answer.value).success
+    )
+      return null;
+    return Object.values(answer.value).reduce<number>(
+      (sum, rowValue) => (typeof rowValue === "number" ? sum + rowValue : sum),
+      0,
+    );
   }
 
   if (column.matrixRowValue !== undefined) {

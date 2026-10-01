@@ -9,6 +9,7 @@ import { cn } from "@typebot.io/ui/lib/cn";
 import { type JSX, useRef, useState } from "react";
 import { ButtonsBlockSettings } from "@/features/blocks/inputs/buttons/components/ButtonsBlockSettings";
 import { CardsBlockSettings } from "@/features/blocks/inputs/cards/components/CardsBlockSettings";
+import { ConstantSumInputSettings } from "@/features/blocks/inputs/constantSum/components/ConstantSumInputSettings";
 import { DateInputSettings } from "@/features/blocks/inputs/date/components/DateInputSettings";
 import { EmailInputSettings } from "@/features/blocks/inputs/emailInput/components/EmailInputSettings";
 import { FileInputSettings } from "@/features/blocks/inputs/fileUpload/components/FileInputSettings";
@@ -18,6 +19,8 @@ import { PaymentSettings } from "@/features/blocks/inputs/payment/components/Pay
 import { PhoneInputSettings } from "@/features/blocks/inputs/phone/components/PhoneInputSettings";
 import { PictureChoiceSettings } from "@/features/blocks/inputs/pictureChoice/components/PictureChoiceSettings";
 import { RatingInputSettings } from "@/features/blocks/inputs/rating/components/RatingInputSettings";
+import { SignatureInputSettings } from "@/features/blocks/inputs/signature/components/SignatureInputSettings";
+import { SliderInputSettings } from "@/features/blocks/inputs/slider/components/SliderInputSettings";
 import { TextInputSettings } from "@/features/blocks/inputs/textInput/components/TextInputSettings";
 import { TimeInputSettings } from "@/features/blocks/inputs/time/components/TimeInputSettings";
 import { UrlInputSettings } from "@/features/blocks/inputs/url/components/UrlInputSettings";
@@ -185,6 +188,30 @@ export const NodeSettings = ({
     case InputBlockType.MATRIX: {
       return (
         <MatrixInputSettings
+          options={node.options}
+          onOptionsChange={updateOptions}
+        />
+      );
+    }
+    case InputBlockType.SLIDER: {
+      return (
+        <SliderInputSettings
+          options={node.options}
+          onOptionsChange={updateOptions}
+        />
+      );
+    }
+    case InputBlockType.CONSTANT_SUM: {
+      return (
+        <ConstantSumInputSettings
+          options={node.options}
+          onOptionsChange={updateOptions}
+        />
+      );
+    }
+    case InputBlockType.SIGNATURE: {
+      return (
+        <SignatureInputSettings
           options={node.options}
           onOptionsChange={updateOptions}
         />

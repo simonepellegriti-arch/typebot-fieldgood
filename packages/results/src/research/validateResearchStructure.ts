@@ -149,5 +149,23 @@ const listBlockCodeLists = (
         ),
       },
     ];
+  if (block.type === InputBlockType.SLIDER)
+    return [
+      {
+        kind: "statements",
+        codes: (block.options?.rows ?? []).map((row, index) =>
+          getMatrixCode(row, index),
+        ),
+      },
+    ];
+  if (block.type === InputBlockType.CONSTANT_SUM)
+    return [
+      {
+        kind: "categories",
+        codes: (block.options?.items ?? []).map((item, index) =>
+          getMatrixCode(item, index),
+        ),
+      },
+    ];
   return [];
 };

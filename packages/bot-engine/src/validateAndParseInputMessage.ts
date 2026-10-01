@@ -14,6 +14,7 @@ import { injectVariableValuesInButtonsInputBlock } from "./blocks/inputs/buttons
 import { parseChoiceStructuredReply } from "./blocks/inputs/buttons/parseChoiceStructuredReply";
 import { parseMultipleChoiceReply } from "./blocks/inputs/buttons/parseMultipleChoiceReply";
 import { parseSingleChoiceReply } from "./blocks/inputs/buttons/parseSingleChoiceReply";
+import { parseConstantSumReply } from "./blocks/inputs/constantSum/parseConstantSumReply";
 import { parseDateInput } from "./blocks/inputs/date/parseDateInput";
 import { parseDateReply } from "./blocks/inputs/date/parseDateReply";
 import { formatEmail } from "./blocks/inputs/email/formatEmail";
@@ -22,6 +23,8 @@ import { parseNumber } from "./blocks/inputs/number/parseNumber";
 import { formatPhoneNumber } from "./blocks/inputs/phone/formatPhoneNumber";
 import { injectVariableValuesInPictureChoiceBlock } from "./blocks/inputs/pictureChoice/injectVariableValuesInPictureChoiceBlock";
 import { validateRatingReply } from "./blocks/inputs/rating/validateRatingReply";
+import { parseSignatureReply } from "./blocks/inputs/signature/parseSignatureReply";
+import { parseSliderReply } from "./blocks/inputs/slider/parseSliderReply";
 import { parseTime } from "./blocks/inputs/time/parseTime";
 import { getReplyContent } from "./helpers/getReplyContent";
 import type { ParsedReply } from "./types";
@@ -106,6 +109,36 @@ export const validateAndParseInputMessage = (
         },
         { block, variables },
       );
+    }
+    case InputBlockType.SLIDER: {
+      if (!message || message.type !== "text") return { status: "fail" };
+      return parseSliderReply(
+        {
+          text: message.text,
+          structuredReply:
+            message.structuredReply?.type === "slider"
+              ? message.structuredReply
+              : undefined,
+        },
+        { block, variables },
+      );
+    }
+    case InputBlockType.CONSTANT_SUM: {
+      if (!message || message.type !== "text") return { status: "fail" };
+      return parseConstantSumReply(
+        {
+          text: message.text,
+          structuredReply:
+            message.structuredReply?.type === "constantSum"
+              ? message.structuredReply
+              : undefined,
+        },
+        { block, variables },
+      );
+    }
+    case InputBlockType.SIGNATURE: {
+      if (message && message.type !== "text") return { status: "fail" };
+      return parseSignatureReply(message?.text, { block });
     }
     case InputBlockType.NUMBER: {
       if (!message || message.type !== "text") return { status: "fail" };

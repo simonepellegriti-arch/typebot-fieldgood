@@ -111,6 +111,13 @@ export type DictionaryQuestion = {
   otherOptionValues?: (string | number)[];
   /** At least one option / matrix column has a score. */
   hasScores?: boolean;
+  /**
+   * Numeric scale (slider, constant sum): plain numbers, scale measurement level,
+   * never label columns. Options only hold the labels of the scale ends.
+   */
+  isScale?: boolean;
+  /** Constant sum: a <VAR>_TOT column with the sum of the rows. */
+  hasTotalColumn?: boolean;
 };
 
 export type DatasetDictionary = {
@@ -158,6 +165,8 @@ export type DatasetColumn = {
   executionIndex?: number;
   /** Matrix: code of the row represented by the column. */
   matrixRowValue?: string | number;
+  /** Constant sum: total of the rows. */
+  isMatrixTotal?: boolean;
   /** Loop iteration represented by the column (wide export of loop questions). */
   loopSlot?: { loopBlockId: string; loopItem?: string; loopIteration?: number };
   /** Score column: of the whole answer, or of one matrix row. */

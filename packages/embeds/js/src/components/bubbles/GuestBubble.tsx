@@ -121,16 +121,36 @@ const TextGuestBubble = (props: { answer: TextInputSubmitContent }) => {
           </For>
         </div>
       </Show>
-      <div
-        class="p-px whitespace-pre-wrap max-w-full typebot-guest-bubble flex flex-col"
-        data-testid="guest-bubble"
+      <Show when={props.answer.previewImageUrl}>
+        {(previewImageUrl) => (
+          <img
+            src={previewImageUrl()}
+            alt="Signature"
+            data-testid="guest-bubble-signature"
+            class="typebot-guest-bubble-image-attachment max-w-[260px] rounded-md bg-white"
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+            }}
+          />
+        )}
+      </Show>
+      <Show
+        when={
+          !props.answer.previewImageUrl ||
+          isNotEmpty(props.answer.label ?? props.answer.value)
+        }
       >
-        <Show when={isNotEmpty(props.answer.label ?? props.answer.value)}>
-          <span class="px-[15px] py-[7px]">
-            {props.answer.label ?? props.answer.value}
-          </span>
-        </Show>
-      </div>
+        <div
+          class="p-px whitespace-pre-wrap max-w-full typebot-guest-bubble flex flex-col"
+          data-testid="guest-bubble"
+        >
+          <Show when={isNotEmpty(props.answer.label ?? props.answer.value)}>
+            <span class="px-[15px] py-[7px]">
+              {props.answer.label ?? props.answer.value}
+            </span>
+          </Show>
+        </div>
+      </Show>
       <Modal
         isOpen={clickedImageSrc() !== undefined}
         onClose={() => setClickedImageSrc(undefined)}

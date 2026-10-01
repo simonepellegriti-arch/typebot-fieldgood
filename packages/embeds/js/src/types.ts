@@ -52,6 +52,8 @@ export type TextInputSubmitContent = {
     replyId?: string;
   };
   attachments?: Attachment[];
+  /** Image shown in the respondent's bubble only (e.g. the signature drawn). */
+  previewImageUrl?: string;
 };
 
 export type RecordingInputSubmitContent = {
