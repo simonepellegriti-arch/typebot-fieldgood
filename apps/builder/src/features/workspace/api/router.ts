@@ -6,6 +6,10 @@ import {
 } from "@typebot.io/workspaces/schemas";
 import { z } from "zod";
 import {
+  createPasswordSetupLinkInputSchema,
+  handleCreatePasswordSetupLink,
+} from "./handleCreatePasswordSetupLink";
+import {
   createWorkspaceInputSchema,
   handleCreateWorkspace,
 } from "./handleCreateWorkspace";
@@ -172,6 +176,10 @@ export const workspaceRouter = {
   createWorkspaceInvitation: authenticatedProcedure
     .input(createWorkspaceInvitationInputSchema)
     .handler(handleCreateWorkspaceInvitation),
+
+  createPasswordSetupLink: authenticatedProcedure
+    .input(createPasswordSetupLinkInputSchema)
+    .handler(handleCreatePasswordSetupLink),
 
   updateWorkspaceInvitation: authenticatedProcedure
     .input(updateWorkspaceInvitationInputSchema)

@@ -190,7 +190,8 @@ describe("handleCreateWorkspaceInvitation", () => {
     );
     expect(members).toHaveLength(1);
     expect(invitations).toHaveLength(1);
-    expect(sendWorkspaceMemberInvitationEmail).toHaveBeenCalledTimes(1);
+    // New people receive their access link from the members list instead.
+    expect(sendWorkspaceMemberInvitationEmail).not.toHaveBeenCalled();
     expectWorkspaceLocks();
   });
 

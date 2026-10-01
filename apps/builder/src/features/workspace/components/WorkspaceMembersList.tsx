@@ -97,6 +97,49 @@ export const WorkspaceMembersList = () => {
     }),
   );
 
+  const { mutate: createPasswordSetupLink, isPending: isCreatingAccessLink } =
+    useMutation(
+      orpc.workspace.createPasswordSetupLink.mutationOptions({
+        onSuccess: async ({ url, isEmailSent }, { email, sendEmail }) => {
+          if (sendEmail && isEmailSent)
+            return toast({
+              type: "success",
+              description: t("workspace.membersList.accessLink.emailSent", {
+                email,
+              }),
+            });
+          const isCopied = await navigator.clipboard
+            .writeText(url)
+            .then(() => true)
+            .catch(() => false);
+          if (!isCopied)
+            return toast({
+              type: "info",
+              description: t("workspace.membersList.accessLink.copyFailed", {
+                email,
+              }),
+              details: url,
+            });
+          toast({
+            type: "info",
+            description: sendEmail
+              ? t("workspace.membersList.accessLink.noEmailServer", { email })
+              : t("workspace.membersList.accessLink.linkCopied", { email }),
+          });
+        },
+        onError: (error) =>
+          toast({
+            title: error.name,
+            description: error.message,
+          }),
+      }),
+    );
+
+  const handleAccessLinkClick = (email: string, sendEmail: boolean) => () => {
+    if (!workspace) return;
+    createPasswordSetupLink({ workspaceId: workspace.id, email, sendEmail });
+  };
+
   const handleDeleteMemberClick = (memberId: string) => () => {
     if (!workspace) return;
     deleteMember({ workspaceId: workspace.id, memberId });
@@ -165,6 +208,11 @@ export const WorkspaceMembersList = () => {
           isMe={member.userId === user?.id}
           onDeleteClick={handleDeleteMemberClick(member.userId)}
           onSelectNewRole={handleSelectNewRole(member.userId)}
+          onSendPasswordLinkClick={
+            member.user.email
+              ? handleAccessLinkClick(member.user.email, true)
+              : undefined
+          }
           canEdit={currentUserMode === "write"}
         />
       ))}
@@ -177,6 +225,27 @@ export const WorkspaceMembersList = () => {
           onSelectNewRole={handleSelectNewInvitationRole(invitation.id)}
           isGuest
           canEdit={currentUserMode === "write"}
+          actions={
+            currentUserMode === "write" && invitation.email ? (
+              <>
+                <Button
+                  size="xs"
+                  variant="outline-secondary"
+                  disabled={isCreatingAccessLink}
+                  onClick={handleAccessLinkClick(invitation.email, false)}
+                >
+                  {t("workspace.membersList.accessLink.copyLink")}
+                </Button>
+                <Button
+                  size="xs"
+                  disabled={isCreatingAccessLink}
+                  onClick={handleAccessLinkClick(invitation.email, true)}
+                >
+                  {t("workspace.membersList.accessLink.sendEmail")}
+                </Button>
+              </>
+            ) : undefined
+          }
         />
       ))}
       {isLoading && (

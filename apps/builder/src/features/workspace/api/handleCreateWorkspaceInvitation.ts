@@ -95,8 +95,13 @@ export const handleCreateWorkspaceInvitation = async ({
     },
   );
 
-  // The invitation is already saved: a missing or failing SMTP server must not
-  // turn it into an error (the invited person can still sign in with that email).
+  // New people get their access link (create password) from the members list
+  // ("Send email" / "Copy link"), not this generic notice.
+  if (!("member" in createdMemberOrInvitation))
+    return createdMemberOrInvitation;
+
+  // The member is already saved: a missing or failing SMTP server must not
+  // turn it into an error.
   try {
     await sendWorkspaceMemberInvitationEmail({
       workspaceName: workspace.name,

@@ -61,6 +61,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       "/signin",
       "/register",
       "/signin/email-redirect",
+      "/set-password",
     ].includes(router.pathname);
     const isPathPublicFriendly = /\/typebots\/.+\/(edit|theme|settings)/.test(
       router.pathname,

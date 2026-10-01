@@ -4,6 +4,7 @@ import { Avatar } from "@typebot.io/ui/components/Avatar";
 import { Badge } from "@typebot.io/ui/components/Badge";
 import { Menu } from "@typebot.io/ui/components/Menu";
 import { cx } from "@typebot.io/ui/lib/cva";
+import type { ReactNode } from "react";
 import { convertWorkspaceRoleToReadable } from "./AddMemberForm";
 
 type Props = {
@@ -16,6 +17,10 @@ type Props = {
   canEdit: boolean;
   onDeleteClick: () => void;
   onSelectNewRole: (role: WorkspaceRole) => void;
+  /** Sends a link to create / reset the password (admins only). */
+  onSendPasswordLinkClick?: () => void;
+  /** Buttons shown next to the member (pending invitations: send / copy access link). */
+  actions?: ReactNode;
 };
 
 export const MemberItem = ({
@@ -28,36 +33,50 @@ export const MemberItem = ({
   canEdit,
   onDeleteClick,
   onSelectNewRole,
+  onSendPasswordLinkClick,
+  actions,
 }: Props) => {
   const { t } = useTranslate();
   const handleAdminClick = () => onSelectNewRole(WorkspaceRole.ADMIN);
   const handleMemberClick = () => onSelectNewRole(WorkspaceRole.MEMBER);
 
   return (
-    <Menu.Root>
-      <Menu.Trigger className="hover:bg-gray-2 rounded-md transition-colors">
-        <MemberIdentityContent
-          email={email}
-          name={name}
-          image={image}
-          isGuest={isGuest}
-          tag={convertWorkspaceRoleToReadable(role)}
-        />
-      </Menu.Trigger>
-      {!isMe && canEdit && (
-        <Menu.Popup>
-          <Menu.Item onClick={handleAdminClick}>
-            {convertWorkspaceRoleToReadable(WorkspaceRole.ADMIN)}
-          </Menu.Item>
-          <Menu.Item onClick={handleMemberClick}>
-            {convertWorkspaceRoleToReadable(WorkspaceRole.MEMBER)}
-          </Menu.Item>
-          <Menu.Item className="text-red-10" onClick={onDeleteClick}>
-            {t("remove")}
-          </Menu.Item>
-        </Menu.Popup>
+    <div className="flex flex-col gap-1">
+      <Menu.Root>
+        <Menu.Trigger className="hover:bg-gray-2 rounded-md transition-colors">
+          <MemberIdentityContent
+            email={email}
+            name={name}
+            image={image}
+            isGuest={isGuest}
+            tag={convertWorkspaceRoleToReadable(role)}
+          />
+        </Menu.Trigger>
+        {!isMe && canEdit && (
+          <Menu.Popup>
+            <Menu.Item onClick={handleAdminClick}>
+              {convertWorkspaceRoleToReadable(WorkspaceRole.ADMIN)}
+            </Menu.Item>
+            <Menu.Item onClick={handleMemberClick}>
+              {convertWorkspaceRoleToReadable(WorkspaceRole.MEMBER)}
+            </Menu.Item>
+            {onSendPasswordLinkClick && (
+              <Menu.Item onClick={onSendPasswordLinkClick}>
+                {t("workspace.membersList.accessLink.resetPassword")}
+              </Menu.Item>
+            )}
+            <Menu.Item className="text-red-10" onClick={onDeleteClick}>
+              {t("remove")}
+            </Menu.Item>
+          </Menu.Popup>
+        )}
+      </Menu.Root>
+      {actions && (
+        <div className="flex flex-wrap justify-end gap-2 px-2 pb-1">
+          {actions}
+        </div>
       )}
-    </Menu.Root>
+    </div>
   );
 };
 
