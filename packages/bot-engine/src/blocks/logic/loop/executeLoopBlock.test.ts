@@ -224,4 +224,90 @@ describe("Loop block", () => {
     );
     expect(inputBlockIds).toEqual(["b_brands", "b_d3"]);
   });
+
+  it("repeats a whole section of several questions spread over linked groups", async () => {
+    const baseTypebot = buildTypebot({
+      sourceType: "answers",
+      sourceBlockId: "b_brands",
+    });
+    // Second question in the same group, then the section continues in another group.
+    const sectionPart1Blocks: unknown[] = [
+      { id: "b_d2b", type: "text input", options: { variableId: "v_d2b" } },
+      {
+        ...text("b_jump", "Ultima domanda su {{ITEM}}"),
+        outgoingEdgeId: "e_part2",
+      },
+    ];
+    const typebot = {
+      ...baseTypebot,
+      variables: [
+        ...baseTypebot.variables,
+        { id: "v_d2b", name: "D2B" },
+        { id: "v_d2c", name: "D2C" },
+      ],
+      edges: [
+        ...baseTypebot.edges,
+        {
+          id: "e_part2",
+          from: { blockId: "b_jump" },
+          to: { groupId: "g_body2" },
+        },
+      ],
+      groups: [
+        ...baseTypebot.groups.map((group) =>
+          group.id === "g_body"
+            ? { ...group, blocks: [...group.blocks, ...sectionPart1Blocks] }
+            : group,
+        ),
+        {
+          id: "g_body2",
+          title: "Per ogni marca (parte 2)",
+          graphCoordinates: { x: 800, y: 0 },
+          blocks: [
+            {
+              id: "b_d2c",
+              type: "text input",
+              options: { variableId: "v_d2c" },
+            },
+          ],
+        },
+      ],
+    };
+    const { inputBlockIds, transcript, answers } = await runTestInterview(
+      typebot,
+      [
+        "Nike, Puma",
+        "Ottima",
+        "Comoda",
+        "La comprerei",
+        "Pessima",
+        "Cara",
+        "No",
+        "Fine",
+      ],
+    );
+    expect(inputBlockIds).toEqual([
+      "b_brands",
+      "b_d2",
+      "b_d2b",
+      "b_d2c",
+      "b_d2",
+      "b_d2b",
+      "b_d2c",
+      "b_d3",
+    ]);
+    expect(transcript.join("\n")).toContain("Ultima domanda su Puma");
+    expect(
+      answers
+        .filter((answer) => answer.loopBlockId === "b_loop")
+        .map((answer) => [answer.blockId, answer.loopItem, answer.value]),
+    ).toEqual([
+      ["b_d2", "1", "3"],
+      ["b_d2b", "1", "Comoda"],
+      ["b_d2c", "1", "La comprerei"],
+      ["b_d2", "3", "1"],
+      ["b_d2b", "3", "Cara"],
+      ["b_d2c", "3", "No"],
+    ]);
+  });
 });
