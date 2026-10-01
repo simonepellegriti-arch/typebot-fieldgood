@@ -6,9 +6,22 @@ import { z } from "zod";
 import { InputBlockType } from "../constants";
 import { fileVisibilityOptions } from "../file/constants";
 import {
+  maxMediaAnswerFileSizeMB,
   maxVideoClipDurationSeconds,
+  minMediaAnswerFileSizeMB,
   minVideoClipDurationSeconds,
-} from "./videoClipConstants";
+} from "./mediaAnswerConstants";
+
+/** Respondents can also send an existing audio / video file as their answer. */
+const mediaFileUploadOptionsSchema = z.object({
+  allowFileUpload: z.boolean().optional(),
+  maxFileSizeMB: z
+    .number()
+    .int()
+    .min(minMediaAnswerFileSizeMB)
+    .max(maxMediaAnswerFileSizeMB)
+    .optional(),
+});
 
 export const textInputOptionsBaseSchema = z.object({
   labels: z
@@ -41,8 +54,9 @@ export const textInputOptionsSchema = textInputOptionsBaseSchema
           saveVariableId: z.string().optional(),
           visibility: z.enum(fileVisibilityOptions).optional(),
         })
+        .merge(mediaFileUploadOptionsSchema)
         .optional(),
-      /** Video answer recorded with the camera (open questions). */
+      /** Video answer recorded with the camera or uploaded (open questions). */
       videoClip: z
         .object({
           isEnabled: z.boolean().optional(),
@@ -55,6 +69,7 @@ export const textInputOptionsSchema = textInputOptionsBaseSchema
             .max(maxVideoClipDurationSeconds)
             .optional(),
         })
+        .merge(mediaFileUploadOptionsSchema)
         .optional(),
       attachments: z
         .object({

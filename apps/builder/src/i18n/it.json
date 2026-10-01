@@ -595,6 +595,11 @@
   "editor.coding.import.apply": "Applica alla bozza",
   "editor.coding.import.applied": "{count} modifiche di codifica applicate alla bozza",
   "blocks.inputs.text.settings.videoClip.label": "Consenti risposta video",
-  "blocks.inputs.text.settings.videoClip.helperText": "Il rispondente può registrare la risposta con la fotocamera (MP4 su Safari/iPhone e Chrome recente, WebM altrove). L'URL del video è la risposta; serve uno storage file (S3) configurato.",
-  "blocks.inputs.text.settings.videoClip.maxDuration": "Durata massima (secondi)"
+  "blocks.inputs.text.settings.videoClip.helperText": "Il rispondente può registrare la risposta con la fotocamera (MP4 su Safari/iPhone e Chrome recente, WebM altrove). L'URL del video è la risposta e viene salvato nello storage (Cloudflare R2).",
+  "blocks.inputs.text.settings.videoClip.maxDuration": "Durata massima (secondi)",
+  "blocks.inputs.text.settings.mediaUpload.audio.label": "Consenti anche il caricamento di un file audio",
+  "blocks.inputs.text.settings.mediaUpload.audio.helperText": "Il rispondente può inviare un file audio esistente (memo vocale, MP3, M4A...) invece di registrare.",
+  "blocks.inputs.text.settings.mediaUpload.video.label": "Consenti anche il caricamento di un file video",
+  "blocks.inputs.text.settings.mediaUpload.video.helperText": "Il rispondente può inviare un video dal dispositivo (galleria, file) invece di registrare. I video più lunghi della durata massima vengono rifiutati.",
+  "blocks.inputs.text.settings.mediaUpload.maxFileSize": "Dimensione massima del file (MB)"
 }

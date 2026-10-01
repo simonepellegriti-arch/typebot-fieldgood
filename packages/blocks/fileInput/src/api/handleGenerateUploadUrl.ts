@@ -1,8 +1,8 @@
 import { ORPCError } from "@orpc/server";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import type { FileInputBlock } from "@typebot.io/blocks-inputs/file/schema";
+import { mediaAnswerUploadPurposes } from "@typebot.io/blocks-inputs/text/mediaAnswerConstants";
 import type { TextInputBlock } from "@typebot.io/blocks-inputs/text/schema";
-import { maxVideoClipUploadBytes } from "@typebot.io/blocks-inputs/text/videoClipConstants";
 import { getSession } from "@typebot.io/chat-session/queries/getSession";
 import { env } from "@typebot.io/env";
 import { getBlockById } from "@typebot.io/groups/helpers/getBlockById";
@@ -18,6 +18,7 @@ import {
 import { generateSignedUploadProxyUrl } from "@typebot.io/lib/s3/signedUploadProxy";
 import prisma from "@typebot.io/prisma";
 import { z } from "zod";
+import { generateMediaAnswerUploadUrl } from "./generateMediaAnswerUploadUrl";
 import { getUploadProxyBaseUrl } from "./getUploadProxyBaseUrl";
 
 export const generateUploadUrlInputSchema = z.object({
@@ -26,10 +27,12 @@ export const generateUploadUrlInputSchema = z.object({
   fileName: z.string(),
   fileType: z.string().optional(),
   fileSize: z.number().optional(),
+  /** Voice / video answer of an open question: uploaded straight to the storage. */
+  purpose: z.enum(mediaAnswerUploadPurposes).optional(),
 });
 
 export const handleGenerateUploadUrl = async ({
-  input: { sessionId, fileType, fileSize },
+  input: { sessionId, fileType, fileSize, purpose },
   context,
 }: {
   input: z.infer<typeof generateUploadUrlInputSchema>;
@@ -75,15 +78,33 @@ export const handleGenerateUploadUrl = async ({
     }),
   );
 
+  if (purpose) {
+    if (block?.type !== InputBlockType.TEXT)
+      throw new ORPCError("BAD_REQUEST", {
+        message: "Current block does not expect file upload",
+      });
+    return generateMediaAnswerUploadUrl({
+      purpose,
+      block,
+      fileType,
+      fileSize,
+      typebotId,
+      workspaceId:
+        "workspaceId" in typebot && typebot.workspaceId
+          ? typebot.workspaceId
+          : undefined,
+      resultId: session.state.typebotsQueue[0].resultId,
+      currentBlockId,
+    });
+  }
+
   if (
     !block ||
     (block.type !== InputBlockType.FILE &&
       (block.type !== InputBlockType.TEXT ||
         !block.options?.attachments?.isEnabled) &&
       (block.type !== InputBlockType.TEXT ||
-        !block.options?.audioClip?.isEnabled) &&
-      (block.type !== InputBlockType.TEXT ||
-        !block.options?.videoClip?.isEnabled))
+        !block.options?.audioClip?.isEnabled))
   )
     throw new ORPCError("BAD_REQUEST", {
       message: "Current block does not expect file upload",
@@ -111,10 +132,7 @@ export const handleGenerateUploadUrl = async ({
       message: `File type ${resolvedFileType} not allowed`,
     });
 
-  const { visibility, maxFileSize } = parseFileUploadParams(
-    block,
-    resolvedFileType,
-  );
+  const { visibility, maxFileSize } = parseFileUploadParams(block);
 
   if (maxFileSize && fileSize && fileSize > maxFileSize * 1024 * 1024)
     throw new ORPCError("BAD_REQUEST", {
@@ -183,7 +201,6 @@ const getAndParsePublicTypebot = async (typebotId: string) => {
 
 const parseFileUploadParams = (
   block: FileInputBlock | TextInputBlock,
-  fileType: string,
 ): { visibility: "Public" | "Private"; maxFileSize: number | undefined } => {
   if (block.type === InputBlockType.FILE) {
     return {
@@ -196,21 +213,9 @@ const parseFileUploadParams = (
     };
   }
 
-  // Recorded answers follow the visibility of their own setting.
-  const recordingOptions = fileType.startsWith("video/")
-    ? block.options?.videoClip
-    : fileType.startsWith("audio/")
-      ? block.options?.audioClip
-      : undefined;
-  if (fileType.startsWith("video/") && block.options?.videoClip?.isEnabled)
-    return {
-      visibility:
-        block.options.videoClip.visibility === "Private" ? "Private" : "Public",
-      maxFileSize: maxVideoClipUploadBytes / 1024 / 1024,
-    };
   return {
     visibility:
-      (recordingOptions ?? block.options?.attachments)?.visibility === "Private"
+      block.options?.attachments?.visibility === "Private"
         ? "Private"
         : "Public",
     maxFileSize: env.NEXT_PUBLIC_BOT_FILE_UPLOAD_MAX_SIZE,

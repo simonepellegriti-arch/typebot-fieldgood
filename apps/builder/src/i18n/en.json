@@ -754,6 +754,11 @@
   "editor.coding.import.apply": "Apply to draft",
   "editor.coding.import.applied": "{count} coding changes applied to the draft",
   "blocks.inputs.text.settings.videoClip.label": "Allow video answer",
-  "blocks.inputs.text.settings.videoClip.helperText": "Respondents can record their answer with the camera (MP4 on Safari/iPhone and recent Chrome, WebM elsewhere). The clip URL is the answer; recordings need file storage (S3) to be configured.",
-  "blocks.inputs.text.settings.videoClip.maxDuration": "Maximum duration (seconds)"
+  "blocks.inputs.text.settings.videoClip.helperText": "Respondents can record their answer with the camera (MP4 on Safari/iPhone and recent Chrome, WebM elsewhere). The clip URL is the answer and is saved in the storage (Cloudflare R2).",
+  "blocks.inputs.text.settings.videoClip.maxDuration": "Maximum duration (seconds)",
+  "blocks.inputs.text.settings.mediaUpload.audio.label": "Also allow uploading an audio file",
+  "blocks.inputs.text.settings.mediaUpload.audio.helperText": "Respondents can send an existing audio file (voice memo, MP3, M4A...) instead of recording.",
+  "blocks.inputs.text.settings.mediaUpload.video.label": "Also allow uploading a video file",
+  "blocks.inputs.text.settings.mediaUpload.video.helperText": "Respondents can send a video from their device (gallery, files) instead of recording. Videos longer than the maximum duration are refused.",
+  "blocks.inputs.text.settings.mediaUpload.maxFileSize": "Maximum file size (MB)"
 }

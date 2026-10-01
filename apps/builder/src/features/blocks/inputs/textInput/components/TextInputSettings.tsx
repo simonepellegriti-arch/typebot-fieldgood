@@ -1,12 +1,12 @@
 import { useTranslate } from "@tolgee/react";
 import { fileVisibilityOptions } from "@typebot.io/blocks-inputs/file/constants";
 import { defaultTextInputOptions } from "@typebot.io/blocks-inputs/text/constants";
-import type { TextInputBlock } from "@typebot.io/blocks-inputs/text/schema";
-import { inputModeOptions } from "@typebot.io/blocks-inputs/text/schema";
 import {
   maxVideoClipDurationSeconds,
   minVideoClipDurationSeconds,
-} from "@typebot.io/blocks-inputs/text/videoClipConstants";
+} from "@typebot.io/blocks-inputs/text/mediaAnswerConstants";
+import type { TextInputBlock } from "@typebot.io/blocks-inputs/text/schema";
+import { inputModeOptions } from "@typebot.io/blocks-inputs/text/schema";
 import { Field } from "@typebot.io/ui/components/Field";
 import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
 import { Switch } from "@typebot.io/ui/components/Switch";
@@ -15,6 +15,7 @@ import { BasicNumberInput } from "@/components/inputs/BasicNumberInput";
 import { BasicSelect } from "@/components/inputs/BasicSelect";
 import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
 import { VariablesCombobox } from "@/components/inputs/VariablesCombobox";
+import { MediaFileUploadSettings } from "./MediaFileUploadSettings";
 
 type Props = {
   options: TextInputBlock["options"];
@@ -174,6 +175,23 @@ export const TextInputSettings = ({ options, onOptionsChange }: Props) => {
                 items={fileVisibilityOptions}
               />
             </Field.Root>
+            <MediaFileUploadSettings
+              kind="audio"
+              allowFileUpload={
+                options?.audioClip?.allowFileUpload ??
+                defaultTextInputOptions.audioClip.allowFileUpload
+              }
+              maxFileSizeMB={
+                options?.audioClip?.maxFileSizeMB ??
+                defaultTextInputOptions.audioClip.maxFileSizeMB
+              }
+              onChange={(updates) =>
+                onOptionsChange({
+                  ...options,
+                  audioClip: { ...options?.audioClip, ...updates },
+                })
+              }
+            />
           </>
         )}
       </Field.Container>
@@ -240,6 +258,18 @@ export const TextInputSettings = ({ options, onOptionsChange }: Props) => {
                 items={fileVisibilityOptions}
               />
             </Field.Root>
+            <MediaFileUploadSettings
+              kind="video"
+              allowFileUpload={
+                options?.videoClip?.allowFileUpload ??
+                defaultTextInputOptions.videoClip.allowFileUpload
+              }
+              maxFileSizeMB={
+                options?.videoClip?.maxFileSizeMB ??
+                defaultTextInputOptions.videoClip.maxFileSizeMB
+              }
+              onChange={updateVideoClip}
+            />
           </>
         )}
       </Field.Container>

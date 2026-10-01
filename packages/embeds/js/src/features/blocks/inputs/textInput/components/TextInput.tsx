@@ -16,10 +16,12 @@ import {
 } from "solid-js";
 import { Button } from "../../../../../components/Button";
 import { CameraIcon } from "../../../../../components/icons/CameraIcon";
+import { FileIcon } from "../../../../../components/icons/FileIcon";
 import { MicrophoneIcon } from "../../../../../components/icons/MicrophoneIcon";
 import { ShortTextInput } from "../../../../../components/inputs/ShortTextInput";
 import { Textarea } from "../../../../../components/inputs/Textarea";
-import { getVideoRecorderLabels } from "../../../../../components/media/getVideoRecorderLabels";
+import { getMediaAnswerLabels } from "../../../../../components/media/getMediaAnswerLabels";
+import { withInferredMediaFileType } from "../../../../../components/media/withInferredMediaFileType";
 import { SendButton } from "../../../../../components/SendButton";
 import { TextInputAddFileButton } from "../../../../../components/TextInputAddFileButton";
 import type {
@@ -33,6 +35,7 @@ import type { CommandData } from "../../../../commands/types";
 import { SelectedFile } from "../../fileUpload/components/SelectedFile";
 import { sanitizeNewFile } from "../../fileUpload/helpers/sanitizeSelectedFiles";
 import { uploadFiles } from "../../fileUpload/helpers/uploadFiles";
+import { AudioFileAnswer } from "./AudioFileAnswer";
 import { VideoRecorder } from "./VideoRecorder";
 import { VoiceRecorder } from "./VoiceRecorder";
 
@@ -55,7 +58,9 @@ export const TextInput = (props: Props) => {
     "started" | "asking" | "stopped"
   >("stopped");
   const [isVideoRecorderOpen, setIsVideoRecorderOpen] = createSignal(false);
-  const videoRecorderLabels = getVideoRecorderLabels();
+  const [pickedAudioFile, setPickedAudioFile] = createSignal<File>();
+  const mediaAnswerLabels = getMediaAnswerLabels();
+  let audioFileInput: HTMLInputElement | undefined;
   let inputRef: HTMLInputElement | HTMLTextAreaElement | undefined;
   let mediaRecorder: MediaRecorder | undefined;
   let recordedChunks: Blob[] = [];
@@ -258,6 +263,7 @@ export const TextInput = (props: Props) => {
                 blockId: props.block.id,
                 sessionId: props.context.sessionId,
                 fileName: audioFile.name,
+                purpose: "audioClip",
               },
             },
           ],
@@ -301,7 +307,11 @@ export const TextInput = (props: Props) => {
     setRecordingStatus("started");
   };
 
-  const submitVideoAnswer = async (videoFile: File) => {
+  /** Recorded or picked voice / video answer: uploaded straight to the storage. */
+  const submitMediaAnswer = async (
+    mediaFile: File,
+    mediaType: "audio" | "video",
+  ) => {
     try {
       setIsUploading(true);
       const result = await uploadFiles({
@@ -309,11 +319,12 @@ export const TextInput = (props: Props) => {
           props.context.apiHost ?? guessApiHost({ ignoreChatApiUrl: true }),
         files: [
           {
-            file: videoFile,
+            file: mediaFile,
             input: {
               blockId: props.block.id,
               sessionId: props.context.sessionId,
-              fileName: videoFile.name,
+              fileName: mediaFile.name,
+              purpose: mediaType === "video" ? "videoClip" : "audioClip",
             },
           },
         ],
@@ -325,21 +336,21 @@ export const TextInput = (props: Props) => {
       if (!url) {
         toaster.create({
           description:
-            result.type === "error" ? result.error : "Could not upload video",
+            result.type === "error" ? result.error : "Could not upload file",
         });
         return;
       }
       props.onSubmit({
         type: "recording",
-        mediaType: "video",
+        mediaType,
         url,
-        blobUrl: URL.createObjectURL(videoFile),
+        blobUrl: URL.createObjectURL(mediaFile),
       });
     } catch (error) {
       setIsUploading(false);
       toaster.create({
         description:
-          error instanceof Error ? error.message : "Could not upload video",
+          error instanceof Error ? error.message : "Could not upload file",
       });
     }
   };
@@ -359,27 +370,75 @@ export const TextInput = (props: Props) => {
         isDisabled={isUploading()}
         class="h-14 flex items-center"
         on:click={() => setIsVideoRecorderOpen(true)}
-        aria-label={videoRecorderLabels.openCamera}
+        aria-label={mediaAnswerLabels.openCamera}
       >
         <CameraIcon class="flex w-6 h-6" />
       </Button>
     </Show>
   );
 
+  const AudioFileButton = () => (
+    <Show
+      when={
+        props.block.options?.audioClip?.isEnabled &&
+        props.block.options.audioClip.allowFileUpload
+      }
+    >
+      <Button
+        type="button"
+        isDisabled={isUploading()}
+        class="h-14 flex items-center"
+        on:click={() => audioFileInput?.click()}
+        aria-label={mediaAnswerLabels.uploadAudio}
+      >
+        <FileIcon class="flex w-6 h-6" />
+      </Button>
+    </Show>
+  );
+
   return (
     <Show
-      when={!isVideoRecorderOpen()}
+      when={!isVideoRecorderOpen() && !pickedAudioFile()}
       fallback={
         <div class="typebot-input flex w-full max-w-[350px] p-2">
-          <VideoRecorder
-            maxDurationSeconds={
-              props.block.options?.videoClip?.maxDurationSeconds ??
-              defaultTextInputOptions.videoClip.maxDurationSeconds
+          <Show
+            when={pickedAudioFile()}
+            fallback={
+              <VideoRecorder
+                maxDurationSeconds={
+                  props.block.options?.videoClip?.maxDurationSeconds ??
+                  defaultTextInputOptions.videoClip.maxDurationSeconds
+                }
+                maxFileSizeMB={
+                  props.block.options?.videoClip?.maxFileSizeMB ??
+                  defaultTextInputOptions.videoClip.maxFileSizeMB
+                }
+                isFileUploadAllowed={
+                  props.block.options?.videoClip?.allowFileUpload ??
+                  defaultTextInputOptions.videoClip.allowFileUpload
+                }
+                isUploading={isUploading()}
+                onSubmit={(videoFile) =>
+                  void submitMediaAnswer(videoFile, "video")
+                }
+                onCancel={() => setIsVideoRecorderOpen(false)}
+              />
             }
-            isUploading={isUploading()}
-            onSubmit={(videoFile) => void submitVideoAnswer(videoFile)}
-            onCancel={() => setIsVideoRecorderOpen(false)}
-          />
+          >
+            {(audioFile) => (
+              <AudioFileAnswer
+                file={audioFile()}
+                maxFileSizeMB={
+                  props.block.options?.audioClip?.maxFileSizeMB ??
+                  defaultTextInputOptions.audioClip.maxFileSizeMB
+                }
+                isUploading={isUploading()}
+                onSubmit={(file) => void submitMediaAnswer(file, "audio")}
+                onChooseAnother={setPickedAudioFile}
+                onCancel={() => setPickedAudioFile(undefined)}
+              />
+            )}
+          </Show>
         </div>
       }
     >
@@ -489,6 +548,7 @@ export const TextInput = (props: Props) => {
           >
             <div class="flex gap-2">
               <VideoAnswerButton />
+              <AudioFileButton />
               <Button
                 type="button"
                 isDisabled={isUploading()}
@@ -520,6 +580,18 @@ export const TextInput = (props: Props) => {
             </SendButton>
           </Match>
         </Switch>
+        <input
+          ref={audioFileInput}
+          type="file"
+          accept="audio/*"
+          class="hidden"
+          aria-label={mediaAnswerLabels.uploadAudio}
+          onChange={(event) => {
+            const file = event.currentTarget.files?.[0];
+            event.currentTarget.value = "";
+            if (file) setPickedAudioFile(withInferredMediaFileType(file));
+          }}
+        />
       </form>
     </Show>
   );

@@ -1377,6 +1377,14 @@
                                                 "Private"
                                               ],
                                               "type": "string"
+                                            },
+                                            "allowFileUpload": {
+                                              "type": "boolean"
+                                            },
+                                            "maxFileSizeMB": {
+                                              "type": "integer",
+                                              "minimum": 1,
+                                              "maximum": 200
                                             }
                                           }
                                         },
@@ -1400,7 +1408,15 @@
                                             "maxDurationSeconds": {
                                               "type": "integer",
                                               "minimum": 5,
-                                              "maximum": 90
+                                              "maximum": 300
+                                            },
+                                            "allowFileUpload": {
+                                              "type": "boolean"
+                                            },
+                                            "maxFileSizeMB": {
+                                              "type": "integer",
+                                              "minimum": 1,
+                                              "maximum": 200
                                             }
                                           }
                                         },
@@ -4710,6 +4726,14 @@
                                                 "Private"
                                               ],
                                               "type": "string"
+                                            },
+                                            "allowFileUpload": {
+                                              "type": "boolean"
+                                            },
+                                            "maxFileSizeMB": {
+                                              "type": "integer",
+                                              "minimum": 1,
+                                              "maximum": 200
                                             }
                                           }
                                         },
@@ -4733,7 +4757,15 @@
                                             "maxDurationSeconds": {
                                               "type": "integer",
                                               "minimum": 5,
-                                              "maximum": 90
+                                              "maximum": 300
+                                            },
+                                            "allowFileUpload": {
+                                              "type": "boolean"
+                                            },
+                                            "maxFileSizeMB": {
+                                              "type": "integer",
+                                              "minimum": 1,
+                                              "maximum": 200
                                             }
                                           }
                                         },
@@ -9045,6 +9077,14 @@
                                                 "Private"
                                               ],
                                               "type": "string"
+                                            },
+                                            "allowFileUpload": {
+                                              "type": "boolean"
+                                            },
+                                            "maxFileSizeMB": {
+                                              "type": "integer",
+                                              "minimum": 1,
+                                              "maximum": 200
                                             }
                                           }
                                         },
@@ -9068,7 +9108,15 @@
                                             "maxDurationSeconds": {
                                               "type": "integer",
                                               "minimum": 5,
-                                              "maximum": 90
+                                              "maximum": 300
+                                            },
+                                            "allowFileUpload": {
+                                              "type": "boolean"
+                                            },
+                                            "maxFileSizeMB": {
+                                              "type": "integer",
+                                              "minimum": 1,
+                                              "maximum": 200
                                             }
                                           }
                                         },
@@ -13005,6 +13053,14 @@
                                                 "Private"
                                               ],
                                               "type": "string"
+                                            },
+                                            "allowFileUpload": {
+                                              "type": "boolean"
+                                            },
+                                            "maxFileSizeMB": {
+                                              "type": "integer",
+                                              "minimum": 1,
+                                              "maximum": 200
                                             }
                                           }
                                         },
@@ -13028,7 +13084,15 @@
                                             "maxDurationSeconds": {
                                               "type": "integer",
                                               "minimum": 5,
-                                              "maximum": 90
+                                              "maximum": 300
+                                            },
+                                            "allowFileUpload": {
+                                              "type": "boolean"
+                                            },
+                                            "maxFileSizeMB": {
+                                              "type": "integer",
+                                              "minimum": 1,
+                                              "maximum": 200
                                             }
                                           }
                                         },
@@ -16254,6 +16318,13 @@
                   },
                   "fileSize": {
                     "type": "number"
+                  },
+                  "purpose": {
+                    "enum": [
+                      "audioClip",
+                      "videoClip"
+                    ],
+                    "type": "string"
                   }
                 },
                 "required": [

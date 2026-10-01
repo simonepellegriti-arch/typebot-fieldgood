@@ -115,49 +115,129 @@ describe("handleGenerateUploadUrl", () => {
   });
 });
 
-describe("video answers of open questions", () => {
+describe("voice / video answers of open questions", () => {
   beforeEach(() => {
     getSessionMock.mockReset();
     publicTypebotFindFirstMock.mockReset();
     getSessionMock.mockResolvedValue(buildSession());
   });
 
-  it("accepts the recorded video with its own visibility and a size cap", async () => {
-    publicTypebotFindFirstMock.mockResolvedValue(
-      buildTextInputTypebot({ isEnabled: true, visibility: "Public" }),
-    );
-    const response = await handleGenerateUploadUrl({
+  const generateMediaUploadUrl = (input: {
+    purpose: "audioClip" | "videoClip";
+    fileType?: string;
+    fileSize?: number;
+  }) =>
+    handleGenerateUploadUrl({
       input: {
         sessionId,
         blockId: blockIdFromSession,
-        fileName: "video-answer.mp4",
-        fileType: "video/mp4",
-        fileSize: 1024 * 1024,
+        fileName: "answer",
+        ...input,
       },
       context: { apiOrigin: "http://localhost:3001" },
     });
-    const filePath = parseSignedUploadFilePath(response.presignedUrl);
-    expect(filePath.startsWith("public/")).toBe(true);
-    expect(filePath.endsWith(".mp4")).toBe(true);
-    expect(response.maxFileSize).toBe(4);
-    await expect(
-      handleGenerateUploadUrl({
-        input: {
-          sessionId,
-          blockId: blockIdFromSession,
-          fileName: "too-long.mp4",
-          fileType: "video/mp4",
-          fileSize: 6 * 1024 * 1024,
-        },
-        context: { apiOrigin: "http://localhost:3001" },
+
+  it("signs a direct upload of the video with its type and size", async () => {
+    publicTypebotFindFirstMock.mockResolvedValue(
+      buildTextInputTypebot({
+        videoClip: { isEnabled: true, visibility: "Public" },
       }),
-    ).rejects.toThrow("File size exceeds the 4MB limit");
+    );
+    const fileSize = 30 * 1024 * 1024;
+    const response = await generateMediaUploadUrl({
+      purpose: "videoClip",
+      fileType: "video/quicktime",
+      fileSize,
+    });
+    const presignedUrl = new URL(response.presignedUrl);
+    expect(presignedUrl.host).toBe("s3.example.com");
+    expect(
+      presignedUrl.pathname.startsWith(
+        `/typebot/public/workspaces/${workspaceIdFromPublicTypebot}/typebots/${typebotIdFromSession}/results/${resultIdFromSession}/blocks/${blockIdFromSession}/`,
+      ),
+    ).toBe(true);
+    expect(presignedUrl.pathname.endsWith(".mov")).toBe(true);
+    expect(presignedUrl.searchParams.get("X-Amz-SignedHeaders")).toBe(
+      "cache-control;content-length;content-type;host",
+    );
+    expect(response.fileType).toBe("video/quicktime");
+    expect(response.maxFileSize).toBe(50);
+    expect(
+      response.fileUrl.endsWith(presignedUrl.pathname.split("/").at(-1) ?? "-"),
+    ).toBe(true);
+  });
+
+  it("refuses videos over the size limit of the question", async () => {
+    publicTypebotFindFirstMock.mockResolvedValue(
+      buildTextInputTypebot({
+        videoClip: { isEnabled: true, maxFileSizeMB: 10 },
+      }),
+    );
+    await expect(
+      generateMediaUploadUrl({
+        purpose: "videoClip",
+        fileType: "video/mp4",
+        fileSize: 11 * 1024 * 1024,
+      }),
+    ).rejects.toThrow("File size exceeds the 10MB limit");
+    await expect(
+      generateMediaUploadUrl({ purpose: "videoClip", fileType: "video/mp4" }),
+    ).rejects.toThrow("Missing file size");
+  });
+
+  it("refuses files that are not videos", async () => {
+    publicTypebotFindFirstMock.mockResolvedValue(
+      buildTextInputTypebot({ videoClip: { isEnabled: true } }),
+    );
+    await expect(
+      generateMediaUploadUrl({
+        purpose: "videoClip",
+        fileType: "text/html",
+        fileSize: 1024,
+      }),
+    ).rejects.toThrow("File type text/html not allowed");
+  });
+
+  it("accepts audio files and keeps private answers behind the builder", async () => {
+    publicTypebotFindFirstMock.mockResolvedValue(
+      buildTextInputTypebot({
+        audioClip: { isEnabled: true, visibility: "Private" },
+      }),
+    );
+    const response = await generateMediaUploadUrl({
+      purpose: "audioClip",
+      fileType: "audio/mpeg",
+      fileSize: 1024 * 1024,
+    });
+    expect(
+      new URL(response.presignedUrl).pathname.startsWith("/typebot/private/"),
+    ).toBe(true);
+    expect(
+      response.fileUrl.startsWith(
+        `http://localhost:3000/api/typebots/${typebotIdFromSession}/results/${resultIdFromSession}/blocks/${blockIdFromSession}/`,
+      ),
+    ).toBe(true);
+    expect(response.fileUrl.endsWith(".mp3")).toBe(true);
+    await expect(
+      generateMediaUploadUrl({
+        purpose: "audioClip",
+        fileType: "image/png",
+        fileSize: 1024,
+      }),
+    ).rejects.toThrow("File type image/png not allowed");
   });
 
   it("refuses uploads when the open question allows no recording", async () => {
     publicTypebotFindFirstMock.mockResolvedValue(
-      buildTextInputTypebot({ isEnabled: false }),
+      buildTextInputTypebot({ videoClip: { isEnabled: false } }),
     );
+    await expect(
+      generateMediaUploadUrl({
+        purpose: "videoClip",
+        fileType: "video/webm",
+        fileSize: 1024,
+      }),
+    ).rejects.toThrow("Current block does not expect this kind of answer");
     await expect(
       handleGenerateUploadUrl({
         input: {
@@ -165,16 +245,34 @@ describe("video answers of open questions", () => {
           blockId: blockIdFromSession,
           fileName: "video-answer.webm",
           fileType: "video/webm",
+          fileSize: 1024,
         },
         context: { apiOrigin: "http://localhost:3001" },
       }),
     ).rejects.toThrow("Current block does not expect file upload");
   });
+
+  it("refuses media answers on file input blocks", async () => {
+    publicTypebotFindFirstMock.mockResolvedValue(buildPublicTypebot());
+    await expect(
+      generateMediaUploadUrl({
+        purpose: "videoClip",
+        fileType: "video/mp4",
+        fileSize: 1024,
+      }),
+    ).rejects.toThrow("Current block does not expect file upload");
+  });
 });
 
-const buildTextInputTypebot = (videoClip: {
+type MediaAnswerOptions = {
   isEnabled: boolean;
   visibility?: "Public" | "Private";
+  maxFileSizeMB?: number;
+};
+
+const buildTextInputTypebot = (options: {
+  audioClip?: MediaAnswerOptions;
+  videoClip?: MediaAnswerOptions;
 }) => ({
   version: "6",
   groups: [
@@ -186,7 +284,7 @@ const buildTextInputTypebot = (videoClip: {
         {
           id: blockIdFromSession,
           type: InputBlockType.TEXT,
-          options: { videoClip },
+          options,
         },
       ],
     },

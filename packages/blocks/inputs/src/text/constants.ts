@@ -7,11 +7,15 @@ export const defaultTextInputOptions = {
   audioClip: {
     isEnabled: false,
     visibility: "Auto",
+    allowFileUpload: false,
+    maxFileSizeMB: 20,
   },
   videoClip: {
     isEnabled: false,
     visibility: "Auto",
     maxDurationSeconds: 60,
+    allowFileUpload: false,
+    maxFileSizeMB: 50,
   },
   attachments: {
     isEnabled: false,

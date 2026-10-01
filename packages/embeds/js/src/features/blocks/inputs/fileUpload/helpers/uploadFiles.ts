@@ -9,6 +9,8 @@ type UploadFileProps = {
       sessionId: string;
       blockId: string;
       fileName: string;
+      /** Voice / video answers are uploaded straight to the storage. */
+      purpose?: "audioClip" | "videoClip";
     };
   }[];
   onUploadProgress?: (props: { fileIndex: number; progress: number }) => void;
@@ -47,6 +49,7 @@ export const uploadFiles = async ({
         fileType: file.type,
         fileSize: file.size,
         blockId: input.blockId,
+        purpose: input.purpose,
       },
     });
 
@@ -61,6 +64,7 @@ export const uploadFiles = async ({
       presignedUrl: data.presignedUrl,
       formData: data.formData,
       file,
+      contentType: data.fileType,
     }).catch((error) => {
       errors.push(parseUploadError(error));
       return;
