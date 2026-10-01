@@ -7,6 +7,7 @@ import {
   buildResearchDataset,
   type ResearchResultInput,
 } from "./buildResearchDataset";
+import { listSignatureFiles } from "./listSignatureFiles";
 import { convertDatasetToSav } from "./sav/convertDatasetToSav";
 import type {
   ResearchExportOptions,
@@ -38,6 +39,8 @@ export const exportResearchDataset = ({
   sav: Uint8Array | undefined;
   codebook: Codebook;
   rowCount: number;
+  /** Signature JPEGs to download with the dataset (links + file names). */
+  signatureFiles: { fileName: string; url: string }[];
 } => {
   const options = researchExportOptionsSchema.parse(rawOptions);
   const dictionary = buildDatasetDictionary(questionnaireVersions);
@@ -70,5 +73,6 @@ export const exportResearchDataset = ({
         : undefined,
     codebook,
     rowCount: dataset.rows.length,
+    signatureFiles: listSignatureFiles(dataset),
   };
 };

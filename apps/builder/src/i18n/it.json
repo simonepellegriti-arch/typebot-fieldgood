@@ -645,5 +645,9 @@
   "blocks.inputs.signature.settings.skipLabel": "Pulsante salta",
   "blocks.inputs.signature.settings.visibility": "Visibilità",
   "blocks.inputs.signature.settings.visibility.helperText": "La firma è salvata come JPEG. Auto / Public: chiunque abbia il link la apre (serve per vederla in Airtable). Private: solo i membri del workspace.",
-  "blocks.inputs.signature.settings.variable.helperText": "Il link del JPEG della firma."
+  "blocks.inputs.signature.settings.variable.helperText": "Il link del JPEG della firma.",
+  "blocks.inputs.slider.settings.preset": "Scala predefinita",
+  "blocks.inputs.slider.settings.preset.helperText": "Imposta in un clic minimo, massimo, passo, valore iniziale e unità. Negli export c'è sempre il numero.",
+  "blocks.inputs.slider.settings.preset.bipolar": "−100 … +100",
+  "blocks.inputs.slider.settings.preset.percentage": "0 … 100 %"
 }

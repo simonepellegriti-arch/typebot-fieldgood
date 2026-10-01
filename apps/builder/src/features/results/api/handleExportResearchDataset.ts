@@ -92,12 +92,13 @@ export const handleExportResearchDataset = async ({
       : undefined,
   });
 
-  const { csv, longCsv, sav, codebook, rowCount } = exportResearchDataset({
-    questionnaireVersions,
-    results,
-    options: exportOptions,
-    fileLabel: typebot.name,
-  });
+  const { csv, longCsv, sav, codebook, rowCount, signatureFiles } =
+    exportResearchDataset({
+      questionnaireVersions,
+      results,
+      options: exportOptions,
+      fileLabel: typebot.name,
+    });
 
   const csvFileName = getExportFileName(typebot, timeFilter).replace(
     /\.csv$/,
@@ -114,5 +115,7 @@ export const handleExportResearchDataset = async ({
     savBase64: sav ? Buffer.from(sav).toString("base64") : undefined,
     codebook: JSON.stringify(codebook, null, 2),
     rowCount,
+    signatureFiles,
+    signaturesZipFileName: csvFileName.replace(/\.csv$/, "-signatures.zip"),
   };
 };

@@ -191,6 +191,12 @@ export const resultsRouter = {
           ),
         codebook: z.string(),
         rowCount: z.number(),
+        signatureFiles: z
+          .array(z.object({ fileName: z.string(), url: z.string() }))
+          .describe(
+            "Signature JPEGs of the exported interviews, named <RESULT_ID>_<column>.jpg.",
+          ),
+        signaturesZipFileName: z.string(),
       }),
     )
     .handler(handleExportResearchDataset),

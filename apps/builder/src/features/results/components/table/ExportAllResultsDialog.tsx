@@ -30,6 +30,7 @@ import { useState } from "react";
 import { BasicSelect } from "@/components/inputs/BasicSelect";
 import { TimeFilterSelect } from "@/features/analytics/components/TimeFilterSelect";
 import { useTypebot } from "@/features/editor/providers/TypebotProvider";
+import { createZipArchive } from "@/features/results/helpers/createZipArchive";
 import { orpc, orpcClient } from "@/lib/queryClient";
 import { toast } from "@/lib/toast";
 import { useResults } from "../../ResultsProvider";
@@ -72,6 +73,7 @@ export const ExportAllResultsDialog = ({
       }),
   );
   const [isCodebookDownloaded, setIsCodebookDownloaded] = useState(true);
+  const [areSignaturesDownloaded, setAreSignaturesDownloaded] = useState(true);
   const updateResearchOptions = (changes: Partial<ResearchExportOptions>) =>
     setResearchOptions((currentOptions) => ({
       ...currentOptions,
@@ -160,6 +162,8 @@ export const ExportAllResultsDialog = ({
         csvFileName,
         savFileName,
         codebookFileName,
+        signatureFiles,
+        signaturesZipFileName,
       } = await orpcClient.results.exportResearchDataset({
         typebotId,
         timeFilter: selectedTimeFilter,
@@ -177,6 +181,20 @@ export const ExportAllResultsDialog = ({
         downloadFile(longCsv, longCsvFileName, "text/csv;charset=utf-8;");
       if (isCodebookDownloaded)
         downloadFile(codebook, codebookFileName, "application/json");
+      if (areSignaturesDownloaded && signatureFiles.length > 0) {
+        const { files, failedCount } =
+          await fetchSignatureFiles(signatureFiles);
+        if (files.length > 0)
+          downloadFile(
+            createZipArchive(files),
+            signaturesZipFileName,
+            "application/zip",
+          );
+        if (failedCount > 0)
+          toast({
+            description: `${failedCount} signature file(s) could not be downloaded.`,
+          });
+      }
     } catch (error) {
       if (error instanceof ORPCError && error.message)
         toast({ description: error.message });
@@ -404,6 +422,8 @@ export const ExportAllResultsDialog = ({
                 publishedVersions={publishedVersionsData?.versions ?? []}
                 isCodebookDownloaded={isCodebookDownloaded}
                 onCodebookDownloadedChange={setIsCodebookDownloaded}
+                areSignaturesDownloaded={areSignaturesDownloaded}
+                onSignaturesDownloadedChange={setAreSignaturesDownloaded}
               />
             )}
           </div>
@@ -427,6 +447,33 @@ export const ExportAllResultsDialog = ({
   );
 };
 
+/** Downloads the signature JPEGs a few at a time. */
+const fetchSignatureFiles = async (
+  signatureFiles: { fileName: string; url: string }[],
+) => {
+  const files: { fileName: string; content: Uint8Array }[] = [];
+  let failedCount = 0;
+  const queue = [...signatureFiles];
+  const downloadNext = async (): Promise<void> => {
+    const signatureFile = queue.shift();
+    if (!signatureFile) return;
+    try {
+      const response = await fetch(signatureFile.url);
+      if (!response.ok) throw new Error(String(response.status));
+      files.push({
+        fileName: signatureFile.fileName,
+        content: new Uint8Array(await response.arrayBuffer()),
+      });
+    } catch {
+      failedCount += 1;
+    }
+    return downloadNext();
+  };
+  await Promise.all(Array.from({ length: 6 }, downloadNext));
+  files.sort((a, b) => a.fileName.localeCompare(b.fileName));
+  return { files, failedCount };
+};
+
 const base64ToBytes = (base64: string) =>
   Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
 
@@ -448,6 +495,8 @@ const ResearchExportOptionsFields = ({
   publishedVersions,
   isCodebookDownloaded,
   onCodebookDownloadedChange,
+  areSignaturesDownloaded,
+  onSignaturesDownloadedChange,
 }: {
   options: ResearchExportOptions;
   onChange: (changes: Partial<ResearchExportOptions>) => void;
@@ -459,6 +508,8 @@ const ResearchExportOptionsFields = ({
   }[];
   isCodebookDownloaded: boolean;
   onCodebookDownloadedChange: (isCodebookDownloaded: boolean) => void;
+  areSignaturesDownloaded: boolean;
+  onSignaturesDownloadedChange: (areSignaturesDownloaded: boolean) => void;
 }) => {
   const selectedVersion =
     options.versionNumbers?.length === 1
@@ -699,6 +750,19 @@ const ResearchExportOptionsFields = ({
           <MoreInfoTooltip>
             JSON with variable labels, value labels, missing values, types and
             multiple response sets, ready to build an SPSS .sav file.
+          </MoreInfoTooltip>
+        </Field.Label>
+      </Field.Root>
+      <Field.Root className="flex-row items-center">
+        <Switch
+          checked={areSignaturesDownloaded}
+          onCheckedChange={onSignaturesDownloadedChange}
+        />
+        <Field.Label>
+          Download signatures (JPEG, ZIP){" "}
+          <MoreInfoTooltip>
+            When the bot has signature blocks: one JPEG per signature, named
+            RESULT_ID_COLUMN.jpg to match the dataset rows.
           </MoreInfoTooltip>
         </Field.Label>
       </Field.Root>

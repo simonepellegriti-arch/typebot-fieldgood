@@ -65060,6 +65060,28 @@
                     },
                     "rowCount": {
                       "type": "number"
+                    },
+                    "signatureFiles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fileName": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "fileName",
+                          "url"
+                        ]
+                      },
+                      "description": "Signature JPEGs of the exported interviews, named <RESULT_ID>_<column>.jpg."
+                    },
+                    "signaturesZipFileName": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -65069,7 +65091,9 @@
                     "csv",
                     "longCsvFileName",
                     "codebook",
-                    "rowCount"
+                    "rowCount",
+                    "signatureFiles",
+                    "signaturesZipFileName"
                   ]
                 }
               }

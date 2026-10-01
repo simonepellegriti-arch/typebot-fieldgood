@@ -202,6 +202,14 @@ describe("research export of slider, constant sum and signature blocks", () => {
     expect(second).toMatchObject({ FIRMA: "" });
   });
 
+  it("lists the signature JPEGs to download, named after the dataset row and column", () => {
+    const { signatureFiles, csv } = exportDataset({});
+    const [first] = toRecords(csv);
+    expect(signatureFiles).toEqual([
+      { fileName: `${first?.RESULT_ID}_FIRMA.jpg`, url: signatureUrl },
+    ]);
+  });
+
   it("writes these columns in the SPSS .sav file", () => {
     const { sav } = exportDataset({ fileFormat: "sav" });
     expect(sav).toBeDefined();

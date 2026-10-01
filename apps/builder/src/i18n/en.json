@@ -804,5 +804,9 @@
   "blocks.inputs.signature.settings.skipLabel": "Skip button",
   "blocks.inputs.signature.settings.visibility": "Visibility",
   "blocks.inputs.signature.settings.visibility.helperText": "The signature is saved as a JPEG. Auto / Public: anyone with the link can open it (needed to show it in Airtable). Private: only members of this workspace.",
-  "blocks.inputs.signature.settings.variable.helperText": "The link of the signature JPEG."
+  "blocks.inputs.signature.settings.variable.helperText": "The link of the signature JPEG.",
+  "blocks.inputs.slider.settings.preset": "Scale preset",
+  "blocks.inputs.slider.settings.preset.helperText": "Sets minimum, maximum, step, start value and unit in one click. Exports always contain the plain number.",
+  "blocks.inputs.slider.settings.preset.bipolar": "−100 … +100",
+  "blocks.inputs.slider.settings.preset.percentage": "0 … 100 %"
 }

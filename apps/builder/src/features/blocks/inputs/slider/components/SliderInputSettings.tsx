@@ -4,10 +4,12 @@ import type {
   SliderInputBlock,
   SliderInputOptions,
 } from "@typebot.io/blocks-inputs/slider/schema";
+import { Button } from "@typebot.io/ui/components/Button";
 import { Field } from "@typebot.io/ui/components/Field";
 import { MoreInfoTooltip } from "@typebot.io/ui/components/MoreInfoTooltip";
 import { Switch } from "@typebot.io/ui/components/Switch";
 import type { Variable } from "@typebot.io/variables/schemas";
+import { useState } from "react";
 import { BasicNumberInput } from "@/components/inputs/BasicNumberInput";
 import { DebouncedTextareaWithVariablesButton } from "@/components/inputs/DebouncedTextarea";
 import { DebouncedTextInputWithVariablesButton } from "@/components/inputs/DebouncedTextInput";
@@ -23,6 +25,12 @@ export const SliderInputSettings = ({ options, onOptionsChange }: Props) => {
   const { t } = useTranslate();
   const updateOptions = (updates: Partial<SliderInputOptions>) =>
     onOptionsChange({ ...options, ...updates });
+  // The scale inputs are uncontrolled: remount them when a preset is applied.
+  const [scaleInputsKey, setScaleInputsKey] = useState(0);
+  const applyScalePreset = (preset: keyof typeof sliderScalePresets) => {
+    updateOptions(sliderScalePresets[preset]);
+    setScaleInputsKey((key) => key + 1);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -58,7 +66,32 @@ export const SliderInputSettings = ({ options, onOptionsChange }: Props) => {
         />
       </Field.Root>
 
-      <div className="flex gap-2">
+      <Field.Root>
+        <Field.Label>
+          {t("blocks.inputs.slider.settings.preset")}
+          <MoreInfoTooltip>
+            {t("blocks.inputs.slider.settings.preset.helperText")}
+          </MoreInfoTooltip>
+        </Field.Label>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="outline-secondary"
+            onClick={() => applyScalePreset("bipolar")}
+          >
+            {t("blocks.inputs.slider.settings.preset.bipolar")}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline-secondary"
+            onClick={() => applyScalePreset("percentage")}
+          >
+            {t("blocks.inputs.slider.settings.preset.percentage")}
+          </Button>
+        </div>
+      </Field.Root>
+
+      <div className="flex gap-2" key={`scale-${scaleInputsKey}`}>
         <Field.Root className="flex-1">
           <Field.Label>{t("blocks.inputs.slider.settings.min")}</Field.Label>
           <BasicNumberInput
@@ -88,7 +121,7 @@ export const SliderInputSettings = ({ options, onOptionsChange }: Props) => {
         </Field.Root>
       </div>
 
-      <Field.Root>
+      <Field.Root key={`start-${scaleInputsKey}`}>
         <Field.Label>
           {t("blocks.inputs.slider.settings.startValue")}
           <MoreInfoTooltip>
@@ -138,7 +171,7 @@ export const SliderInputSettings = ({ options, onOptionsChange }: Props) => {
         </Field.Root>
       </div>
 
-      <Field.Root>
+      <Field.Root key={`unit-${scaleInputsKey}`}>
         <Field.Label>
           {t("blocks.inputs.slider.settings.unit")}
           <MoreInfoTooltip>
@@ -225,3 +258,9 @@ export const SliderInputSettings = ({ options, onOptionsChange }: Props) => {
     </div>
   );
 };
+
+/** Usual research scales: bipolar (disagree … agree) and percentage. */
+const sliderScalePresets = {
+  bipolar: { min: -100, max: 100, step: 1, startValue: 0, unit: undefined },
+  percentage: { min: 0, max: 100, step: 1, startValue: 50, unit: "%" },
+} as const satisfies Record<string, Partial<SliderInputOptions>>;
