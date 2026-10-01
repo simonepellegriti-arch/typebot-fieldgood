@@ -34,6 +34,18 @@ export function proxy(req: NextRequest) {
 
   const { pathname, locale, defaultLocale, searchParams } = req.nextUrl;
 
+  // FIELDBOT access pages follow the browser language (Italian team), the
+  // rest of the builder keeps the user's preference.
+  if (
+    accessPagePaths.has(pathname) &&
+    locale === defaultLocale &&
+    prefersItalian(req.headers.get("accept-language"))
+  ) {
+    const url = req.nextUrl.clone();
+    url.locale = "it";
+    return NextResponse.redirect(url);
+  }
+
   const isMostLikelySignedIn = Boolean(
     req.cookies.get("__Secure-authjs.session-token") ??
       req.cookies.get("authjs.session-token"),
@@ -69,6 +81,11 @@ export function proxy(req: NextRequest) {
   return NextResponse.next();
 }
 
+const accessPagePaths = new Set(["/signin", "/register", "/set-password"]);
+
+const prefersItalian = (acceptLanguage: string | null) =>
+  acceptLanguage?.split(",")[0]?.trim().toLowerCase().startsWith("it") ?? false;
+
 function getCallbackRedirectPath(callbackUrl: string, baseUrl: string) {
   try {
     return new URL(callbackUrl, baseUrl).searchParams.get("redirectPath");
@@ -84,6 +101,7 @@ export const config = {
     "/typebots",
     "/signin",
     "/register",
+    "/set-password",
     "/__ENV.js",
     "/favicon.svg",
     "/robots.txt",
