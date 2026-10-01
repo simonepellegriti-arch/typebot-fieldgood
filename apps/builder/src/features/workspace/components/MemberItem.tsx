@@ -70,6 +70,14 @@ export const MemberItem = ({
             </Menu.Item>
           </Menu.Popup>
         )}
+        {/* Admins can also get a link to set their own password. */}
+        {isMe && canEdit && onSendPasswordLinkClick && (
+          <Menu.Popup>
+            <Menu.Item onClick={onSendPasswordLinkClick}>
+              {t("workspace.membersList.accessLink.resetPassword")}
+            </Menu.Item>
+          </Menu.Popup>
+        )}
       </Menu.Root>
       {actions && (
         <div className="flex flex-wrap justify-end gap-2 px-2 pb-1">
