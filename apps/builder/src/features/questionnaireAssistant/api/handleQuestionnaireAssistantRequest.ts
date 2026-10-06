@@ -1,4 +1,3 @@
-import { zodToSchema } from "@typebot.io/ai/zodToSchema";
 import { auth } from "@typebot.io/auth/lib/nextAuth";
 import { decrypt } from "@typebot.io/credentials/decrypt";
 import { env } from "@typebot.io/env";
@@ -6,7 +5,12 @@ import { forgedBlocks } from "@typebot.io/forge-repository/definitions";
 import prisma from "@typebot.io/prisma";
 import { WorkspaceRole } from "@typebot.io/prisma/enum";
 import { typebotV6Schema } from "@typebot.io/typebot/schemas/typebot";
-import { generateObject, type LanguageModel, type UserContent } from "ai";
+import {
+  generateObject,
+  type LanguageModel,
+  NoObjectGeneratedError,
+  type UserContent,
+} from "ai";
 import { z } from "zod";
 import { isSameOriginRequest } from "@/features/auth/helpers/isSameOriginRequest";
 import {
@@ -19,6 +23,7 @@ import {
   buildAssistantReply,
   questionnaireAssistantSystemPrompt,
 } from "../helpers/questionnaireAssistantPrompt";
+import { questionnaireSpecGenerationSchema } from "../helpers/questionnaireSpecGenerationSchema";
 import {
   type QuestionnaireSpec,
   questionnaireSpecSchema,
@@ -99,7 +104,7 @@ export const handleQuestionnaireAssistantRequest = async (request: Request) => {
     });
   } catch (error) {
     console.error("Questionnaire assistant generation failed", error);
-    return errorResponse(502, "ai-failed", errorMessage(error));
+    return errorResponse(502, "ai-failed", describeGenerationError(error));
   }
   if (spec.questions.length === 0)
     return errorResponse(422, "no-questions", spec.notes.join("\n"));
@@ -213,12 +218,14 @@ const generateQuestionnaireSpec = async ({
     try {
       const { object } = await generateObject({
         model,
-        schema: zodToSchema(questionnaireSpecSchema),
+        schema: questionnaireSpecGenerationSchema,
         system: questionnaireAssistantSystemPrompt,
         messages: [{ role: "user", content }],
+        // Strict structured outputs: OpenAI always returns every field.
+        providerOptions: { openai: { strictJsonSchema: true } },
         maxRetries: 1,
       });
-      return questionnaireSpecSchema.parse(object);
+      return object;
     } catch (error) {
       lastError = error;
       // Another model only helps when this one doesn't exist for the account.
@@ -261,6 +268,34 @@ const getWorkspaceModels = async (workspaceId: string) => {
 
 const errorMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
+
+/** Short, readable reason for the chat (which fields the AI got wrong). */
+const describeGenerationError = (error: unknown) => {
+  if (!NoObjectGeneratedError.isInstance(error)) return errorMessage(error);
+  const validationError =
+    error.cause instanceof Error ? error.cause.cause : undefined;
+  const issues =
+    validationError instanceof z.ZodError
+      ? validationError.issues
+          .slice(0, 3)
+          .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+          .join("; ")
+      : undefined;
+  console.error(
+    "Questionnaire assistant output",
+    error.finishReason,
+    error.text?.slice(0, 4000),
+  );
+  return [
+    error.message,
+    error.finishReason === "length"
+      ? "The questionnaire is too long for one answer."
+      : undefined,
+    issues,
+  ]
+    .filter(Boolean)
+    .join(" ");
+};
 
 const errorResponse = (status: number, error: string, details?: string) =>
   Response.json({ error, details }, { status });

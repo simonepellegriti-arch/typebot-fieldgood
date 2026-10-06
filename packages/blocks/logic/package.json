@@ -17,6 +17,6 @@
   "dependencies": {
     "@typebot.io/blocks-base": "workspace:*",
     "@typebot.io/conditions": "workspace:*",
-    "zod": "^4.3.5"
+    "zod": "4.3.5"
   }
 }

@@ -867,7 +867,7 @@
   "questionnaireAssistant.fileError.unreadable": "{fileName}: the file could not be read.",
   "questionnaireAssistant.fileError.empty": "{fileName}: no text found in the file.",
   "questionnaireAssistant.error.no-ai-credentials": "An OpenAI or Anthropic API key is needed: add it in Settings & Members → Credentials of this workspace.",
-  "questionnaireAssistant.error.ai-failed": "The AI could not read the questionnaire. Try again, or attach a shorter document.",
+  "questionnaireAssistant.error.ai-failed": "The AI could not read the questionnaire. Your files are still attached: send again to retry, or attach a shorter document.",
   "questionnaireAssistant.error.no-questions": "I couldn't find any question in the document.",
   "questionnaireAssistant.error.typebot-not-found": "The bot of this conversation no longer exists or you can't edit it. Start a new conversation.",
   "questionnaireAssistant.error.empty-request": "Attach a questionnaire or write a request.",

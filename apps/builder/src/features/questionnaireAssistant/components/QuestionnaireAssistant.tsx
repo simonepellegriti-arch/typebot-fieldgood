@@ -135,6 +135,12 @@ export const QuestionnaireAssistant = () => {
     setDraft("");
     setDocuments([]);
     setIsSending(true);
+    // Failed request: the files and the text go back in the composer, so a
+    // retry (or a follow-up) still sends the questionnaire.
+    const restoreRequest = () => {
+      setDocuments((current) => (current.length ? current : sentDocuments));
+      setDraft((current) => current || message);
+    };
     try {
       const response = await fetch("/api/questionnaire-assistant", {
         method: "POST",
@@ -162,6 +168,7 @@ export const QuestionnaireAssistant = () => {
             notes: details ? [details] : undefined,
           },
         ]);
+        restoreRequest();
         return;
       }
       const result = parsedBody.data;
@@ -187,6 +194,7 @@ export const QuestionnaireAssistant = () => {
           text: t("questionnaireAssistant.error.network"),
         },
       ]);
+      restoreRequest();
     } finally {
       setIsSending(false);
     }

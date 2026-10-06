@@ -708,7 +708,7 @@
   "questionnaireAssistant.fileError.unreadable": "{fileName}: non riesco a leggere il file.",
   "questionnaireAssistant.fileError.empty": "{fileName}: nel file non c'è testo.",
   "questionnaireAssistant.error.no-ai-credentials": "Serve una chiave API OpenAI o Anthropic: aggiungila in Impostazioni e membri → Credenziali di questo workspace.",
-  "questionnaireAssistant.error.ai-failed": "L'AI non è riuscita a leggere il questionario. Riprova, oppure allega un documento più corto.",
+  "questionnaireAssistant.error.ai-failed": "L'AI non è riuscita a leggere il questionario. I file sono ancora allegati: invia di nuovo per riprovare, oppure allega un documento più corto.",
   "questionnaireAssistant.error.no-questions": "Non ho trovato domande nel documento.",
   "questionnaireAssistant.error.typebot-not-found": "Il bot di questa conversazione non esiste più o non puoi modificarlo. Inizia una nuova conversazione.",
   "questionnaireAssistant.error.empty-request": "Allega un questionario o scrivi una richiesta.",

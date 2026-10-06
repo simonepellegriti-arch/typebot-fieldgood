@@ -49,14 +49,23 @@ export const buildAssistantReply = ({
   questionCount: number;
   filterCount: number;
   screenOutCount: number;
-}) =>
-  [
-    isNewBot ? "Ho creato il bot" : "Ho aggiornato il bot",
-    `con ${questionCount} domande`,
-    filterCount ? `, ${filterCount} filtri` : "",
-    screenOutCount ? `, ${screenOutCount} chiusure (screen-out)` : "",
-    ".",
-  ]
-    .join(" ")
-    .replace(/ ,/g, ",")
-    .replace(/ \./, ".");
+}) => {
+  const counts = [
+    questionCount === 1 ? "1 domanda" : `${questionCount} domande`,
+    filterCount === 0
+      ? undefined
+      : filterCount === 1
+        ? "1 filtro"
+        : `${filterCount} filtri`,
+    screenOutCount === 0
+      ? undefined
+      : screenOutCount === 1
+        ? "1 chiusura anticipata (screen-out)"
+        : `${screenOutCount} chiusure anticipate (screen-out)`,
+  ].filter(Boolean);
+  const lastCount = counts.pop();
+  const countsText = counts.length
+    ? `${counts.join(", ")} e ${lastCount}`
+    : lastCount;
+  return `${isNewBot ? "Ho creato il bot" : "Ho aggiornato il bot"} con ${countsText}.`;
+};
