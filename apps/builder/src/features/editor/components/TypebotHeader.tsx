@@ -344,6 +344,13 @@ const TypebotNav = ({
       >
         {t("share.button.label")}
       </ButtonLink>
+      <ButtonLink
+        href={`/typebots/${typebotId}/participants`}
+        variant={router.pathname.endsWith("participants") ? "outline" : "ghost"}
+        size="sm"
+      >
+        {t("participants.heading")}
+      </ButtonLink>
       {isResultsDisplayed && (
         <ButtonLink
           href={`/typebots/${typebotId}/results`}

@@ -169,6 +169,8 @@ const sessionStateSchemaV3 = sessionStateSchemaV2
       })
       .optional(),
     publicTypebotId: z.string().optional(),
+    /** Respondent of a list (unique link): progress and Airtable dashboard follow the session. */
+    participantId: z.string().optional(),
     /** Active loops, innermost last. Each iteration keeps its item code and label. */
     loops: z
       .array(

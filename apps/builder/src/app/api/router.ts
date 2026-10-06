@@ -22,6 +22,7 @@ import { generateGroupTitle } from "@/features/editor/api/generateGroupTitle";
 import { emailsRouter } from "@/features/emails/api/router";
 import { folderRouter } from "@/features/folders/api/router";
 import { forgeRouter } from "@/features/forge/api/router";
+import { participantsRouter } from "@/features/participants/api/router";
 import { resultsRouter } from "@/features/results/api/router";
 import { telemetryRouter } from "@/features/telemetry/api/router";
 import { themeRouter } from "@/features/theme/api/router";
@@ -64,6 +65,7 @@ export const appRouter: AppRouter = {
   typebot: typebotRouter,
   httpRequest: httpRequestRouter,
   results: resultsRouter,
+  participants: participantsRouter,
   theme: themeRouter,
   collaborators: collaboratorsRouter,
   customDomains: customDomainsRouter,
@@ -98,6 +100,7 @@ export type AppRouter = {
   typebot: typeof typebotRouter;
   httpRequest: typeof httpRequestRouter;
   results: typeof resultsRouter;
+  participants: typeof participantsRouter;
   theme: typeof themeRouter;
   collaborators: typeof collaboratorsRouter;
   customDomains: typeof customDomainsRouter;

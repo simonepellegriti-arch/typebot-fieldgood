@@ -4,10 +4,13 @@ import { messageSchema } from "@typebot.io/chat-api/schemas";
 import { restartSession } from "@typebot.io/chat-session/queries/restartSession";
 import { createId } from "@typebot.io/lib/createId";
 import { withSessionStore } from "@typebot.io/runtime-session-store";
+import { after } from "next/server";
 import { z } from "zod";
 import { computeCurrentProgress } from "../computeCurrentProgress";
 import { assertOriginIsAllowed } from "../helpers/assertOriginIsAllowed";
 import { filterPotentiallySensitiveLogs } from "../logs/filterPotentiallySensitiveLogs";
+import { prepareParticipantStart } from "../participants/startParticipantChat";
+import { updateParticipantProgress } from "../participants/updateParticipantProgress";
 import { saveStateToDatabase } from "../saveStateToDatabase";
 import { startSession } from "../startSession";
 
@@ -69,6 +72,23 @@ export const handleStartChat = async ({
   input: z.infer<typeof startChatInputSchema>;
   context: Context;
 }) => {
+  // Respondent list links (…?pid=token): resume, thank-you or list variables.
+  const participantStart = await prepareParticipantStart({
+    publicId,
+    prefilledVariables,
+    textBubbleContentFormat,
+    context: { origin, iframeReferrerOrigin },
+  });
+  if (participantStart.type === "response") return participantStart.response;
+  const participantId =
+    participantStart.type === "start"
+      ? participantStart.participantId
+      : undefined;
+  const startVariables =
+    participantStart.type === "start"
+      ? participantStart.prefilledVariables
+      : prefilledVariables;
+
   const sessionId = createId();
   return withSessionStore(sessionId, async (sessionStore) => {
     const {
@@ -90,8 +110,8 @@ export const handleStartChat = async ({
         isOnlyRegistering,
         isStreamEnabled,
         publicId,
-        prefilledVariables,
-        resultId: startResultId,
+        prefilledVariables: startVariables,
+        resultId: participantId ? undefined : startResultId,
         textBubbleContentFormat,
         message,
       },
@@ -102,13 +122,24 @@ export const handleStartChat = async ({
       iframeReferrerOrigin,
     });
 
+    const sessionState = participantId
+      ? { ...newSessionState, participantId }
+      : newSessionState;
+    const isWaitingForExternalEvent = messages.some(
+      (message) =>
+        message.type === "custom-embed" ||
+        (message.type === BubbleBlockType.EMBED &&
+          message.content.waitForEvent?.isEnabled) ||
+        (message.type === BubbleBlockType.VIDEO &&
+          isVideoWatchTrackingActive(message.content)),
+    );
     const session = isOnlyRegistering
       ? await restartSession({
-          state: newSessionState,
+          state: sessionState,
         })
       : await saveStateToDatabase({
           session: {
-            state: newSessionState,
+            state: sessionState,
           },
           sessionId: {
             type: "new",
@@ -119,15 +150,21 @@ export const handleStartChat = async ({
           clientSideActions,
           visitedEdges,
           setVariableHistory,
-          isWaitingForExternalEvent: messages.some(
-            (message) =>
-              message.type === "custom-embed" ||
-              (message.type === BubbleBlockType.EMBED &&
-                message.content.waitForEvent?.isEnabled) ||
-              (message.type === BubbleBlockType.VIDEO &&
-                isVideoWatchTrackingActive(message.content)),
-          ),
+          isWaitingForExternalEvent,
         });
+
+    if (participantId && !isOnlyRegistering)
+      after(() =>
+        updateParticipantProgress({
+          participantId,
+          state: sessionState,
+          isStart: true,
+          isCompleted:
+            !input &&
+            !isWaitingForExternalEvent &&
+            !clientSideActions?.some((action) => action.expectsDedicatedReply),
+        }),
+      );
 
     const isEnded =
       newSessionState.progressMetadata &&

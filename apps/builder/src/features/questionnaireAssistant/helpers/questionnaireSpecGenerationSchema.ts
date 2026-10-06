@@ -239,124 +239,144 @@ const stimulusOrNull = z.preprocess(
     }),
 );
 
-const lenientQuestionSchema = z.object({
-  code: requiredText,
-  type: questionTypeSchema,
-  text: requiredText,
-  instructions: textOrNull,
-  options: listOf(
-    z.object({
-      code: requiredText,
-      label: requiredText,
-      isExclusive: booleanOrFalse,
-      isOther: booleanOrFalse,
-      goTo: textOrNull.transform((value) => value?.trim() || null),
-    }),
-  ),
-  rows: listOf(z.object({ code: requiredText, label: requiredText })),
-  scale: z.preprocess(
-    (value) => (value === undefined ? null : value),
-    z
-      .object({
-        min: numberOrNull,
-        max: numberOrNull,
-        minLabel: textOrNull,
-        maxLabel: textOrNull,
-      })
-      .nullable()
-      .transform((scale) =>
-        scale && scale.min !== null && scale.max !== null
-          ? {
-              min: scale.min,
-              max: scale.max,
-              minLabel: scale.minLabel,
-              maxLabel: scale.maxLabel,
-            }
-          : null,
-      ),
-  ),
-  total: numberOrNull,
-  maxSelections: numberOrNull,
-  isRandomized: booleanOrFalse,
-  media: mediaOrNull,
-  probe: probeOrNull,
-  stimulus: stimulusOrNull,
-  showIf: conditionGroupOrNull,
-  terminateIf: conditionGroupOrNull,
-});
+const lenientQuestionSchema = z
+  .object({
+    code: requiredText,
+    type: questionTypeSchema,
+    text: requiredText,
+    instructions: textOrNull,
+    options: listOf(
+      z.object({
+        code: requiredText,
+        label: requiredText,
+        isExclusive: booleanOrFalse,
+        isOther: booleanOrFalse,
+        goTo: textOrNull.transform((value) => value?.trim() || null),
+      }),
+    ),
+    rows: listOf(z.object({ code: requiredText, label: requiredText })),
+    scale: z.preprocess(
+      (value) => (value === undefined ? null : value),
+      z
+        .object({
+          min: numberOrNull,
+          max: numberOrNull,
+          minLabel: textOrNull,
+          maxLabel: textOrNull,
+        })
+        .nullable()
+        .transform((scale) =>
+          scale && scale.min !== null && scale.max !== null
+            ? {
+                min: scale.min,
+                max: scale.max,
+                minLabel: scale.minLabel,
+                maxLabel: scale.maxLabel,
+              }
+            : null,
+        ),
+    ),
+    total: numberOrNull,
+    maxSelections: numberOrNull,
+    isRandomized: booleanOrFalse,
+    media: mediaOrNull,
+    probe: probeOrNull,
+    stimulus: stimulusOrNull,
+    showIf: conditionGroupOrNull,
+    terminateIf: conditionGroupOrNull,
+  })
+  .transform((question) =>
+    // FieldGood standard: open answers can always be typed or recorded.
+    (question.type === "open" || question.type === "openLong") &&
+    !question.media
+      ? { ...question, media: "voice" as const }
+      : question,
+  );
 
-const lenientSpecSchema = z.object({
-  title: z
-    .unknown()
-    .transform((value) =>
-      typeof value === "string" && value.trim() ? value.trim() : "Questionario",
-    ),
-  language: z
-    .unknown()
-    .transform((value) =>
-      typeof value === "string" && value.trim() ? value.trim() : "it",
-    ),
-  addressForm: z
-    .unknown()
-    .transform((value) =>
-      typeof value === "string" && normalizeKey(value) === "lei"
-        ? ("lei" as const)
-        : ("tu" as const),
-    ),
-  privacyUrl: textOrNull,
-  voiceTest: booleanOrFalse,
-  introText: textOrNull,
-  closingText: textOrNull,
-  screenOutText: textOrNull,
-  linkVariables: listOf(
-    z.object({ name: variableName, description: textOrNull }),
-  ).transform((variables) =>
-    variables
-      .filter((variable) => variable.name)
-      .map((variable) => ({
-        name: variable.name,
-        description: variable.description ?? "",
-      })),
-  ),
-  computedVariables: listOf(
-    z.object({
-      name: variableName,
-      sourceVariable: requiredText,
-      cases: listOf(z.object({ whenValue: requiredText, text: requiredText })),
-      defaultText: textOrNull,
-    }),
-  ).transform((variables) =>
-    variables
-      .filter((variable) => variable.name && variable.sourceVariable)
-      .map((variable) => ({
-        ...variable,
-        defaultText: variable.defaultText ?? "",
-      })),
-  ),
-  airtable: airtableOrNull,
-  questions: listOf(lenientQuestionSchema),
-  loops: listOf(
-    z.object({
-      name: variableName,
-      firstQuestion: requiredText,
-      lastQuestion: requiredText,
-      isRandomized: booleanOrFalse,
-      items: listOf(
-        z.object({
-          code: variableName,
-          label: requiredText,
-          stimulus: stimulusOrNull,
-        }),
+const lenientSpecSchema = z
+  .object({
+    title: z
+      .unknown()
+      .transform((value) =>
+        typeof value === "string" && value.trim()
+          ? value.trim()
+          : "Questionario",
       ),
-    }),
-  ).transform((loops) =>
-    loops.filter(
-      (loop) =>
-        loop.name &&
-        loop.items.filter((item) => item.code).length > 0 &&
-        loop.firstQuestion &&
-        loop.lastQuestion,
+    language: z
+      .unknown()
+      .transform((value) =>
+        typeof value === "string" && value.trim() ? value.trim() : "it",
+      ),
+    addressForm: z
+      .unknown()
+      .transform((value) =>
+        typeof value === "string" && normalizeKey(value) === "lei"
+          ? ("lei" as const)
+          : ("tu" as const),
+      ),
+    privacyUrl: textOrNull,
+    voiceTest: booleanOrFalse,
+    introText: textOrNull,
+    closingText: textOrNull,
+    screenOutText: textOrNull,
+    linkVariables: listOf(
+      z.object({ name: variableName, description: textOrNull }),
+    ).transform((variables) =>
+      variables
+        .filter((variable) => variable.name)
+        .map((variable) => ({
+          name: variable.name,
+          description: variable.description ?? "",
+        })),
     ),
-  ),
-  notes: listOf(requiredText),
-});
+    computedVariables: listOf(
+      z.object({
+        name: variableName,
+        sourceVariable: requiredText,
+        cases: listOf(
+          z.object({ whenValue: requiredText, text: requiredText }),
+        ),
+        defaultText: textOrNull,
+      }),
+    ).transform((variables) =>
+      variables
+        .filter((variable) => variable.name && variable.sourceVariable)
+        .map((variable) => ({
+          ...variable,
+          defaultText: variable.defaultText ?? "",
+        })),
+    ),
+    airtable: airtableOrNull,
+    questions: listOf(lenientQuestionSchema),
+    loops: listOf(
+      z.object({
+        name: variableName,
+        firstQuestion: requiredText,
+        lastQuestion: requiredText,
+        isRandomized: booleanOrFalse,
+        items: listOf(
+          z.object({
+            code: variableName,
+            label: requiredText,
+            stimulus: stimulusOrNull,
+          }),
+        ),
+      }),
+    ).transform((loops) =>
+      loops.filter(
+        (loop) =>
+          loop.name &&
+          loop.items.filter((item) => item.code).length > 0 &&
+          loop.firstQuestion &&
+          loop.lastQuestion,
+      ),
+    ),
+    notes: listOf(requiredText),
+  })
+  .transform((spec) => ({
+    ...spec,
+    // Airtable, personal links and resume live on the Participants page.
+    airtable: null,
+    // Microphone test whenever respondents can answer by voice.
+    voiceTest: spec.questions.some((question) => question.media === "voice"),
+  }));

@@ -5,12 +5,14 @@ import { messageSchema } from "@typebot.io/chat-api/schemas";
 import { getSession } from "@typebot.io/chat-session/queries/getSession";
 import { isDefined, isNotDefined } from "@typebot.io/lib/utils";
 import { withSessionStore } from "@typebot.io/runtime-session-store";
+import { after } from "next/server";
 import { z } from "zod";
 import { computeCurrentProgress } from "../computeCurrentProgress";
 import { continueBotFlow } from "../continueBotFlow";
 import { assertOriginIsAllowed } from "../helpers/assertOriginIsAllowed";
 import { filterPotentiallySensitiveLogs } from "../logs/filterPotentiallySensitiveLogs";
 import { parseDynamicTheme } from "../parseDynamicTheme";
+import { updateParticipantProgress } from "../participants/updateParticipantProgress";
 import { saveStateToDatabase } from "../saveStateToDatabase";
 
 export const continueChatInputSchema = z.object({
@@ -83,6 +85,14 @@ export const handleContinueChat = async ({
       sessionStore,
     });
 
+    const isWaitingForExternalEvent = messages.some(
+      (message) =>
+        message.type === "custom-embed" ||
+        (message.type === BubbleBlockType.EMBED &&
+          message.content.waitForEvent?.isEnabled) ||
+        (message.type === BubbleBlockType.VIDEO &&
+          isVideoWatchTrackingActive(message.content)),
+    );
     if (newSessionState)
       await saveStateToDatabase({
         sessionId: {
@@ -97,15 +107,22 @@ export const handleContinueChat = async ({
         clientSideActions,
         visitedEdges,
         setVariableHistory,
-        isWaitingForExternalEvent: messages.some(
-          (message) =>
-            message.type === "custom-embed" ||
-            (message.type === BubbleBlockType.EMBED &&
-              message.content.waitForEvent?.isEnabled) ||
-            (message.type === BubbleBlockType.VIDEO &&
-              isVideoWatchTrackingActive(message.content)),
-        ),
+        isWaitingForExternalEvent,
       });
+
+    const participantId = newSessionState?.participantId;
+    if (participantId)
+      after(() =>
+        updateParticipantProgress({
+          participantId,
+          state: newSessionState,
+          answeredBlockId: sessionState.currentBlockId,
+          isCompleted:
+            !input &&
+            !isWaitingForExternalEvent &&
+            !clientSideActions?.some((action) => action.expectsDedicatedReply),
+        }),
+      );
 
     const isPreview = isNotDefined(sessionState.typebotsQueue[0].resultId);
 

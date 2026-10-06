@@ -244,6 +244,8 @@ model Typebot {
   whatsAppCredentialsId   String?
   riskLevel               Int?
   bannedIps               BannedIp[]
+  participants            Participant[]
+  participantPanel        ParticipantPanel?
   space                   Space?                    @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   spaceId                 String?
 
@@ -531,4 +533,39 @@ enum CollaborationType {
   READ
   WRITE
   FULL_ACCESS
+}
+
+/// Respondent list of a bot (FIELDBOT): list columns mapped to variables,
+/// optional Airtable dashboard (token encrypted).
+model ParticipantPanel {
+  typebotId         String   @id
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+  idColumn          String?
+  columns           Json
+  airtable          Json?
+  airtableTokenData String?
+  airtableTokenIv   String?
+  typebot           Typebot  @relation(fields: [typebotId], references: [id], onDelete: Cascade)
+}
+
+/// One respondent of a list: unique link token, list data, progress.
+model Participant {
+  id               String    @id @default(cuid())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @default(now()) @updatedAt
+  typebotId        String
+  token            String    @unique
+  externalId       String?
+  data             Json
+  status           String    @default("NOT_STARTED")
+  checkpoint       String?
+  resultId         String?   @unique
+  airtableRecordId String?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  lastActivityAt   DateTime?
+  typebot          Typebot   @relation(fields: [typebotId], references: [id], onDelete: Cascade)
+
+  @@index([typebotId, createdAt])
 }

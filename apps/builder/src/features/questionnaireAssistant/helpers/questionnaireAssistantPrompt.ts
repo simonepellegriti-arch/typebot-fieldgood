@@ -15,7 +15,7 @@ QUESTION TYPES (FieldGood traccia notation → type)
 - "Altro [specificare]" → isOther true. "Nessuno", "Non so" in a multiple question → isExclusive true.
 - "VOCALE" / "MESSAGGIO VOCALE" / "raccontamelo con un vocale" → openLong with media "voice".
 - "VIDEO" / "VIDEO O VOCALE" → openLong with media "video".
-- Free text without voice/video → open (short) or openLong (descriptions, comments), media null.
+- Every other open answer → open (short) or openLong (descriptions, comments) with media "voice": FieldGood respondents can always type OR record a voice message.
 - "FOTO" / "selfie" / "scatta una foto" → photo (maxSelections = number of photos when more than one).
 - "RISPOSTA SI/NO" with a list of statements, or any battery where the same scale applies to several statements → matrix: rows = statements, options = scale (Sì/No → 1 "Sì", 2 "No").
 - number (ages, quantities, bounds in scale), rating (0-10 / 1-10 / NPS as one number), slider (cursor, -100…+100, 0…100%), constantSum ("distribuisci 100 punti"), signature, email, phone, date.
@@ -25,7 +25,7 @@ QUESTION TYPES (FieldGood traccia notation → type)
 
 PIPING AND VARIABLE TEXTS
 - "[INSERIRE RISPOSTA A Q8]", "Hai risposto [ITEM DA Q14]" → write {{Q8}} / {{Q14}} in the text: FIELDBOT shows the label of the answer.
-- Data that comes with the respondent ("[INSERIRE INDIRIZZO DA DATABASE]", store, panel, target, cell, name) → a linkVariable (e.g. pdv, panel, target) written as {{pdv}} in texts.
+- Data that comes with the respondent ("[INSERIRE INDIRIZZO DA DATABASE]", store, panel, target, profile, cell, name) → a linkVariable (e.g. pdv, panel, profilo) written as {{pdv}} in texts and used in showIf: it is a column of the respondent list uploaded on the Participants page.
 - Alternatives that depend on a variable ("[lattina 330ml / bottiglietta 400ml]" by panel TEST / CONTROL) → computedVariables: name (e.g. formato), sourceVariable (panel), cases (TEST → "lattina 330ml"), defaultText ("bottiglietta 400ml"); write {{formato}} in the texts.
 
 ROUTING
@@ -50,8 +50,8 @@ START OF THE CHAT
 - voiceTest: true when there are voice questions (FieldGood standard microphone test), unless the researcher says otherwise.
 - introText: a short welcome only when the document has one, else null. closingText / screenOutText: from the document, else null.
 
-AIRTABLE (live data on an Airtable table)
-Fill airtable ONLY when the researcher asks to connect Airtable and gives base (app…) and table (tbl… or name); otherwise null. lookupField = field identifying the respondent (default "Telefono"), linkParameter = link parameter with its value (default "uid"), loadFields = record fields the questionnaire uses (e.g. "PDV assegnato" → pdv, "Panel" → panel). Never write tokens or passwords anywhere.
+AIRTABLE, PERSONAL LINKS AND RESUME
+airtable is always null: personal links, resume where the respondent left and the live Airtable dashboard (status, checkpoint, answers) are set up by FIELDBOT on the bot's Participants page, not in the questionnaire. When the researcher asks for Airtable, say in notes: "Airtable, link personali e ripresa si attivano dalla pagina Partecipanti del bot (carica la lista e collega la tabella)". Never write tokens or passwords anywhere.
 
 NOTES
 Brief, in the questionnaire language: what could not be represented, codes you had to invent or change, ambiguities the researcher should check.

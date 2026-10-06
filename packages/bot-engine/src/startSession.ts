@@ -362,7 +362,7 @@ export const startSession = async ({
   };
 };
 
-const getTypebot = async (startParams: StartParams) => {
+export const getTypebot = async (startParams: StartParams) => {
   let typebotQuery:
     | Awaited<ReturnType<typeof findTypebot>>
     | Awaited<ReturnType<typeof findPublicTypebot>>;
@@ -531,7 +531,7 @@ const parseStartClientSideAction = (
   return { type: "startPropsToInject", startPropsToInject };
 };
 
-const sanitizeAndParseTheme = (
+export const sanitizeAndParseTheme = (
   theme: Theme,
   {
     variables,

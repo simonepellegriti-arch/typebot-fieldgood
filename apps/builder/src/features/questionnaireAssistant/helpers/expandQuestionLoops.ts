@@ -33,7 +33,7 @@ export const expandQuestionLoops = (spec: QuestionnaireSpec) => {
       const suffixed = (code: string) =>
         repeatedCodes.has(code) ? `${code}_${item.code}` : code;
       const rewriteText = (text: string) =>
-        text.replace(/\{\{\s*([^{}]+?)\s*\}\}/g, (full, name: string) =>
+        text.replace(/\{\{\s*([^{}]+?)\s*\}\}/g, (_match, name: string) =>
           name === loop.name ? item.label : `{{${suffixed(name)}}}`,
         );
       const rewriteConditions = (

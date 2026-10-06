@@ -87,3 +87,25 @@ describe("buildAssistantReply", () => {
     );
   });
 });
+
+describe("FieldGood defaults", () => {
+  it("lets every open answer be typed or recorded, with the microphone test", () => {
+    const parsed = parseGeneratedQuestionnaireSpec({
+      title: "Prova",
+      airtable: { baseId: "appX", tableId: "tblY" },
+      questions: [
+        { code: "A1", type: "openLong", text: "Raccontami" },
+        { code: "A2", type: "open", text: "Perché?", media: "video" },
+        { code: "A3", type: "single", text: "Scegli", options: [] },
+      ],
+    });
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.questions.map((question) => question.media)).toEqual([
+      "voice",
+      "video",
+      null,
+    ]);
+    expect(parsed.data?.voiceTest).toBe(true);
+    expect(parsed.data?.airtable).toBeNull();
+  });
+});
