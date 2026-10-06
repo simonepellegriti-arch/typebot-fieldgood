@@ -328,16 +328,12 @@ export const convertQuestionnaireSpecToTypebot = (
       return;
     }
 
-    group.add(
-      ...buildQuestionBlocks({
-        question,
-        bot,
-        labels,
-        pipe,
-        hasLabel: labelledCodes.has(question.code),
-        hasOtherText: Boolean(airtable),
-      }),
-    );
+    group.add(...buildQuestionBlocks({ question, bot, labels, pipe }));
+    // Readable answer (labels instead of codes) for piping and Airtable.
+    if (labelledCodes.has(question.code))
+      group.add(
+        bot.setVariable(`${question.code}_TESTO`, labelExpression(question)),
+      );
 
     if (isOpen(question) && openAiCredentialsId) {
       if (question.media === "voice")
@@ -462,15 +458,11 @@ const buildQuestionBlocks = ({
   bot,
   labels,
   pipe,
-  hasLabel,
-  hasOtherText,
 }: {
   question: QuestionnaireQuestion;
   bot: ReturnType<typeof createBotBuilder>;
   labels: BotLabels;
   pipe: (text: string) => string;
-  hasLabel: boolean;
-  hasOtherText: boolean;
 }): BotBlock[] => {
   const variableId =
     question.type === "info" || question.type === "continue"
@@ -482,9 +474,6 @@ const buildQuestionBlocks = ({
     : undefined;
   const questionBubble = () => bot.textBubble(text, instructions);
   const fullText = instructions ? `${text}\n${instructions}` : text;
-  const labelVariable = hasLabel
-    ? { labelVariableId: bot.variable(`${question.code}_TESTO`) }
-    : {};
   const rows = question.rows.map((row) => ({
     id: createId(),
     label: row.label,
@@ -497,8 +486,7 @@ const buildQuestionBlocks = ({
     case "continue":
       return [];
     case "single":
-    case "multiple": {
-      const hasOther = question.options.some((option) => option.isOther);
+    case "multiple":
       return [
         questionBubble(),
         {
@@ -515,10 +503,6 @@ const buildQuestionBlocks = ({
           })),
           options: {
             variableId,
-            ...labelVariable,
-            ...(hasOther && hasOtherText
-              ? { otherTextVariableId: bot.variable(`${question.code}_ALTRO`) }
-              : {}),
             isMultipleChoice: question.type === "multiple",
             buttonLabel: labels.send,
             ...(question.maxSelections
@@ -528,7 +512,6 @@ const buildQuestionBlocks = ({
           },
         },
       ];
-    }
     case "open":
     case "openLong":
       return [
@@ -614,7 +597,6 @@ const buildQuestionBlocks = ({
           type: InputBlockType.MATRIX,
           options: {
             variableId,
-            ...labelVariable,
             question: fullText,
             rows,
             columns: question.options.map((option) => ({
@@ -994,10 +976,6 @@ const airtableFieldsOf = (
   [question.code]: labelledCodes.has(question.code)
     ? `{{${question.code}_TESTO}}`
     : `{{${question.code}}}`,
-  ...(question.options.some((option) => option.isOther) &&
-  (question.type === "single" || question.type === "multiple")
-    ? { [`${question.code}_ALTRO`]: `{{${question.code}_ALTRO}}` }
-    : {}),
   ...(isOpen(question) && question.media === "voice"
     ? { [`${question.code}_URL`]: `{{${question.code}_URL}}` }
     : {}),
@@ -1030,6 +1008,23 @@ const airtableColumnsNote = (
       ),
   ];
   return `Airtable: incolla il token nel blocco "auth_airtable" del gruppo "SETTA SPECIFICHE AIRTABLE" e crea nella tabella questi campi di testo: ${[...new Set(columns)].join(", ")}.`;
+};
+
+/**
+ * Labels of a choice answer ("1, 3" → "Aereo, Nave") or of a grid answer
+ * ({"1": 2} → "Statement: Column" lines).
+ */
+const labelExpression = (question: QuestionnaireQuestion) => {
+  const optionLabels = Object.fromEntries(
+    question.options.map((option) => [option.code, option.label]),
+  );
+  if (question.type === "matrix") {
+    const rowLabels = Object.fromEntries(
+      question.rows.map((row) => [row.code, row.label]),
+    );
+    return `((value) => { const rows = ${JSON.stringify(rowLabels)}; const columns = ${JSON.stringify(optionLabels)}; let answers = {}; try { answers = typeof value === "string" ? JSON.parse(value || "{}") : (value ?? {}); } catch (error) { return String(value ?? ""); } return Object.entries(answers).map(([row, column]) => (rows[row] ?? row) + ": " + [].concat(column).map((code) => columns[String(code)] ?? code).join(", ")).join("\n"); })({{${question.code}}})`;
+  }
+  return `((value) => { const labels = ${JSON.stringify(optionLabels)}; return String(value ?? "").split(",").map((code) => code.trim()).filter(Boolean).map((code) => labels[code] ?? code).join(", "); })({{${question.code}}})`;
 };
 
 /** JSON of the answers so far, updated after each question ("Stato" field). */
