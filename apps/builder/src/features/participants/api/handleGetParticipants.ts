@@ -32,7 +32,8 @@ export const handleGetParticipants = async ({
     }),
     prisma.participant.findMany({
       where: { typebotId },
-      orderBy: { createdAt: "asc" },
+      // Rows of one upload share their creation time: then by ID.
+      orderBy: [{ createdAt: "asc" }, { externalId: "asc" }],
       take: 10_000,
       select: {
         id: true,
