@@ -84,11 +84,16 @@ const question = (
   ...overrides,
 });
 
-const option = (code: string, label: string, extra = {}) => ({
+const option = (
+  code: string,
+  label: string,
+  extra: { isExclusive?: boolean; isOther?: boolean; goTo?: string } = {},
+) => ({
   code,
   label,
   isExclusive: false,
   isOther: false,
+  goTo: null,
   ...extra,
 });
 
@@ -650,5 +655,106 @@ describe("Airtable resume with routing", () => {
       "Ora acquista il prodotto",
     );
     expect(respondent.variables.checkpoint).toBe("ACQ");
+  });
+});
+
+describe("option routing (Passare a / Terminare / Ripetere)", () => {
+  const storeSpec: QuestionnaireSpec = {
+    ...spec,
+    introText: null,
+    airtable: {
+      baseId: "appTEST",
+      tableId: "tblTEST",
+      lookupField: "Telefono",
+      linkParameter: "uid",
+      loadFields: [],
+    },
+    questions: [
+      question({
+        code: "Q2",
+        type: "single",
+        text: "Cerca l'espositore. L'hai trovato?",
+        options: [
+          option("1", "L'ho trovato", { goTo: "Q5" }),
+          option("2", "Non lo vedo", { goTo: "Q3" }),
+        ],
+      }),
+      question({
+        code: "Q3",
+        type: "single",
+        text: "Cerca meglio vicino alle casse.",
+        options: [
+          option("1", "Ora l'ho trovato", { goTo: "Q5" }),
+          option("2", "Non c'è", { goTo: "Q4" }),
+        ],
+      }),
+      question({
+        code: "Q4",
+        type: "single",
+        text: "Il prodotto non c'è: chiudi o torni un altro giorno?",
+        options: [
+          option("1", "CHIUDO QUI!", { goTo: "END" }),
+          option("2", "RITORNO", { goTo: "RETURN:Q2" }),
+        ],
+      }),
+      question({
+        code: "Q5",
+        type: "single",
+        text: "Quale espositore hai trovato?",
+        options: [option("1", "Pozzetto"), option("2", "Frigo")],
+      }),
+    ],
+  };
+  const { typebot, warnings } = convertQuestionnaireSpecToTypebot(storeSpec);
+  const respondent = (initialValues: Record<string, string> = {}) =>
+    withMockedServices(typebot, {
+      initialValues: { record_id_airtable: "rec1", ...initialValues },
+    });
+
+  it("jumps from the option to the question it names", async () => {
+    expect(
+      warnings.filter((warning) => !warning.startsWith("Airtable")),
+    ).toEqual([]);
+    const found = await runTestInterview(respondent(), ["L'ho trovato"]);
+    const transcript = found.transcript.join("\n");
+    expect(transcript).toContain("Quale espositore hai trovato?");
+    expect(transcript).not.toContain("Cerca meglio");
+  });
+
+  it("closes the interview or pauses it until the respondent comes back", async () => {
+    const closed = await runTestInterview(respondent(), [
+      "Non lo vedo",
+      "Non c'è",
+      "CHIUDO QUI!",
+    ]);
+    expect(closed.transcript.join("\n")).toContain("l'intervista termina qui");
+    expect(closed.variables.checkpoint).toBe("SCREENOUT");
+
+    const paused = await runTestInterview(respondent(), [
+      "Non lo vedo",
+      "Non c'è",
+      "RITORNO",
+    ]);
+    expect(paused.transcript.join("\n")).toContain("riapri questo link");
+    expect(paused.variables.checkpoint).toBe("RIPRENDI:Q2");
+
+    const back = await runTestInterview(
+      respondent({ checkpoint: "RIPRENDI:Q2" }),
+      [],
+    );
+    expect(back.transcript.join("\n")).toContain("Cerca l'espositore");
+  });
+
+  it("applies the routing of the last answer when resuming", async () => {
+    const resumed = await runTestInterview(
+      respondent({
+        checkpoint: "Q2",
+        stato_json: JSON.stringify({ Q2: "1", Q2_TESTO: "L'ho trovato" }),
+      }),
+      [],
+    );
+    const transcript = resumed.transcript.join("\n");
+    expect(transcript).toContain("Quale espositore hai trovato?");
+    expect(transcript).not.toContain("Cerca meglio");
   });
 });

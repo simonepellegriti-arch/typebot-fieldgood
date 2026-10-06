@@ -293,6 +293,45 @@ export const convertQuestionnaireSpecToTypebot = (
   if (spec.introText) introGroup.add(bot.textBubble(pipe(spec.introText)));
   introGroup.setNext(firstQuestionTarget);
 
+  // Option routing: "Passare a Q5", "Terminare", "Ripetere Q2" (come back later).
+  const questionGroupByCode = new Map(
+    questionGroups.map(({ question, group }) => [question.code, group]),
+  );
+  const pauseGroups = new Map<string, GroupBuilder>();
+  const pauseGroupFor = (code: string) => {
+    const existing = pauseGroups.get(code);
+    if (existing) return existing;
+    const group = bot.createGroup(`IN PAUSA - riprende da ${code}`);
+    group.add(bot.textBubble(labels.pause));
+    saveCheckpoint(group, `RIPRENDI:${code}`, "IN PAUSA - TORNA PIÙ TARDI");
+    pauseGroups.set(code, group);
+    return group;
+  };
+  const routeTarget = (
+    goTo: string,
+    questionCode: string,
+  ): LazyTarget | undefined => {
+    const normalized = goTo.trim();
+    if (/^(END|FINE|TERMINA(RE)?|CHIUDI)$/i.test(normalized))
+      return screenOutGroup.start();
+    const returnMatch = normalized.match(/^RETURN\s*:\s*(.+)$/i);
+    const code = returnMatch?.[1]?.trim() ?? normalized;
+    const target = questionGroupByCode.get(code);
+    if (!target) {
+      warnings.push(
+        `${questionCode}: il salto verso "${goTo}" non corrisponde a nessuna domanda ed è stato ignorato.`,
+      );
+      return undefined;
+    }
+    if (!returnMatch) return target.start();
+    if (!airtable)
+      warnings.push(
+        `${questionCode}: per riprendere più tardi da ${code} serve il collegamento ad Airtable; l'intervista si chiude con il messaggio di pausa.`,
+      );
+    return pauseGroupFor(code).start();
+  };
+  const resumeTargets = new Map<string, LazyTarget>();
+
   // Questions.
   questionGroups.forEach(({ question, group }, index) => {
     const next = nextAfter(index);
@@ -375,6 +414,9 @@ export const convertQuestionnaireSpecToTypebot = (
       );
     }
 
+    // On resume, the routing of the last answered question is applied again.
+    resumeTargets.set(question.code, group.at(group.mark()));
+
     if (question.terminateIf) {
       const terminateItems = conditions.toItems(
         question.terminateIf,
@@ -390,6 +432,35 @@ export const convertQuestionnaireSpecToTypebot = (
             })),
           ),
         );
+    }
+
+    if (question.type === "single") {
+      const codesByTarget = new Map<string, string[]>();
+      for (const option of question.options)
+        if (option.goTo)
+          codesByTarget.set(option.goTo, [
+            ...(codesByTarget.get(option.goTo) ?? []),
+            option.code,
+          ]);
+      const routes = [...codesByTarget.entries()].flatMap(([goTo, codes]) => {
+        const to = routeTarget(goTo, question.code);
+        if (!to) return [];
+        return [
+          {
+            to,
+            content: {
+              logicalOperator: LogicalOperator.OR,
+              comparisons: codes.map((code) => ({
+                id: createId(),
+                variableId: bot.variable(question.code),
+                comparisonOperator: ComparisonOperators.EQUAL,
+                value: code,
+              })),
+            },
+          },
+        ];
+      });
+      if (routes.length > 0) group.add(bot.condition(routes));
     }
   });
 
@@ -413,7 +484,11 @@ export const convertQuestionnaireSpecToTypebot = (
         },
         ...questionGroups.map(({ question }, index) => ({
           content: equals(checkpointId, question.code),
-          to: nextAfter(index),
+          to: resumeTargets.get(question.code) ?? nextAfter(index),
+        })),
+        ...[...pauseGroups.keys()].map((code) => ({
+          content: equals(checkpointId, `RIPRENDI:${code}`),
+          to: questionGroupByCode.get(code)?.start() ?? firstQuestionTarget,
         })),
         { content: equals(checkpointId, "FINE"), to: endGroup.start() },
         {
@@ -427,7 +502,16 @@ export const convertQuestionnaireSpecToTypebot = (
 
   endGroup.add(bot.textBubble(pipe(spec.closingText ?? labels.closing)));
   saveCheckpoint(endGroup, "FINE", "CHATBOT CONCLUSO");
-  if (questions.some((question) => question.terminateIf)) {
+  const usesScreenOut = questions.some(
+    (question) =>
+      question.terminateIf ||
+      question.options.some(
+        (option) =>
+          option.goTo &&
+          /^(END|FINE|TERMINA(RE)?|CHIUDI)$/i.test(option.goTo.trim()),
+      ),
+  );
+  if (usesScreenOut) {
     screenOutGroup.add(
       bot.textBubble(pipe(spec.screenOutText ?? labels.screenOut)),
     );

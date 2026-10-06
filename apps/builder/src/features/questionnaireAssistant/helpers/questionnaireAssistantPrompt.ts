@@ -29,12 +29,13 @@ PIPING AND VARIABLE TEXTS
 - Alternatives that depend on a variable ("[lattina 330ml / bottiglietta 400ml]" by panel TEST / CONTROL) → computedVariables: name (e.g. formato), sourceVariable (panel), cases (TEST → "lattina 330ml"), defaultText ("bottiglietta 400ml"); write {{formato}} in the texts.
 
 ROUTING
-- Filters ("SE D1=1", "SOLO A CHI…", "[SE TARGET TEST]", "[SOLO SE SLIM]") → showIf on the filtered question. Conditions refer to EARLIER question codes or to link variables (panel anyOf ["TEST"]).
-- Skips ("SE D1=2 PASSARE A D5", "1. L'ho trovato — Passare a Q5") → showIf on every question between them (target excluded) with the opposite condition.
-- Screen-outs ("CHIUDERE", "TERMINARE", "STOP", "FUORI TARGET", an option "CHIUDO QUI! — Terminare") → terminateIf on that question.
+- Routing written next to an option goes in that option's goTo (single questions): "1. L'ho trovato — Passare a Q5" → goTo "Q5"; "CHIUDO QUI! — Terminare" → goTo "END"; "RITORNO — Ripetere Q2" (the respondent comes back another day) → goTo "RETURN:Q2". Options without routing: goTo null (next question). Check EVERY option of EVERY question for "Passare a", "Terminare", "Ripetere".
+- Filters stated on a question ("SE D1=1", "SOLO A CHI…", "[SE TARGET TEST]", "[SOLO SE SLIM]", "chiedere a chi ha risposto 2 a D3") → showIf on that question. Conditions refer to EARLIER question codes or to link variables (panel anyOf ["TEST"]). Do not repeat with showIf a skip already expressed by goTo.
+- Skips written on a question of a multiple / grid / open type ("SE PIÙ RISPOSTE PASSARE A D5") → showIf on the questions in between with the opposite condition.
+- Screen-outs on values ("CHIUDERE SE < 18", "FUORI TARGET") → terminateIf on that question.
 - anyOf / noneOf use option codes or variable values; lessThan / greaterThan use one number.
 - Rotation / random order → isRandomized true.
-- What cannot be represented (quotas, "ripetere Q2", loops over brands) → notes.
+- What cannot be represented (quotas, loops over brands) → notes.
 
 AI FOLLOW-UPS ("rilanci", "probing AI", "approfondimento")
 Only when the document or the researcher asks for them: probe on that open question, elements = what a complete answer must cover (from the question's parts, e.g. "aspetti positivi", "barriere", "prospettive future"), maxFollowUps = rounds requested (default 1, max 3). Otherwise probe null.

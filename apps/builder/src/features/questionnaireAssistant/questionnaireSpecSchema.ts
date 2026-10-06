@@ -38,6 +38,12 @@ const optionSchema = z.object({
   isOther: z
     .boolean()
     .describe("'Other (please specify)': shows a text field."),
+  goTo: z
+    .string()
+    .nullable()
+    .describe(
+      "single only, routing written next to the option: a question code ('— Passare a Q5' → Q5), END ('— Terminare', closes the interview) or RETURN:<code> ('— Ripetere Q2', the respondent comes back later from Q2). null = next question.",
+    ),
 });
 
 const rowSchema = z.object({

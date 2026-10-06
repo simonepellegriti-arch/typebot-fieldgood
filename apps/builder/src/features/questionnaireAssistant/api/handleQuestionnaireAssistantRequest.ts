@@ -59,7 +59,8 @@ const aiCredentialsSchema = z.object({
 
 /** Models tried in order (the first one the account can use). */
 const modelIdsByProvider = {
-  openai: ["gpt-5.4-mini", "gpt-4.1", "gpt-4o"],
+  // The full model follows long questionnaires and their routing much better.
+  openai: ["gpt-5.4", "gpt-5.4-mini", "gpt-4.1"],
   anthropic: ["claude-sonnet-4-6", "claude-sonnet-4-5"],
 } as const;
 

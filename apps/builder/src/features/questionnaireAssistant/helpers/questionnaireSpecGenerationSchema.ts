@@ -221,6 +221,7 @@ const lenientQuestionSchema = z.object({
       label: requiredText,
       isExclusive: booleanOrFalse,
       isOther: booleanOrFalse,
+      goTo: textOrNull.transform((value) => value?.trim() || null),
     }),
   ),
   rows: listOf(z.object({ code: requiredText, label: requiredText })),
