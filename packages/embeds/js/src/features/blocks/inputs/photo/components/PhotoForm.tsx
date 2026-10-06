@@ -460,7 +460,7 @@ export const PhotoForm = (props: Props) => {
             on:click={() => void openCamera()}
             class="items-center gap-2"
           >
-            <CameraIcon class="size-5" />
+            <CameraIcon class="size-5" aria-hidden="true" />
             {photos().length > 0 ? labels.takeAnother : labels.takePhoto}
           </Button>
         </Show>
