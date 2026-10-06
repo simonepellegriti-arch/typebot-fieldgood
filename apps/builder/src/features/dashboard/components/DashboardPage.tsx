@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { Seo } from "@/components/Seo";
 import { FolderContent } from "@/features/folders/components/FolderContent";
 import { TypebotDndProvider } from "@/features/folders/TypebotDndProvider";
+import { QuestionnaireAssistant } from "@/features/questionnaireAssistant/components/QuestionnaireAssistant";
 import { useUser } from "@/features/user/hooks/useUser";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
 import { orpc } from "@/lib/queryClient";
@@ -111,6 +112,7 @@ export const DashboardPage = () => {
           <FolderContent folder={null} />
         )}
       </TypebotDndProvider>
+      <QuestionnaireAssistant />
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { NotFoundPage } from "@/components/NotFoundPage";
 import { Seo } from "@/components/Seo";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
+import { QuestionnaireAssistant } from "@/features/questionnaireAssistant/components/QuestionnaireAssistant";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
 import { orpc } from "@/lib/queryClient";
 import { TypebotDndProvider } from "../TypebotDndProvider";
@@ -43,6 +44,7 @@ export const FolderPage = () => {
           <FolderContent folder={folder} />
         )}
       </TypebotDndProvider>
+      <QuestionnaireAssistant />
     </div>
   );
 };
