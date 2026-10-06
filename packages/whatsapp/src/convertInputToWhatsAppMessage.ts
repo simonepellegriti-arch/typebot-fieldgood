@@ -294,6 +294,15 @@ export const convertInputToWhatsAppMessages = async ({
         .join("\n\n");
       return [{ type: "text", text: { body } }];
     }
+    case InputBlockType.PHOTO: {
+      const body = [
+        lastMessageText ?? input.options?.question,
+        "Photos can only be taken in the web version of this survey.",
+      ]
+        .filter(isDefined)
+        .join("\n\n");
+      return [{ type: "text", text: { body } }];
+    }
     case InputBlockType.CARDS: {
       const messages = [];
       for (const item of input.items) {

@@ -143,6 +143,8 @@ const getSampleValue = (block: InputBlock, userEmail?: string): string => {
     }
     case InputBlockType.SIGNATURE:
       return "https://domain.com/signature.jpg";
+    case InputBlockType.PHOTO:
+      return "https://domain.com/photo.jpg";
     case InputBlockType.CARDS:
       return block.items
         .map((item) => item.title ?? item.description)

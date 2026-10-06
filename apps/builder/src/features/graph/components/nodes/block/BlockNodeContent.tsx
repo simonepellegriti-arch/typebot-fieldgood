@@ -22,6 +22,7 @@ import { MatrixNodeContent } from "@/features/blocks/inputs/matrix/components/Ma
 import { NumberNodeContent } from "@/features/blocks/inputs/number/components/NumberNodeContent";
 import { PaymentInputContent } from "@/features/blocks/inputs/payment/components/PaymentInputContent";
 import { PhoneNodeContent } from "@/features/blocks/inputs/phone/components/PhoneNodeContent";
+import { PhotoNodeContent } from "@/features/blocks/inputs/photo/components/PhotoNodeContent";
 import { PictureChoiceNode } from "@/features/blocks/inputs/pictureChoice/components/PictureChoiceNode";
 import { RatingInputContent } from "@/features/blocks/inputs/rating/components/RatingInputContent";
 import { SignatureNodeContent } from "@/features/blocks/inputs/signature/components/SignatureNodeContent";
@@ -113,6 +114,9 @@ export const BlockNodeContent = ({
     }
     case InputBlockType.CONSTANT_SUM: {
       return <ConstantSumNodeContent options={block.options} />;
+    }
+    case InputBlockType.PHOTO: {
+      return <PhotoNodeContent options={block.options} />;
     }
     case InputBlockType.SIGNATURE: {
       return <SignatureNodeContent options={block.options} />;

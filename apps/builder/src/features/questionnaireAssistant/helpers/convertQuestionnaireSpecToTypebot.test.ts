@@ -222,3 +222,34 @@ describe("convertQuestionnaireSpecToTypebot", () => {
     expect(minor.transcript.join("\n")).not.toContain("Hai viaggiato");
   });
 });
+
+describe("photo questions", () => {
+  it("become photo blocks with the number of photos asked", () => {
+    const { typebot } = convertQuestionnaireSpecToTypebot({
+      ...spec,
+      questions: [
+        question({
+          code: "F1",
+          type: "photo",
+          text: "Scatti una foto dello scaffale",
+          maxSelections: 3,
+        }),
+        question({ code: "F2", type: "photo", text: "Foto dello scontrino" }),
+      ],
+    });
+    const photoBlocks = typebot.groups
+      .flatMap((group) => group.blocks)
+      .filter((block) => block.type === "photo input");
+    expect(photoBlocks).toHaveLength(2);
+    expect(photoBlocks.map((block) => block.options)).toMatchObject([
+      { question: "Scatti una foto dello scaffale", maxPhotos: 3 },
+      { question: "Foto dello scontrino", maxPhotos: 1 },
+    ]);
+    expect(
+      importTypebotInputSchema.safeParse({
+        workspaceId: "w",
+        typebot: { ...typebot, icon: null, folderId: null },
+      }).success,
+    ).toBe(true);
+  });
+});

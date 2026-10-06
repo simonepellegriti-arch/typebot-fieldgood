@@ -54,6 +54,8 @@ export type TextInputSubmitContent = {
   attachments?: Attachment[];
   /** Image shown in the respondent's bubble only (e.g. the signature drawn). */
   previewImageUrl?: string;
+  /** Images shown in the respondent's bubble only (e.g. the photos taken). */
+  previewImageUrls?: string[];
 };
 
 export type RecordingInputSubmitContent = {

@@ -92,7 +92,7 @@ export const handleExportResearchDataset = async ({
       : undefined,
   });
 
-  const { csv, longCsv, sav, codebook, rowCount, signatureFiles } =
+  const { csv, longCsv, sav, codebook, rowCount, imageFiles } =
     exportResearchDataset({
       questionnaireVersions,
       results,
@@ -115,7 +115,7 @@ export const handleExportResearchDataset = async ({
     savBase64: sav ? Buffer.from(sav).toString("base64") : undefined,
     codebook: JSON.stringify(codebook, null, 2),
     rowCount,
-    signatureFiles,
-    signaturesZipFileName: csvFileName.replace(/\.csv$/, "-signatures.zip"),
+    imageFiles,
+    imagesZipFileName: csvFileName.replace(/\.csv$/, "-images.zip"),
   };
 };

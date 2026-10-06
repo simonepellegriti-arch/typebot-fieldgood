@@ -2942,6 +2942,74 @@
                                     "id",
                                     "type"
                                   ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "outgoingEdgeId": {
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "enum": [
+                                        "photo input"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "options": {
+                                      "type": "object",
+                                      "properties": {
+                                        "variableId": {
+                                          "type": "string"
+                                        },
+                                        "question": {
+                                          "type": "string"
+                                        },
+                                        "maxPhotos": {
+                                          "type": "integer",
+                                          "minimum": 1,
+                                          "maximum": 10
+                                        },
+                                        "source": {
+                                          "enum": [
+                                            "camera",
+                                            "cameraOrGallery"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "facingMode": {
+                                          "enum": [
+                                            "environment",
+                                            "user"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "buttonLabel": {
+                                          "type": "string"
+                                        },
+                                        "isRequired": {
+                                          "type": "boolean"
+                                        },
+                                        "skipLabel": {
+                                          "type": "string"
+                                        },
+                                        "visibility": {
+                                          "enum": [
+                                            "Auto",
+                                            "Public",
+                                            "Private"
+                                          ],
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "type"
+                                  ]
                                 }
                               ]
                             },
@@ -6485,6 +6553,74 @@
                                           "type": "string"
                                         },
                                         "clearLabel": {
+                                          "type": "string"
+                                        },
+                                        "buttonLabel": {
+                                          "type": "string"
+                                        },
+                                        "isRequired": {
+                                          "type": "boolean"
+                                        },
+                                        "skipLabel": {
+                                          "type": "string"
+                                        },
+                                        "visibility": {
+                                          "enum": [
+                                            "Auto",
+                                            "Public",
+                                            "Private"
+                                          ],
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "type"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "outgoingEdgeId": {
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "enum": [
+                                        "photo input"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "options": {
+                                      "type": "object",
+                                      "properties": {
+                                        "variableId": {
+                                          "type": "string"
+                                        },
+                                        "question": {
+                                          "type": "string"
+                                        },
+                                        "maxPhotos": {
+                                          "type": "integer",
+                                          "minimum": 1,
+                                          "maximum": 10
+                                        },
+                                        "source": {
+                                          "enum": [
+                                            "camera",
+                                            "cameraOrGallery"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "facingMode": {
+                                          "enum": [
+                                            "environment",
+                                            "user"
+                                          ],
                                           "type": "string"
                                         },
                                         "buttonLabel": {
@@ -11082,6 +11218,74 @@
                                     "id",
                                     "type"
                                   ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "outgoingEdgeId": {
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "enum": [
+                                        "photo input"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "options": {
+                                      "type": "object",
+                                      "properties": {
+                                        "variableId": {
+                                          "type": "string"
+                                        },
+                                        "question": {
+                                          "type": "string"
+                                        },
+                                        "maxPhotos": {
+                                          "type": "integer",
+                                          "minimum": 1,
+                                          "maximum": 10
+                                        },
+                                        "source": {
+                                          "enum": [
+                                            "camera",
+                                            "cameraOrGallery"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "facingMode": {
+                                          "enum": [
+                                            "environment",
+                                            "user"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "buttonLabel": {
+                                          "type": "string"
+                                        },
+                                        "isRequired": {
+                                          "type": "boolean"
+                                        },
+                                        "skipLabel": {
+                                          "type": "string"
+                                        },
+                                        "visibility": {
+                                          "enum": [
+                                            "Auto",
+                                            "Public",
+                                            "Private"
+                                          ],
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "type"
+                                  ]
                                 }
                               ]
                             },
@@ -15252,6 +15456,74 @@
                                           "type": "string"
                                         },
                                         "clearLabel": {
+                                          "type": "string"
+                                        },
+                                        "buttonLabel": {
+                                          "type": "string"
+                                        },
+                                        "isRequired": {
+                                          "type": "boolean"
+                                        },
+                                        "skipLabel": {
+                                          "type": "string"
+                                        },
+                                        "visibility": {
+                                          "enum": [
+                                            "Auto",
+                                            "Public",
+                                            "Private"
+                                          ],
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "type"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "outgoingEdgeId": {
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "enum": [
+                                        "photo input"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "options": {
+                                      "type": "object",
+                                      "properties": {
+                                        "variableId": {
+                                          "type": "string"
+                                        },
+                                        "question": {
+                                          "type": "string"
+                                        },
+                                        "maxPhotos": {
+                                          "type": "integer",
+                                          "minimum": 1,
+                                          "maximum": 10
+                                        },
+                                        "source": {
+                                          "enum": [
+                                            "camera",
+                                            "cameraOrGallery"
+                                          ],
+                                          "type": "string"
+                                        },
+                                        "facingMode": {
+                                          "enum": [
+                                            "environment",
+                                            "user"
+                                          ],
                                           "type": "string"
                                         },
                                         "buttonLabel": {

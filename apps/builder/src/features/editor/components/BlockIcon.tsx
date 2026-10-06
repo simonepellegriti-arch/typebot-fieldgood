@@ -22,6 +22,7 @@ import { MatrixInputIcon } from "@/features/blocks/inputs/matrix/components/Matr
 import { NumberInputIcon } from "@/features/blocks/inputs/number/components/NumberInputIcon";
 import { PaymentInputIcon } from "@/features/blocks/inputs/payment/components/PaymentInputIcon";
 import { PhoneInputIcon } from "@/features/blocks/inputs/phone/components/PhoneInputIcon";
+import { PhotoInputIcon } from "@/features/blocks/inputs/photo/components/PhotoInputIcon";
 import { PictureChoiceIcon } from "@/features/blocks/inputs/pictureChoice/components/PictureChoiceIcon";
 import { RatingInputIcon } from "@/features/blocks/inputs/rating/components/RatingInputIcon";
 import { SignatureInputIcon } from "@/features/blocks/inputs/signature/components/SignatureInputIcon";
@@ -111,6 +112,10 @@ export const BlockIcon = ({ type, className }: BlockIconProps): JSX.Element => {
         <ConstantSumInputIcon
           className={cn("text-orange-9 stroke-2", className)}
         />
+      );
+    case InputBlockType.PHOTO:
+      return (
+        <PhotoInputIcon className={cn("text-orange-9 stroke-2", className)} />
       );
     case InputBlockType.SIGNATURE:
       return (

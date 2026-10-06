@@ -19,6 +19,7 @@ import { generateSignedUploadProxyUrl } from "@typebot.io/lib/s3/signedUploadPro
 import prisma from "@typebot.io/prisma";
 import { z } from "zod";
 import { generateMediaAnswerUploadUrl } from "./generateMediaAnswerUploadUrl";
+import { generatePhotoUploadUrl } from "./generatePhotoUploadUrl";
 import { generateSignatureUploadUrl } from "./generateSignatureUploadUrl";
 import { getUploadProxyBaseUrl } from "./getUploadProxyBaseUrl";
 
@@ -98,6 +99,20 @@ export const handleGenerateUploadUrl = async ({
       currentBlockId,
     });
   }
+
+  if (block?.type === InputBlockType.PHOTO)
+    return generatePhotoUploadUrl({
+      block,
+      fileType,
+      fileSize,
+      typebotId,
+      workspaceId:
+        "workspaceId" in typebot && typebot.workspaceId
+          ? typebot.workspaceId
+          : undefined,
+      resultId: session.state.typebotsQueue[0].resultId,
+      currentBlockId,
+    });
 
   if (block?.type === InputBlockType.SIGNATURE)
     return generateSignatureUploadUrl({

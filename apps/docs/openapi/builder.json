@@ -316,6 +316,9 @@
                             "$ref": "#/components/schemas/SignatureInput"
                           },
                           {
+                            "$ref": "#/components/schemas/PhotoInput"
+                          },
+                          {
                             "$ref": "#/components/schemas/ChoiceInput"
                           },
                           {
@@ -2017,6 +2020,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/SignatureInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/PhotoInput"
                           },
                           {
                             "$ref": "#/components/schemas/ChoiceInput"
@@ -4931,6 +4937,74 @@
                 "type": "string"
               },
               "clearLabel": {
+                "type": "string"
+              },
+              "buttonLabel": {
+                "type": "string"
+              },
+              "isRequired": {
+                "type": "boolean"
+              },
+              "skipLabel": {
+                "type": "string"
+              },
+              "visibility": {
+                "enum": [
+                  "Auto",
+                  "Public",
+                  "Private"
+                ],
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "PhotoInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "outgoingEdgeId": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "photo input"
+            ],
+            "type": "string"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "variableId": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              },
+              "maxPhotos": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "source": {
+                "enum": [
+                  "camera",
+                  "cameraOrGallery"
+                ],
+                "type": "string"
+              },
+              "facingMode": {
+                "enum": [
+                  "environment",
+                  "user"
+                ],
                 "type": "string"
               },
               "buttonLabel": {
@@ -13488,6 +13562,9 @@
                             "$ref": "#/components/schemas/SignatureInput"
                           },
                           {
+                            "$ref": "#/components/schemas/PhotoInput"
+                          },
+                          {
                             "type": "object",
                             "properties": {
                               "id": {
@@ -15896,6 +15973,9 @@
                             "$ref": "#/components/schemas/SignatureInput"
                           },
                           {
+                            "$ref": "#/components/schemas/PhotoInput"
+                          },
+                          {
                             "type": "object",
                             "properties": {
                               "id": {
@@ -18302,6 +18382,9 @@
                           },
                           {
                             "$ref": "#/components/schemas/SignatureInput"
+                          },
+                          {
+                            "$ref": "#/components/schemas/PhotoInput"
                           },
                           {
                             "type": "object",
@@ -20731,6 +20814,9 @@
                             "$ref": "#/components/schemas/SignatureInput"
                           },
                           {
+                            "$ref": "#/components/schemas/PhotoInput"
+                          },
+                          {
                             "type": "object",
                             "properties": {
                               "id": {
@@ -23029,6 +23115,9 @@
                             "$ref": "#/components/schemas/SignatureInput"
                           },
                           {
+                            "$ref": "#/components/schemas/PhotoInput"
+                          },
+                          {
                             "$ref": "#/components/schemas/ChoiceInput"
                           },
                           {
@@ -24777,6 +24866,9 @@
                                                 "$ref": "#/components/schemas/SignatureInput"
                                               },
                                               {
+                                                "$ref": "#/components/schemas/PhotoInput"
+                                              },
+                                              {
                                                 "type": "object",
                                                 "properties": {
                                                   "id": {
@@ -25616,6 +25708,9 @@
                                               },
                                               {
                                                 "$ref": "#/components/schemas/SignatureInput"
+                                              },
+                                              {
+                                                "$ref": "#/components/schemas/PhotoInput"
                                               },
                                               {
                                                 "$ref": "#/components/schemas/ChoiceInput"
@@ -30779,6 +30874,9 @@
                                         "$ref": "#/components/schemas/SignatureInput"
                                       },
                                       {
+                                        "$ref": "#/components/schemas/PhotoInput"
+                                      },
+                                      {
                                         "$ref": "#/components/schemas/ChoiceInput"
                                       },
                                       {
@@ -32881,6 +32979,9 @@
                                         },
                                         {
                                           "$ref": "#/components/schemas/SignatureInput"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/PhotoInput"
                                         },
                                         {
                                           "$ref": "#/components/schemas/ChoiceInput"
@@ -36621,6 +36722,9 @@
                                               "$ref": "#/components/schemas/SignatureInput"
                                             },
                                             {
+                                              "$ref": "#/components/schemas/PhotoInput"
+                                            },
+                                            {
                                               "$ref": "#/components/schemas/ChoiceInput"
                                             },
                                             {
@@ -38724,6 +38828,9 @@
                                             },
                                             {
                                               "$ref": "#/components/schemas/SignatureInput"
+                                            },
+                                            {
+                                              "$ref": "#/components/schemas/PhotoInput"
                                             },
                                             {
                                               "type": "object",
@@ -40939,6 +41046,9 @@
                                             "$ref": "#/components/schemas/SignatureInput"
                                           },
                                           {
+                                            "$ref": "#/components/schemas/PhotoInput"
+                                          },
+                                          {
                                             "$ref": "#/components/schemas/ChoiceInput"
                                           },
                                           {
@@ -42445,6 +42555,9 @@
                                           },
                                           {
                                             "$ref": "#/components/schemas/SignatureInput"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/PhotoInput"
                                           },
                                           {
                                             "type": "object",
@@ -44726,6 +44839,9 @@
                                         },
                                         {
                                           "$ref": "#/components/schemas/SignatureInput"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/PhotoInput"
                                         },
                                         {
                                           "$ref": "#/components/schemas/ChoiceInput"
@@ -49437,6 +49553,9 @@
                                                   "$ref": "#/components/schemas/SignatureInput"
                                                 },
                                                 {
+                                                  "$ref": "#/components/schemas/PhotoInput"
+                                                },
+                                                {
                                                   "$ref": "#/components/schemas/ChoiceInput"
                                                 },
                                                 {
@@ -51612,6 +51731,9 @@
                                                 },
                                                 {
                                                   "$ref": "#/components/schemas/SignatureInput"
+                                                },
+                                                {
+                                                  "$ref": "#/components/schemas/PhotoInput"
                                                 },
                                                 {
                                                   "type": "object",
@@ -53879,6 +54001,9 @@
                                             "$ref": "#/components/schemas/SignatureInput"
                                           },
                                           {
+                                            "$ref": "#/components/schemas/PhotoInput"
+                                          },
+                                          {
                                             "$ref": "#/components/schemas/ChoiceInput"
                                           },
                                           {
@@ -55164,6 +55289,9 @@
                                           },
                                           {
                                             "$ref": "#/components/schemas/SignatureInput"
+                                          },
+                                          {
+                                            "$ref": "#/components/schemas/PhotoInput"
                                           },
                                           {
                                             "type": "object",
@@ -57434,6 +57562,9 @@
                                         },
                                         {
                                           "$ref": "#/components/schemas/SignatureInput"
+                                        },
+                                        {
+                                          "$ref": "#/components/schemas/PhotoInput"
                                         },
                                         {
                                           "$ref": "#/components/schemas/ChoiceInput"
@@ -65061,7 +65192,7 @@
                     "rowCount": {
                       "type": "number"
                     },
-                    "signatureFiles": {
+                    "imageFiles": {
                       "type": "array",
                       "items": {
                         "type": "object",
@@ -65078,9 +65209,9 @@
                           "url"
                         ]
                       },
-                      "description": "Signature JPEGs of the exported interviews, named <RESULT_ID>_<column>.jpg."
+                      "description": "Signature and photo JPEGs of the exported interviews, named <RESULT_ID>_<column>.jpg (<RESULT_ID>_<column>_<n>.jpg when an answer holds several photos)."
                     },
-                    "signaturesZipFileName": {
+                    "imagesZipFileName": {
                       "type": "string"
                     }
                   },
@@ -65092,8 +65223,8 @@
                     "longCsvFileName",
                     "codebook",
                     "rowCount",
-                    "signatureFiles",
-                    "signaturesZipFileName"
+                    "imageFiles",
+                    "imagesZipFileName"
                   ]
                 }
               }
@@ -79854,6 +79985,9 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/SignatureInput"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/PhotoInput"
                                 }
                               ]
                             },
@@ -82912,6 +83046,9 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/SignatureInput"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/PhotoInput"
                                 }
                               ]
                             },
@@ -85967,6 +86104,9 @@
                                 },
                                 {
                                   "$ref": "#/components/schemas/SignatureInput"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/PhotoInput"
                                 }
                               ]
                             },

@@ -9,6 +9,7 @@ import { matrixInputSchema } from "./matrix/schema";
 import { numberInputSchema } from "./number/schema";
 import { paymentInputSchema } from "./payment/schema";
 import { phoneNumberInputBlockSchema } from "./phone/schema";
+import { photoInputSchema } from "./photo/schema";
 import { pictureChoiceBlockSchemas } from "./pictureChoice/schema";
 import { ratingInputBlockSchema } from "./rating/schema";
 import { signatureInputSchema } from "./signature/schema";
@@ -32,6 +33,7 @@ const inputBlockSchemas = [
   sliderInputSchema,
   constantSumInputSchema,
   signatureInputSchema,
+  photoInputSchema,
 ] as const;
 
 export const inputBlockV5Schema = z.discriminatedUnion("type", [

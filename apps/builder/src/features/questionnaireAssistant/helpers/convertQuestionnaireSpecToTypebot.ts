@@ -1,6 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
+import { maxPhotosLimit } from "@typebot.io/blocks-inputs/photo/constants";
 import { LogicBlockType } from "@typebot.io/blocks-logic/constants";
 import {
   ComparisonOperators,
@@ -468,6 +469,22 @@ const buildQuestionBlocks = (
             variableId,
             question: joinText(question.text, question.instructions),
             buttonLabel: labels.send,
+          },
+        },
+      ];
+    case "photo":
+      return [
+        {
+          id: createId(),
+          type: InputBlockType.PHOTO,
+          options: {
+            variableId,
+            question: joinText(question.text, question.instructions),
+            buttonLabel: labels.send,
+            maxPhotos: Math.min(
+              maxPhotosLimit,
+              Math.max(1, Math.round(question.maxSelections ?? 1)),
+            ),
           },
         },
       ];

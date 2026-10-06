@@ -18,6 +18,7 @@ export enum InputBlockType {
   SLIDER = "slider input",
   CONSTANT_SUM = "constant sum input",
   SIGNATURE = "signature input",
+  PHOTO = "photo input",
 }
 
 export const replyEventInputTypeFromEnum = {
@@ -38,4 +39,5 @@ export const replyEventInputTypeFromEnum = {
   [InputBlockType.SLIDER]: "slider",
   [InputBlockType.CONSTANT_SUM]: "constant sum",
   [InputBlockType.SIGNATURE]: "signature",
+  [InputBlockType.PHOTO]: "photo",
 };

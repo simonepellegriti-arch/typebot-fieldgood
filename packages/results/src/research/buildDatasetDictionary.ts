@@ -304,13 +304,14 @@ const listRowEntries = (
   }
 };
 
-/** Question text written in the block itself (matrix, slider, constant sum, signature). */
+/** Question text written in the block itself (matrix, slider, constant sum, signature, photo). */
 const getBlockQuestionText = (block: InputBlock) => {
   if (
     block.type !== InputBlockType.MATRIX &&
     block.type !== InputBlockType.SLIDER &&
     block.type !== InputBlockType.CONSTANT_SUM &&
-    block.type !== InputBlockType.SIGNATURE
+    block.type !== InputBlockType.SIGNATURE &&
+    block.type !== InputBlockType.PHOTO
   )
     return;
   const singleSliderLabel =

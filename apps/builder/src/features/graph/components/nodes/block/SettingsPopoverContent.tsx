@@ -17,6 +17,7 @@ import { MatrixInputSettings } from "@/features/blocks/inputs/matrix/components/
 import { NumberInputSettings } from "@/features/blocks/inputs/number/components/NumberInputSettings";
 import { PaymentSettings } from "@/features/blocks/inputs/payment/components/PaymentSettings";
 import { PhoneInputSettings } from "@/features/blocks/inputs/phone/components/PhoneInputSettings";
+import { PhotoInputSettings } from "@/features/blocks/inputs/photo/components/PhotoInputSettings";
 import { PictureChoiceSettings } from "@/features/blocks/inputs/pictureChoice/components/PictureChoiceSettings";
 import { RatingInputSettings } from "@/features/blocks/inputs/rating/components/RatingInputSettings";
 import { SignatureInputSettings } from "@/features/blocks/inputs/signature/components/SignatureInputSettings";
@@ -204,6 +205,14 @@ export const NodeSettings = ({
     case InputBlockType.CONSTANT_SUM: {
       return (
         <ConstantSumInputSettings
+          options={node.options}
+          onOptionsChange={updateOptions}
+        />
+      );
+    }
+    case InputBlockType.PHOTO: {
+      return (
+        <PhotoInputSettings
           options={node.options}
           onOptionsChange={updateOptions}
         />

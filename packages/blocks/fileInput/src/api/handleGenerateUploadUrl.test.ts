@@ -329,6 +329,69 @@ describe("signatures", () => {
   });
 });
 
+describe("photos", () => {
+  beforeEach(() => {
+    getSessionMock.mockReset();
+    publicTypebotFindFirstMock.mockReset();
+    getSessionMock.mockResolvedValue(buildSession());
+    publicTypebotFindFirstMock.mockResolvedValue({
+      version: "6",
+      groups: [
+        {
+          id: "group",
+          title: "Group",
+          graphCoordinates: { x: 0, y: 0 },
+          blocks: [
+            {
+              id: blockIdFromSession,
+              type: InputBlockType.PHOTO,
+              options: { maxPhotos: 3 },
+            },
+          ],
+        },
+      ],
+      typebot: { workspaceId: workspaceIdFromPublicTypebot },
+    });
+  });
+
+  const generatePhotoUploadUrl = (input: {
+    fileType?: string;
+    fileSize?: number;
+  }) =>
+    handleGenerateUploadUrl({
+      input: {
+        sessionId,
+        blockId: blockIdFromSession,
+        fileName: "photo.jpg",
+        ...input,
+      },
+      context: { apiOrigin: "http://localhost:3001" },
+    });
+
+  it("signs a direct public upload of the JPEG by default", async () => {
+    const response = await generatePhotoUploadUrl({
+      fileType: "image/jpeg",
+      fileSize: 900_000,
+    });
+    const presignedUrl = new URL(response.presignedUrl);
+    expect(presignedUrl.pathname.startsWith("/typebot/public/")).toBe(true);
+    expect(presignedUrl.pathname.endsWith(".jpeg")).toBe(true);
+    expect(response.maxFileSize).toBe(5);
+  });
+
+  it("refuses other file types and files over 5 MB", async () => {
+    await expect(
+      generatePhotoUploadUrl({ fileType: "image/heic", fileSize: 1000 }),
+    ).rejects.toThrow("File type image/heic not allowed");
+    await expect(
+      generatePhotoUploadUrl({
+        fileType: "image/jpeg",
+        fileSize: 6 * 1024 * 1024,
+      }),
+    ).rejects.toThrow("File size exceeds the 5MB limit");
+  });
+});
+
 type MediaAnswerOptions = {
   isEnabled: boolean;
   visibility?: "Public" | "Private";

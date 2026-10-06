@@ -66,6 +66,7 @@ export const getInputBlockLabel = (
   [InputBlockType.SLIDER]: t("editor.sidebarBlock.slider.label"),
   [InputBlockType.CONSTANT_SUM]: t("editor.sidebarBlock.constantSum.label"),
   [InputBlockType.SIGNATURE]: t("editor.sidebarBlock.signature.label"),
+  [InputBlockType.PHOTO]: t("editor.sidebarBlock.photo.label"),
 });
 
 export const getLogicBlockLabel = (

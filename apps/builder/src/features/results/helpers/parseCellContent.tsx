@@ -40,6 +40,28 @@ export const parseCellContent = (
       ),
       plainText: content,
     };
+  if (blockType === InputBlockType.PHOTO && typeof content === "string") {
+    const photoUrls = content
+      .split(",")
+      .map((url) => url.trim())
+      .filter(Boolean);
+    return {
+      element: (
+        <div className="flex flex-wrap gap-1">
+          {photoUrls.map((photoUrl, index) => (
+            <a key={photoUrl} href={photoUrl} target="_blank" rel="noreferrer">
+              <img
+                src={photoUrl}
+                alt={`${index + 1}`}
+                className="h-10 w-10 rounded border border-gray-6 object-cover"
+              />
+            </a>
+          ))}
+        </div>
+      ),
+      plainText: content,
+    };
+  }
   return blockType === InputBlockType.FILE
     ? { element: <FileLinks fileNamesStr={content} />, plainText: content }
     : { plainText: content.toString() };

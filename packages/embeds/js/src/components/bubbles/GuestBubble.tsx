@@ -72,6 +72,9 @@ export const GuestBubble = (props: Props) => {
 
 const TextGuestBubble = (props: { answer: TextInputSubmitContent }) => {
   const [clickedImageSrc, setClickedImageSrc] = createSignal<string>();
+  const previewImageUrls = () =>
+    props.answer.previewImageUrls ??
+    (props.answer.previewImageUrl ? [props.answer.previewImageUrl] : []);
 
   return (
     <div class="flex flex-col gap-1 items-end">
@@ -121,22 +124,38 @@ const TextGuestBubble = (props: { answer: TextInputSubmitContent }) => {
           </For>
         </div>
       </Show>
-      <Show when={props.answer.previewImageUrl}>
-        {(previewImageUrl) => (
-          <img
-            src={previewImageUrl()}
-            alt="Signature"
-            data-testid="guest-bubble-signature"
-            class="typebot-guest-bubble-image-attachment max-w-[260px] rounded-md bg-white"
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-            }}
-          />
-        )}
+      <Show when={previewImageUrls().length > 0}>
+        <div class="flex gap-1 max-w-[350px] flex-wrap justify-end">
+          <For each={previewImageUrls()}>
+            {(previewImageUrl, index) => (
+              <button
+                type="button"
+                class="border-none bg-transparent p-0 cursor-pointer"
+                aria-label={`Open image ${index() + 1}`}
+                onClick={() => setClickedImageSrc(previewImageUrl)}
+              >
+                <img
+                  src={previewImageUrl}
+                  alt=""
+                  data-testid="guest-bubble-preview-image"
+                  class={cx(
+                    "typebot-guest-bubble-image-attachment rounded-md bg-white object-cover",
+                    previewImageUrls().length > 1
+                      ? "size-[110px]"
+                      : "max-w-[260px]",
+                  )}
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                />
+              </button>
+            )}
+          </For>
+        </div>
       </Show>
       <Show
         when={
-          !props.answer.previewImageUrl ||
+          previewImageUrls().length === 0 ||
           isNotEmpty(props.answer.label ?? props.answer.value)
         }
       >

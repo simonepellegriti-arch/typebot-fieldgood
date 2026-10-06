@@ -203,9 +203,9 @@ describe("research export of slider, constant sum and signature blocks", () => {
   });
 
   it("lists the signature JPEGs to download, named after the dataset row and column", () => {
-    const { signatureFiles, csv } = exportDataset({});
+    const { imageFiles, csv } = exportDataset({});
     const [first] = toRecords(csv);
-    expect(signatureFiles).toEqual([
+    expect(imageFiles).toEqual([
       { fileName: `${first?.RESULT_ID}_FIRMA.jpg`, url: signatureUrl },
     ]);
   });

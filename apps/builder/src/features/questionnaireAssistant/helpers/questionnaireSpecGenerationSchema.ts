@@ -49,6 +49,10 @@ const questionTypeAliases: Record<string, (typeof questionTypes)[number]> = {
   grid: "matrix",
   sum: "constantSum",
   message: "info",
+  foto: "photo",
+  picture: "photo",
+  camera: "photo",
+  firma: "signature",
 };
 
 const textOrNull = z

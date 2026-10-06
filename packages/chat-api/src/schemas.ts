@@ -28,6 +28,7 @@ import {
   paymentInputSchema,
 } from "@typebot.io/blocks-inputs/payment/schema";
 import { phoneNumberInputBlockSchema } from "@typebot.io/blocks-inputs/phone/schema";
+import { photoInputSchema } from "@typebot.io/blocks-inputs/photo/schema";
 import { pictureChoiceBlockSchemas } from "@typebot.io/blocks-inputs/pictureChoice/schema";
 import { ratingInputBlockSchema } from "@typebot.io/blocks-inputs/rating/schema";
 import { signatureInputSchema } from "@typebot.io/blocks-inputs/signature/schema";
@@ -353,6 +354,7 @@ const chatResponseBaseSchema = z.object({
         sliderInputSchema,
         constantSumInputSchema,
         signatureInputSchema,
+        photoInputSchema,
       ]),
       z.discriminatedUnion("type", [
         buttonsInputSchemas.v5,

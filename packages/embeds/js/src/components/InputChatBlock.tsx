@@ -10,6 +10,7 @@ import type { NumberInputBlock } from "@typebot.io/blocks-inputs/number/schema";
 import { defaultPaymentInputOptions } from "@typebot.io/blocks-inputs/payment/constants";
 import type { PaymentInputBlock } from "@typebot.io/blocks-inputs/payment/schema";
 import type { PhoneNumberInputBlock } from "@typebot.io/blocks-inputs/phone/schema";
+import type { PhotoInputBlock } from "@typebot.io/blocks-inputs/photo/schema";
 import type { PictureChoiceBlock } from "@typebot.io/blocks-inputs/pictureChoice/schema";
 import type { RatingInputBlock } from "@typebot.io/blocks-inputs/rating/schema";
 import type { SignatureInputBlock } from "@typebot.io/blocks-inputs/signature/schema";
@@ -37,6 +38,7 @@ import { MatrixForm } from "../features/blocks/inputs/matrix/components/MatrixFo
 import { NumberInput } from "../features/blocks/inputs/number/components/NumberInput";
 import { PaymentForm } from "../features/blocks/inputs/payment/components/PaymentForm";
 import { PhoneInput } from "../features/blocks/inputs/phone/components/PhoneInput";
+import { PhotoForm } from "../features/blocks/inputs/photo/components/PhotoForm";
 import { MultiplePictureChoice } from "../features/blocks/inputs/pictureChoice/MultiplePictureChoice";
 import { SinglePictureChoice } from "../features/blocks/inputs/pictureChoice/SinglePictureChoice";
 import { RatingForm } from "../features/blocks/inputs/rating/components/RatingForm";
@@ -288,6 +290,16 @@ const Input = (props: {
           />
         )}
       </Match>
+      <Match when={isPhotoBlock(props.block)} keyed>
+        {(block) => (
+          <PhotoForm
+            context={props.context}
+            block={block}
+            onSubmit={props.onSubmit}
+            onSkip={props.onSkip}
+          />
+        )}
+      </Match>
       <Match when={props.block.type === InputBlockType.CARDS}>
         <CardsCaroussel
           block={props.block as CardsBlock}
@@ -323,6 +335,11 @@ const isConstantSumBlock = (
   block: ContinueChatResponse["input"],
 ): ConstantSumInputBlock | undefined =>
   block?.type === InputBlockType.CONSTANT_SUM ? block : undefined;
+
+const isPhotoBlock = (
+  block: ContinueChatResponse["input"],
+): PhotoInputBlock | undefined =>
+  block?.type === InputBlockType.PHOTO ? block : undefined;
 
 const isSignatureBlock = (
   block: ContinueChatResponse["input"],

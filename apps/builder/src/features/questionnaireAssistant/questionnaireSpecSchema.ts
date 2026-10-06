@@ -17,6 +17,7 @@ export const questionTypes = [
   "slider",
   "constantSum",
   "signature",
+  "photo",
   "email",
   "phone",
   "date",

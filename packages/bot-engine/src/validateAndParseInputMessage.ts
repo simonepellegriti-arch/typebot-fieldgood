@@ -21,6 +21,7 @@ import { formatEmail } from "./blocks/inputs/email/formatEmail";
 import { parseMatrixReply } from "./blocks/inputs/matrix/parseMatrixReply";
 import { parseNumber } from "./blocks/inputs/number/parseNumber";
 import { formatPhoneNumber } from "./blocks/inputs/phone/formatPhoneNumber";
+import { parsePhotoReply } from "./blocks/inputs/photo/parsePhotoReply";
 import { injectVariableValuesInPictureChoiceBlock } from "./blocks/inputs/pictureChoice/injectVariableValuesInPictureChoiceBlock";
 import { validateRatingReply } from "./blocks/inputs/rating/validateRatingReply";
 import { parseSignatureReply } from "./blocks/inputs/signature/parseSignatureReply";
@@ -139,6 +140,10 @@ export const validateAndParseInputMessage = (
     case InputBlockType.SIGNATURE: {
       if (message && message.type !== "text") return { status: "fail" };
       return parseSignatureReply(message?.text, { block });
+    }
+    case InputBlockType.PHOTO: {
+      if (message && message.type !== "text") return { status: "fail" };
+      return parsePhotoReply(message?.text, { block });
     }
     case InputBlockType.NUMBER: {
       if (!message || message.type !== "text") return { status: "fail" };

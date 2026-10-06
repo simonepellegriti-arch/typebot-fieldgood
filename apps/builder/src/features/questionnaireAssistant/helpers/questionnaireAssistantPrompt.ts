@@ -19,6 +19,7 @@ QUESTION TYPES
 - slider: slider / "sposti il cursore" / -100..+100 or 0..100%: rows = statements ([] when only one), scale min/max/labels.
 - constantSum: distribute points/percentages ("dividere 100 punti", "fatto 100"): rows = categories, total = amount.
 - signature: the respondent must sign. email / phone / date: contact data or dates.
+- photo: the respondent takes one or more photos with the phone camera ("scatti una foto", "fotografi lo scaffale / lo scontrino"); maxSelections = number of photos when more than one is asked, else null.
 - info: text only, no answer (section titles, explanations, transitions).
 Scales asked as options with labels (e.g. 1 Per niente ... 5 Molto) are "single" unless they apply to several statements (then "matrix").
 

@@ -73,7 +73,7 @@ export const ExportAllResultsDialog = ({
       }),
   );
   const [isCodebookDownloaded, setIsCodebookDownloaded] = useState(true);
-  const [areSignaturesDownloaded, setAreSignaturesDownloaded] = useState(true);
+  const [areImagesDownloaded, setAreImagesDownloaded] = useState(true);
   const updateResearchOptions = (changes: Partial<ResearchExportOptions>) =>
     setResearchOptions((currentOptions) => ({
       ...currentOptions,
@@ -162,8 +162,8 @@ export const ExportAllResultsDialog = ({
         csvFileName,
         savFileName,
         codebookFileName,
-        signatureFiles,
-        signaturesZipFileName,
+        imageFiles,
+        imagesZipFileName,
       } = await orpcClient.results.exportResearchDataset({
         typebotId,
         timeFilter: selectedTimeFilter,
@@ -181,18 +181,17 @@ export const ExportAllResultsDialog = ({
         downloadFile(longCsv, longCsvFileName, "text/csv;charset=utf-8;");
       if (isCodebookDownloaded)
         downloadFile(codebook, codebookFileName, "application/json");
-      if (areSignaturesDownloaded && signatureFiles.length > 0) {
-        const { files, failedCount } =
-          await fetchSignatureFiles(signatureFiles);
+      if (areImagesDownloaded && imageFiles.length > 0) {
+        const { files, failedCount } = await fetchImageFiles(imageFiles);
         if (files.length > 0)
           downloadFile(
             createZipArchive(files),
-            signaturesZipFileName,
+            imagesZipFileName,
             "application/zip",
           );
         if (failedCount > 0)
           toast({
-            description: `${failedCount} signature file(s) could not be downloaded.`,
+            description: `${failedCount} image file(s) could not be downloaded.`,
           });
       }
     } catch (error) {
@@ -422,8 +421,8 @@ export const ExportAllResultsDialog = ({
                 publishedVersions={publishedVersionsData?.versions ?? []}
                 isCodebookDownloaded={isCodebookDownloaded}
                 onCodebookDownloadedChange={setIsCodebookDownloaded}
-                areSignaturesDownloaded={areSignaturesDownloaded}
-                onSignaturesDownloadedChange={setAreSignaturesDownloaded}
+                areImagesDownloaded={areImagesDownloaded}
+                onImagesDownloadedChange={setAreImagesDownloaded}
               />
             )}
           </div>
@@ -447,21 +446,21 @@ export const ExportAllResultsDialog = ({
   );
 };
 
-/** Downloads the signature JPEGs a few at a time. */
-const fetchSignatureFiles = async (
-  signatureFiles: { fileName: string; url: string }[],
+/** Downloads the signature and photo JPEGs a few at a time. */
+const fetchImageFiles = async (
+  imageFiles: { fileName: string; url: string }[],
 ) => {
   const files: { fileName: string; content: Uint8Array }[] = [];
   let failedCount = 0;
-  const queue = [...signatureFiles];
+  const queue = [...imageFiles];
   const downloadNext = async (): Promise<void> => {
-    const signatureFile = queue.shift();
-    if (!signatureFile) return;
+    const imageFile = queue.shift();
+    if (!imageFile) return;
     try {
-      const response = await fetch(signatureFile.url);
+      const response = await fetch(imageFile.url);
       if (!response.ok) throw new Error(String(response.status));
       files.push({
-        fileName: signatureFile.fileName,
+        fileName: imageFile.fileName,
         content: new Uint8Array(await response.arrayBuffer()),
       });
     } catch {
@@ -495,8 +494,8 @@ const ResearchExportOptionsFields = ({
   publishedVersions,
   isCodebookDownloaded,
   onCodebookDownloadedChange,
-  areSignaturesDownloaded,
-  onSignaturesDownloadedChange,
+  areImagesDownloaded,
+  onImagesDownloadedChange,
 }: {
   options: ResearchExportOptions;
   onChange: (changes: Partial<ResearchExportOptions>) => void;
@@ -508,8 +507,8 @@ const ResearchExportOptionsFields = ({
   }[];
   isCodebookDownloaded: boolean;
   onCodebookDownloadedChange: (isCodebookDownloaded: boolean) => void;
-  areSignaturesDownloaded: boolean;
-  onSignaturesDownloadedChange: (areSignaturesDownloaded: boolean) => void;
+  areImagesDownloaded: boolean;
+  onImagesDownloadedChange: (areImagesDownloaded: boolean) => void;
 }) => {
   const selectedVersion =
     options.versionNumbers?.length === 1
@@ -755,14 +754,15 @@ const ResearchExportOptionsFields = ({
       </Field.Root>
       <Field.Root className="flex-row items-center">
         <Switch
-          checked={areSignaturesDownloaded}
-          onCheckedChange={onSignaturesDownloadedChange}
+          checked={areImagesDownloaded}
+          onCheckedChange={onImagesDownloadedChange}
         />
         <Field.Label>
-          Download signatures (JPEG, ZIP){" "}
+          Download signatures and photos (JPEG, ZIP){" "}
           <MoreInfoTooltip>
-            When the bot has signature blocks: one JPEG per signature, named
-            RESULT_ID_COLUMN.jpg to match the dataset rows.
+            When the bot has signature or photo blocks: one JPEG per signature
+            or photo, named RESULT_ID_COLUMN.jpg (RESULT_ID_COLUMN_2.jpg… when
+            an answer holds several photos) to match the dataset rows.
           </MoreInfoTooltip>
         </Field.Label>
       </Field.Root>
