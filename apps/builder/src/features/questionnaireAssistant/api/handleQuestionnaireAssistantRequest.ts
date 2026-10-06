@@ -19,6 +19,7 @@ import {
 } from "@/features/typebot/api/handleImportTypebot";
 import { isWriteTypebotForbidden } from "@/features/typebot/helpers/isWriteTypebotForbidden";
 import { convertQuestionnaireSpecToTypebot } from "../helpers/convertQuestionnaireSpecToTypebot";
+import { expandQuestionLoops } from "../helpers/expandQuestionLoops";
 import {
   buildAssistantReply,
   questionnaireAssistantSystemPrompt,
@@ -163,7 +164,9 @@ export const handleQuestionnaireAssistantRequest = async (request: Request) => {
     savedTypebot = { id: createdTypebot.id, name: createdTypebot.name };
   }
 
-  const answeredQuestions = spec.questions.filter(
+  // Counted as the respondents see them: repeated blocks written out.
+  const { questions: botQuestions } = expandQuestionLoops(spec);
+  const answeredQuestions = botQuestions.filter(
     (question) => question.type !== "info",
   );
   return Response.json({
@@ -173,8 +176,8 @@ export const handleQuestionnaireAssistantRequest = async (request: Request) => {
     reply: buildAssistantReply({
       isNewBot,
       questionCount: answeredQuestions.length,
-      filterCount: spec.questions.filter((question) => question.showIf).length,
-      screenOutCount: spec.questions.filter((question) => question.terminateIf)
+      filterCount: botQuestions.filter((question) => question.showIf).length,
+      screenOutCount: botQuestions.filter((question) => question.terminateIf)
         .length,
     }),
     notes: [...spec.notes, ...warnings],

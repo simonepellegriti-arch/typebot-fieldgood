@@ -1,6 +1,7 @@
 const italianTu = {
   send: "Invia",
   continue: "Continua",
+  replay: "🔁 Rivedi il video",
   typeAnswer: "Scrivi la tua risposta…",
   typeOrSpeak: "Scrivi qui o tocca il microfono…",
   typeNumber: "Scrivi un numero…",
@@ -45,6 +46,7 @@ const italianLei: typeof italianTu = {
 const english: typeof italianTu = {
   send: "Send",
   continue: "Continue",
+  replay: "🔁 Watch it again",
   typeAnswer: "Type your answer…",
   typeOrSpeak: "Type here or tap the microphone…",
   typeNumber: "Type a number…",

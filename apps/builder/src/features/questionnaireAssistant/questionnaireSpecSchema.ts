@@ -79,6 +79,26 @@ const probeSchema = z.object({
   maxFollowUps: z.number().describe("Follow-up questions at most (1 to 3)."),
 });
 
+const stimulusSchema = z.object({
+  type: z.enum(["video", "image"]),
+  url: z
+    .string()
+    .nullable()
+    .describe(
+      "Link to the file when the document gives it; null when it doesn't (the researcher adds it in the editor).",
+    ),
+  label: z
+    .string()
+    .describe(
+      "Name for the researcher, e.g. 'Video Gaviscon'. Never shown to respondents.",
+    ),
+  allowReplay: z
+    .boolean()
+    .describe(
+      "Video: the respondent may watch it once more (recorded). From 'replay una sola volta'.",
+    ),
+});
+
 export const questionnaireQuestionSchema = z.object({
   code: z
     .string()
@@ -134,6 +154,11 @@ export const questionnaireQuestionSchema = z.object({
   probe: probeSchema
     .nullable()
     .describe("open / openLong only: AI follow-up questions, or null."),
+  stimulus: stimulusSchema
+    .nullable()
+    .describe(
+      "Video or image shown before the question text (concept, pack, spot), or null.",
+    ),
   showIf: conditionGroupSchema
     .nullable()
     .describe(
@@ -174,6 +199,34 @@ const airtableSchema = z.object({
   loadFields: z
     .array(z.object({ airtableField: z.string(), variable: z.string() }))
     .describe("Respondent fields loaded at the start (Nome, PDV, Panel…)."),
+});
+
+const loopSchema = z.object({
+  name: z
+    .string()
+    .describe(
+      "Short name in capitals, e.g. VIDEO. In the repeated texts {{VIDEO}} shows the item label.",
+    ),
+  firstQuestion: z.string().describe("Code of the first repeated question."),
+  lastQuestion: z.string().describe("Code of the last repeated question."),
+  isRandomized: z
+    .boolean()
+    .describe("Items in random order for each respondent (rotation)."),
+  items: z
+    .array(
+      z.object({
+        code: z
+          .string()
+          .describe(
+            "Short suffix added to the repeated codes (G1 → G1_GAV): letters and numbers.",
+          ),
+        label: z.string(),
+        stimulus: stimulusSchema
+          .nullable()
+          .describe("Shown before the first repeated question, or null."),
+      }),
+    )
+    .describe("What the questions are repeated for, in document order."),
 });
 
 export const questionnaireSpecSchema = z.object({
@@ -217,6 +270,11 @@ export const questionnaireSpecSchema = z.object({
       "ONLY when the researcher asks to connect Airtable and gives base and table; otherwise null.",
     ),
   questions: z.array(questionnaireQuestionSchema),
+  loops: z
+    .array(loopSchema)
+    .describe(
+      "Questions repeated for each stimulus / brand / product ('Ripetere G1–G8 dopo ciascun video'). Write the repeated questions ONCE; the bot repeats them. [] when none.",
+    ),
   notes: z
     .array(z.string())
     .describe(
@@ -229,3 +287,5 @@ export type QuestionnaireQuestion = z.infer<typeof questionnaireQuestionSchema>;
 export type QuestionnaireCondition = z.infer<typeof conditionSchema>;
 export type QuestionnaireConditionGroup = z.infer<typeof conditionGroupSchema>;
 export type QuestionnaireAirtable = z.infer<typeof airtableSchema>;
+export type QuestionnaireStimulus = z.infer<typeof stimulusSchema>;
+export type QuestionnaireLoop = z.infer<typeof loopSchema>;

@@ -1,4 +1,5 @@
 import { createId } from "@paralleldrive/cuid2";
+import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import { maxPhotosLimit } from "@typebot.io/blocks-inputs/photo/constants";
 import {
@@ -11,6 +12,7 @@ import type {
   QuestionnaireConditionGroup,
   QuestionnaireQuestion,
   QuestionnaireSpec,
+  QuestionnaireStimulus,
 } from "../questionnaireSpecSchema";
 import { buildProbePrompt } from "./buildProbePrompt";
 import {
@@ -20,6 +22,7 @@ import {
   type GroupBuilder,
   type LazyTarget,
 } from "./createBotBuilder";
+import { expandQuestionLoops } from "./expandQuestionLoops";
 import { type BotLabels, getBotLabels } from "./getBotLabels";
 
 /**
@@ -41,7 +44,26 @@ export const convertQuestionnaireSpecToTypebot = (
   const labels = getBotLabels(spec.language, spec.addressForm);
   const warnings: string[] = [];
   const bot = createBotBuilder();
-  const questions = deduplicateCodes(spec.questions);
+  // Repeated questions (one block per stimulus) written out, then unique codes.
+  const expanded = expandQuestionLoops(spec);
+  warnings.push(...expanded.warnings);
+  const questions = deduplicateCodes(expanded.questions);
+  const finalCodeOf = new Map(
+    expanded.questions.map((question, index) => [
+      question,
+      questions[index]?.code ?? question.code,
+    ]),
+  );
+  const rotations = expanded.rotations.map((rotation) => ({
+    name: rotation.name,
+    blocks: rotation.blocks.map((block) => ({
+      itemCode: block.itemCode,
+      label: block.label,
+      codes: block.questions.map(
+        (question) => finalCodeOf.get(question) ?? question.code,
+      ),
+    })),
+  }));
   const questionByCode = new Map(
     questions.map((question) => [question.code, question]),
   );
@@ -120,10 +142,52 @@ export const convertQuestionnaireSpecToTypebot = (
   const endGroup = bot.createGroup("FINE");
   const screenOutGroup = bot.createGroup("Fine anticipata (screen-out)");
 
-  const firstQuestionTarget =
-    questionGroups[0]?.group.start() ?? endGroup.start();
-  const nextAfter = (index: number): LazyTarget =>
+  // Rotations: a dispatcher group sends the respondent to the blocks in a
+  // random order, one after the other, then on to the rest.
+  const questionIndexByCode = new Map(
+    questions.map((question, index) => [question.code, index]),
+  );
+  const rotationRouters = rotations.flatMap((rotation) => {
+    const blocks = rotation.blocks.flatMap((block) => {
+      const firstIndex = questionIndexByCode.get(block.codes[0] ?? "");
+      const lastIndex = questionIndexByCode.get(block.codes.at(-1) ?? "");
+      const doneMarker = block.codes.find((code) => {
+        const question = questionByCode.get(code);
+        return question && isAnswered(question) && !question.showIf;
+      });
+      if (firstIndex === undefined || lastIndex === undefined || !doneMarker)
+        return [];
+      return [{ ...block, firstIndex, lastIndex, doneMarker }];
+    });
+    if (blocks.length < 2) {
+      warnings.push(
+        `Ripetizione ${rotation.name}: l'ordine casuale richiede blocchi con almeno una domanda sempre posta; i blocchi restano nell'ordine del documento.`,
+      );
+      return [];
+    }
+    return [
+      {
+        name: rotation.name,
+        blocks,
+        startIndex: Math.min(...blocks.map((block) => block.firstIndex)),
+        endIndex: Math.max(...blocks.map((block) => block.lastIndex)),
+        group: bot.createGroup(`ROTAZIONE ${rotation.name}`),
+      },
+    ];
+  });
+  const sequentialNextAfter = (index: number): LazyTarget =>
     questionGroups[index + 1]?.group.start() ?? endGroup.start();
+  const nextAfter = (index: number): LazyTarget => {
+    const router = rotationRouters.find(
+      (candidate) =>
+        candidate.startIndex === index + 1 ||
+        candidate.blocks.some((block) => block.lastIndex === index),
+    );
+    return router ? router.group.start() : sequentialNextAfter(index);
+  };
+  const firstQuestionTarget = questionGroups[0]
+    ? nextAfter(-1)
+    : endGroup.start();
 
   const recordUrl =
     "https://api.airtable.com/v0/{{base_id}}/{{table_id}}/{{record_id_airtable}}";
@@ -380,6 +444,14 @@ export const convertQuestionnaireSpecToTypebot = (
         );
     }
 
+    if (question.stimulus)
+      addStimulus(group, {
+        bot,
+        labels,
+        stimulus: question.stimulus,
+        code: question.code,
+      });
+
     if (question.type === "continue") {
       group.add(
         bot.textBubble(pipe(question.text), question.instructions ?? undefined),
@@ -493,6 +565,48 @@ export const convertQuestionnaireSpecToTypebot = (
       if (routes.length > 0) group.add(bot.condition(routes));
     }
   });
+
+  // Rotation dispatchers: random order drawn once, then the first block not
+  // answered yet (also right after a resume).
+  for (const router of rotationRouters) {
+    const orderVariable = `ordine_${router.name}`;
+    const nextVariable = `prossimo_${router.name}`;
+    const itemCodes = router.blocks.map((block) => block.itemCode);
+    router.group
+      .add(
+        bot.setVariable(
+          orderVariable,
+          `return ((order) => { if (order) return String(order); const items = ${JSON.stringify(itemCodes)}; for (let index = items.length - 1; index > 0; index--) { const other = Math.floor(Math.random() * (index + 1)); [items[index], items[other]] = [items[other], items[index]]; } return items.join(","); })({{${orderVariable}}})`,
+        ),
+        bot.setVariable(
+          nextVariable,
+          `return ((order, answers) => String(order).split(",").find((item) => answers[item] === undefined || answers[item] === null || answers[item] === "") ?? "FINE")({{${orderVariable}}}, { ${router.blocks
+            .map(
+              (block) =>
+                `${JSON.stringify(block.itemCode)}: {{${block.doneMarker}}}`,
+            )
+            .join(", ")} })`,
+        ),
+        bot.condition(
+          router.blocks.map((block) => ({
+            content: equals(bot.variable(nextVariable), block.itemCode),
+            to:
+              questionGroups[block.firstIndex]?.group.start() ??
+              endGroup.start(),
+          })),
+        ),
+      )
+      .setNext(sequentialNextAfter(router.endIndex));
+  }
+  const missingStimuli = questions.filter(
+    (question) => question.stimulus && !question.stimulus.url,
+  );
+  if (missingStimuli.length > 0)
+    warnings.push(
+      `Stimoli da caricare nell'editor (blocco video/immagine in testa alla domanda): ${missingStimuli
+        .map((question) => `${question.stimulus?.label} → ${question.code}`)
+        .join("; ")}.`,
+    );
 
   // Resume: answers restored, then straight to the question after the last one answered.
   if (airtable) {
@@ -826,6 +940,72 @@ const addTranscription = (
     bot.transcription({ credentialsId, audioUrlVariable, resultVariable }),
   );
   afterTranscription.position = group.mark();
+};
+
+/**
+ * Stimulus before the question. Videos must be watched (90%, no skipping
+ * ahead, watched share in CODE_VISIONE); with replay the respondent may watch
+ * once more, recorded in CODE_RIVISTO (Sì / No).
+ */
+const addStimulus = (
+  group: GroupBuilder,
+  {
+    bot,
+    labels,
+    stimulus,
+    code,
+  }: {
+    bot: ReturnType<typeof createBotBuilder>;
+    labels: BotLabels;
+    stimulus: QuestionnaireStimulus;
+    code: string;
+  },
+) => {
+  const url = stimulus.url ? { url: stimulus.url } : {};
+  if (stimulus.type === "image") {
+    group.add({ id: createId(), type: BubbleBlockType.IMAGE, content: url });
+    return;
+  }
+  const video = (watchTracking: Record<string, unknown>): BotBlock => ({
+    id: createId(),
+    type: BubbleBlockType.VIDEO,
+    content: { ...url, watchTracking },
+  });
+  group.add(
+    video({
+      isEnabled: true,
+      isRequired: true,
+      minimumWatchPercentage: 90,
+      allowSeeking: false,
+      autoContinueOnEnd: stimulus.allowReplay,
+      variableId: bot.variable(`${code}_VISIONE`),
+      buttonLabel: labels.continue,
+    }),
+  );
+  if (!stimulus.allowReplay) return;
+  const afterReplay = { position: -1 };
+  const replayGroup = bot.createGroup(`${code} · rivede il video`);
+  replayGroup
+    .add(
+      video({
+        isEnabled: true,
+        isRequired: false,
+        allowSeeking: true,
+        variableId: bot.variable(`${code}_VISIONE_BIS`),
+        buttonLabel: labels.continue,
+      }),
+    )
+    .setNext(() => group.at(afterReplay.position)());
+  group.add(
+    bot.buttons(
+      [
+        { label: labels.replay, value: "Sì", to: replayGroup.start() },
+        { label: labels.continue, value: "No" },
+      ],
+      `${code}_RIVISTO`,
+    ),
+  );
+  afterReplay.position = group.mark();
 };
 
 /**

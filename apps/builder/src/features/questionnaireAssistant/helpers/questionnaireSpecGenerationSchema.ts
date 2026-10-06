@@ -210,6 +210,35 @@ const conditionGroupOrNull = z.preprocess(
     ),
 );
 
+const stimulusOrNull = z.preprocess(
+  (value) => (value === undefined ? null : value),
+  z
+    .object({
+      type: z.unknown(),
+      url: textOrNull,
+      label: textOrNull,
+      allowReplay: booleanOrFalse,
+    })
+    .nullable()
+    .transform((stimulus) => {
+      if (!stimulus) return null;
+      const key =
+        typeof stimulus.type === "string" ? normalizeKey(stimulus.type) : "";
+      const type = ["image", "immagine", "foto", "picture", "photo"].includes(
+        key,
+      )
+        ? ("image" as const)
+        : ("video" as const);
+      const url = stimulus.url?.trim() ?? null;
+      return {
+        type,
+        url: url && /^https?:\/\//i.test(url) ? url : null,
+        label: stimulus.label ?? (type === "video" ? "Video" : "Immagine"),
+        allowReplay: type === "video" && stimulus.allowReplay,
+      };
+    }),
+);
+
 const lenientQuestionSchema = z.object({
   code: requiredText,
   type: questionTypeSchema,
@@ -251,6 +280,7 @@ const lenientQuestionSchema = z.object({
   isRandomized: booleanOrFalse,
   media: mediaOrNull,
   probe: probeOrNull,
+  stimulus: stimulusOrNull,
   showIf: conditionGroupOrNull,
   terminateIf: conditionGroupOrNull,
 });
@@ -305,5 +335,28 @@ const lenientSpecSchema = z.object({
   ),
   airtable: airtableOrNull,
   questions: listOf(lenientQuestionSchema),
+  loops: listOf(
+    z.object({
+      name: variableName,
+      firstQuestion: requiredText,
+      lastQuestion: requiredText,
+      isRandomized: booleanOrFalse,
+      items: listOf(
+        z.object({
+          code: variableName,
+          label: requiredText,
+          stimulus: stimulusOrNull,
+        }),
+      ),
+    }),
+  ).transform((loops) =>
+    loops.filter(
+      (loop) =>
+        loop.name &&
+        loop.items.filter((item) => item.code).length > 0 &&
+        loop.firstQuestion &&
+        loop.lastQuestion,
+    ),
+  ),
   notes: listOf(requiredText),
 });

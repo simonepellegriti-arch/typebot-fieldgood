@@ -34,8 +34,13 @@ ROUTING
 - Skips written on a question of a multiple / grid / open type ("SE PIÙ RISPOSTE PASSARE A D5") → showIf on the questions in between with the opposite condition.
 - Screen-outs on values ("CHIUDERE SE < 18", "FUORI TARGET") → terminateIf on that question.
 - anyOf / noneOf use option codes or variable values; lessThan / greaterThan use one number.
-- Rotation / random order → isRandomized true.
-- What cannot be represented (quotas, loops over brands) → notes.
+- Rotation / random order of options or statements → isRandomized true.
+- What cannot be represented (quotas) → notes.
+
+STIMULI AND REPEATED BLOCKS
+- A video / image / concept / pack shown to respondents before a question ("mostrare il video", "stimolo", "concept board") → stimulus on that question: type video or image, url only when the document gives a link (else null: the researcher uploads it), label = what it is ("Video Gaviscon"), allowReplay true when replay is allowed ("replay una sola volta"). Never turn a stimulus into a link variable.
+- Questions repeated for each stimulus, brand or product ("Ripetere G1–G8 dopo ciascun video", "per ciascuna marca") → write the repeated questions ONCE (G1…G8, with their own codes) and add a loop: firstQuestion G1, lastQuestion G8, items = one per stimulus / brand in document order (code = short suffix like GAV, ESO, PLUS, REFLU; label; stimulus of that item), isRandomized true when the order is randomized / rotated. Inside the repeated texts {{LOOPNAME}} shows the item label: use it only when the document names the brand in the question. Questions after the loop (comparisons across stimuli) are NOT part of it. loops = [] when nothing is repeated.
+- "Scala 1–10 + motivazione", "Scelta singola + motivazione", "Sì/No + testo aperto" → the closed question, then an open question "Perché?" right after it (code + "a", e.g. G2a); for "Sì/No + testo" the open one only to who answered Sì (showIf).
 
 AI FOLLOW-UPS ("rilanci", "probing AI", "approfondimento")
 Only when the document or the researcher asks for them: probe on that open question, elements = what a complete answer must cover (from the question's parts, e.g. "aspetti positivi", "barriere", "prospettive future"), maxFollowUps = rounds requested (default 1, max 3). Otherwise probe null.

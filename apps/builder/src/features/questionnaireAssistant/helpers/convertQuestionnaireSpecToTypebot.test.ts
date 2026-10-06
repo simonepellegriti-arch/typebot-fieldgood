@@ -79,6 +79,7 @@ const question = (
   isRandomized: false,
   media: null,
   probe: null,
+  stimulus: null,
   showIf: null,
   terminateIf: null,
   ...overrides,
@@ -110,6 +111,7 @@ const spec: QuestionnaireSpec = {
   closingText: null,
   screenOutText: null,
   notes: [],
+  loops: [],
   questions: [
     question({
       code: "S1",
@@ -817,5 +819,115 @@ describe("option routing (Passare a / Terminare / Ripetere)", () => {
     const transcript = resumed.transcript.join("\n");
     expect(transcript).toContain("Quale espositore hai trovato?");
     expect(transcript).not.toContain("Cerca meglio");
+  });
+});
+
+describe("stimuli repeated in random order (Ripetere G1–G2 dopo ciascun video)", () => {
+  const stimulus = (label: string, allowReplay = false) => ({
+    type: "video" as const,
+    url: null,
+    label,
+    allowReplay,
+  });
+  const videoSpec: QuestionnaireSpec = {
+    ...spec,
+    introText: null,
+    questions: [
+      question({ code: "Q1", type: "open", text: "Come ti chiami?" }),
+      question({
+        code: "G1",
+        type: "open",
+        text: "Cosa ricordi di {{VIDEO}}?",
+      }),
+      question({
+        code: "G2",
+        type: "single",
+        text: "Ti è piaciuto?",
+        options: [option("1", "Sì"), option("2", "No")],
+      }),
+      question({
+        code: "G2a",
+        type: "open",
+        text: "Perché ti è piaciuto?",
+        showIf: {
+          logic: "all",
+          conditions: [
+            { questionCode: "G2", operator: "anyOf", values: ["1"] },
+          ],
+        },
+      }),
+      question({ code: "G9", type: "open", text: "Quale ricordi meglio?" }),
+    ],
+    loops: [
+      {
+        name: "VIDEO",
+        firstQuestion: "G1",
+        lastQuestion: "G2a",
+        isRandomized: true,
+        items: [
+          { code: "A", label: "Video A", stimulus: stimulus("Spot A", true) },
+          { code: "B", label: "Video B", stimulus: stimulus("Spot B") },
+          { code: "C", label: "Video C", stimulus: stimulus("Spot C") },
+        ],
+      },
+    ],
+  };
+  const { typebot, warnings } = convertQuestionnaireSpecToTypebot(videoSpec);
+
+  it("writes one block per video, with the video before its first question", () => {
+    expect(
+      importTypebotInputSchema.safeParse({
+        workspaceId: "w",
+        typebot: { ...typebot, icon: null, folderId: null },
+      }).success,
+    ).toBe(true);
+    const titles = typebot.groups.map((group) => group.title);
+    for (const code of ["G1_A", "G2_B", "G2a_C", "ROTAZIONE VIDEO"])
+      expect(titles).toContain(code);
+    const g1b = typebot.groups.find((group) => group.title === "G1_B");
+    expect(g1b?.blocks[0]).toMatchObject({
+      type: "video",
+      content: { watchTracking: { isEnabled: true, isRequired: true } },
+    });
+    expect(warnings.join("\n")).toContain("Spot A → G1_A");
+  });
+
+  it("shows every block once, in the drawn order, then the questions after", async () => {
+    const originalRandom = Math.random;
+    Math.random = () => 0;
+    try {
+      const interview = await runTestInterview(
+        withMockedServices(typebot, {}),
+        [
+          "Simone",
+          "ricordo B",
+          "No",
+          "ricordo C",
+          "Sì",
+          "perché sì",
+          "🔁 Rivedi il video",
+          "ricordo A",
+          "No",
+          "B",
+        ],
+      );
+      const transcript = interview.transcript.join("\n");
+      const positions = ["Video B", "Video C", "Video A", "Quale ricordi"].map(
+        (text) => transcript.indexOf(text),
+      );
+      expect(positions.every((position) => position >= 0)).toBe(true);
+      expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+      expect(interview.variables).toMatchObject({
+        ordine_VIDEO: "B,C,A",
+        G1_B: "ricordo B",
+        G2a_C: "perché sì",
+        G1_A_RIVISTO: "Sì",
+        G1_A: "ricordo A",
+        G9: "B",
+      });
+      expect(interview.variables.G2a_B).toBeUndefined();
+    } finally {
+      Math.random = originalRandom;
+    }
   });
 });
