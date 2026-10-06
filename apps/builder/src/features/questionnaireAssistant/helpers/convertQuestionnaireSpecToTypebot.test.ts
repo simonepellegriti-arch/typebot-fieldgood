@@ -12,6 +12,49 @@ mock.module("isolated-vm", () => ({
   Callback: class {},
 }));
 
+// Set variable code runs in isolated-vm in production; here in plain JS, with
+// the same rules (variables passed by id, numbers guessed from strings).
+const { parseGuessedValueType } = await import(
+  "@typebot.io/variables/parseGuessedValueType"
+);
+mock.module("@typebot.io/variables/executeFunction", () => ({
+  executeFunction: async ({
+    variables,
+    body,
+  }: {
+    variables: { id: string; name: string; value?: unknown }[];
+    body: string;
+  }) => {
+    const usedVariables = variables.filter((variable) =>
+      body.includes(`{{${variable.name}}}`),
+    );
+    const code = usedVariables.reduce(
+      (text, variable) => text.replaceAll(`{{${variable.name}}}`, variable.id),
+      body,
+    );
+    try {
+      const run = new Function(
+        ...usedVariables.map((variable) => variable.id),
+        `return (async () => { ${code} })()`,
+      );
+      return {
+        output: await run(
+          ...usedVariables.map((variable) =>
+            parseGuessedValueType(
+              typeof variable.value === "string" || variable.value == null
+                ? (variable.value ?? undefined)
+                : String(variable.value),
+            ),
+          ),
+        ),
+        newVariables: [],
+      };
+    } catch (error) {
+      return { error, output: undefined };
+    }
+  },
+}));
+
 const { convertQuestionnaireSpecToTypebot } = await import(
   "./convertQuestionnaireSpecToTypebot"
 );
@@ -34,6 +77,8 @@ const question = (
   total: null,
   maxSelections: null,
   isRandomized: false,
+  media: null,
+  probe: null,
   showIf: null,
   terminateIf: null,
   ...overrides,
@@ -50,6 +95,12 @@ const option = (code: string, label: string, extra = {}) => ({
 const spec: QuestionnaireSpec = {
   title: "Abitudini di viaggio",
   language: "it",
+  addressForm: "tu",
+  privacyUrl: null,
+  voiceTest: false,
+  linkVariables: [],
+  computedVariables: [],
+  airtable: null,
   introText: "Benvenuto! Ci vorranno 3 minuti.",
   closingText: null,
   screenOutText: null,
@@ -251,5 +302,353 @@ describe("photo questions", () => {
         typebot: { ...typebot, icon: null, folderId: null },
       }).success,
     ).toBe(true);
+  });
+});
+
+type TestBlock = Record<string, unknown> & { id: string; type: string };
+type TestGroup = { title: string; blocks: TestBlock[] };
+
+/**
+ * Airtable calls and OpenAI blocks can't run in tests: they become Set
+ * variable blocks (same id and edges) that write the given values.
+ */
+const withMockedServices = (
+  typebot: ReturnType<typeof convertQuestionnaireSpecToTypebot>["typebot"],
+  {
+    initialValues = {},
+    generated = () => "🏁",
+    transcribed = "risposta trascritta",
+  }: {
+    initialValues?: Record<string, string>;
+    generated?: (variableName: string) => string;
+    transcribed?: string;
+  },
+) => {
+  const nameOf = (variableId: unknown) =>
+    typebot.variables.find((variable) => variable.id === variableId)?.name ??
+    "";
+  const noopId = "v_noop";
+  const groups: TestGroup[] = typebot.groups.map((group) => ({
+    ...group,
+    blocks: group.blocks.map((block) => {
+      const options = (block.options ?? {}) as Record<string, unknown>;
+      const asSetVariable = (variableId: unknown, value: string) => ({
+        id: block.id,
+        type: "Set variable",
+        outgoingEdgeId: block.outgoingEdgeId,
+        options: {
+          variableId,
+          expressionToEvaluate: JSON.stringify(value),
+        },
+      });
+      if (block.type === "Webhook") return asSetVariable(noopId, "1");
+      if (block.type === "openai" && options.action === "Create transcription")
+        return asSetVariable(options.transcriptionVariableId, transcribed);
+      if (block.type === "openai") {
+        const [extracted] = (options.variablesToExtract ?? []) as {
+          variableId: string;
+        }[];
+        return asSetVariable(
+          extracted?.variableId,
+          generated(nameOf(extracted?.variableId)),
+        );
+      }
+      return block;
+    }),
+  }));
+  return {
+    ...typebot,
+    groups,
+    variables: [
+      ...typebot.variables.map((variable) =>
+        variable.name in initialValues
+          ? { ...variable, value: initialValues[variable.name] }
+          : variable,
+      ),
+      { id: noopId, name: "noop" },
+    ],
+    id: "generated",
+    isArchived: false,
+    updatedAt: new Date(),
+    workspaceId: "workspace",
+  };
+};
+
+const shopperSpec: QuestionnaireSpec = {
+  ...spec,
+  title: "Espositore refrigerato",
+  linkVariables: [{ name: "panel", description: "TEST o CONTROL" }],
+  computedVariables: [
+    {
+      name: "formato",
+      sourceVariable: "panel",
+      cases: [{ whenValue: "TEST", text: "lattina 330ml" }],
+      defaultText: "bottiglietta 400ml",
+    },
+  ],
+  introText: null,
+  questions: [
+    question({
+      code: "Q8",
+      type: "single",
+      text: "Quanto sei propenso ad acquistare Estathé {{formato}}?",
+      options: [
+        option("1", "Certamente acquisterei"),
+        option("2", "Probabilmente acquisterei"),
+      ],
+    }),
+    question({
+      code: "Q9",
+      type: "open",
+      text: "Puoi dirmi perché hai risposto «{{Q8}}»?",
+      media: "voice",
+      probe: { elements: ["motivazioni"], maxFollowUps: 2 },
+    }),
+    question({
+      code: "Q33",
+      type: "single",
+      text: "Come hai trovato la lattina rispetto alla bottiglietta?",
+      options: [option("1", "Meglio"), option("2", "Peggio")],
+      showIf: {
+        logic: "all",
+        conditions: [
+          { questionCode: "panel", operator: "anyOf", values: ["TEST"] },
+        ],
+      },
+    }),
+    question({
+      code: "Q25",
+      type: "matrix",
+      text: "Rispondi sì o no a ciascuna affermazione.",
+      options: [option("1", "Sì"), option("2", "No")],
+      rows: [
+        { code: "1", label: "È ideale quando voglio una bevanda fresca" },
+        { code: "2", label: "È pratica da portare con me" },
+      ],
+    }),
+  ],
+};
+
+describe("FieldGood patterns", () => {
+  const { typebot, warnings } = convertQuestionnaireSpecToTypebot(shopperSpec, {
+    openAiCredentialsId: "cred_openai",
+  });
+
+  it("builds a valid bot with voice answers, follow-ups and piped labels", () => {
+    expect(warnings).toEqual([]);
+    expect(
+      importTypebotInputSchema.safeParse({
+        workspaceId: "w",
+        typebot: { ...typebot, icon: null, folderId: null },
+      }).success,
+    ).toBe(true);
+    const q9 = typebot.groups.find((group) => group.title === "Q9");
+    const types = q9?.blocks.map((block) => block.type) ?? [];
+    expect(types.filter((type) => type === "openai")).toHaveLength(5);
+    const q9Input = q9?.blocks.find((block) => block.type === "text input");
+    expect(q9Input?.options).toMatchObject({ audioClip: { isEnabled: true } });
+  });
+
+  it("pipes labels, computes texts from link variables and filters on them", async () => {
+    const testPanel = await runTestInterview(
+      withMockedServices(typebot, {
+        initialValues: { panel: "TEST" },
+        generated: (name) =>
+          name === "Q9_AI1" ? "Cosa ti spinge di più? 😊" : "🏁",
+      }),
+      [
+        "Probabilmente acquisterei",
+        { type: "audio", url: "https://example.com/vocale.webm" },
+        "Il prezzo",
+        "Meglio",
+        { type: "text", text: "1=1, 2=2" },
+      ],
+    );
+    const transcript = testPanel.transcript.join("\n");
+    expect(transcript).toContain("Estathé lattina 330ml");
+    expect(transcript).toContain("«Probabilmente acquisterei»");
+    expect(transcript).toContain("Cosa ti spinge di più? 😊");
+    expect(transcript).toContain("Come hai trovato la lattina");
+    expect(testPanel.variables.Q8).toBe("2");
+    expect(testPanel.variables.Q9).toBe("risposta trascritta");
+    expect(testPanel.variables.Q9_URL).toBe("https://example.com/vocale.webm");
+    expect(testPanel.variables.Q9_R1).toBe("Il prezzo");
+    expect(testPanel.variables.Q33).toBe("1");
+
+    const controlPanel = await runTestInterview(
+      withMockedServices(typebot, { initialValues: { panel: "CONTROL" } }),
+      ["Certamente acquisterei", "Perché mi piace"],
+    );
+    const controlTranscript = controlPanel.transcript.join("\n");
+    expect(controlTranscript).toContain("Estathé bottiglietta 400ml");
+    expect(controlTranscript).not.toContain("Come hai trovato la lattina");
+    expect(controlTranscript).not.toContain("Cosa ti spinge di più?");
+    expect(controlPanel.variables.Q9).toBe("Perché mi piace");
+  });
+});
+
+describe("Airtable frame", () => {
+  const airtableSpec: QuestionnaireSpec = {
+    ...shopperSpec,
+    privacyUrl: "https://example.com/privacy.pdf",
+    airtable: {
+      baseId: "appTEST",
+      tableId: "tblTEST",
+      lookupField: "Telefono",
+      linkParameter: "uid",
+      loadFields: [{ airtableField: "PDV assegnato", variable: "pdv" }],
+    },
+  };
+  const { typebot, warnings } = convertQuestionnaireSpecToTypebot(
+    airtableSpec,
+    { openAiCredentialsId: "cred_openai" },
+  );
+  const groupTitles = typebot.groups.map((group) => group.title);
+  const httpBodies = typebot.groups.flatMap((group) =>
+    group.blocks.flatMap((block) => {
+      const options = (block.options ?? {}) as {
+        webhook?: { method?: string; url?: string; body?: string };
+      };
+      return block.type === "Webhook" && options.webhook
+        ? [{ group: group.title, ...options.webhook }]
+        : [];
+    }),
+  );
+
+  it("loads the respondent, saves each answer live and lists the columns to create", () => {
+    expect(groupTitles.slice(0, 4)).toEqual([
+      "SETTA SPECIFICHE AIRTABLE",
+      "PRENDI INFO RESPONDENT E VERIFICA",
+      "ERRORE - link non valido",
+      "PREPARAZIONE",
+    ]);
+    const lookup = httpBodies.find((request) => request.method === "GET");
+    expect(lookup?.url).toContain('filterByFormula={Telefono}="{{uid}}"');
+    const q8Patch = httpBodies.find((request) => request.group === "Q8");
+    expect(JSON.parse(q8Patch?.body ?? "{}")).toMatchObject({
+      fields: {
+        Q8: "{{Q8_TESTO}}",
+        Checkpoint: "Q8",
+        Status: "CHATBOT IN CORSO - Q8",
+      },
+      typecast: true,
+    });
+    const q9Patch = httpBodies.find((request) => request.group === "Q9");
+    expect(Object.keys(JSON.parse(q9Patch?.body ?? "{}").fields)).toEqual(
+      expect.arrayContaining(["Q9", "Q9_URL", "Q9_RILANCI"]),
+    );
+    expect(warnings.join("\n")).toContain("Q9_RILANCI");
+    expect(warnings.join("\n")).toContain("PDV assegnato");
+    expect(
+      importTypebotInputSchema.safeParse({
+        workspaceId: "w",
+        typebot: { ...typebot, icon: null, folderId: null },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("starts new respondents from the privacy notice", async () => {
+    const newRespondent = await runTestInterview(
+      withMockedServices(typebot, {
+        initialValues: { record_id_airtable: "rec1", panel: "TEST" },
+      }),
+      ["✅ Ho preso visione", "Certamente acquisterei"],
+    );
+    const transcript = newRespondent.transcript.join("\n");
+    expect(transcript).toContain("INFORMATIVA PRIVACY");
+    expect(transcript).toContain("Quanto sei propenso");
+    expect(newRespondent.variables.checkpoint).toBe("Q8");
+    expect(JSON.parse(String(newRespondent.variables.stato_json))).toEqual({
+      Q8: "1",
+      Q8_TESTO: "Certamente acquisterei",
+    });
+  });
+
+  it("resumes after the last answered question, with the answers restored", async () => {
+    const returning = await runTestInterview(
+      withMockedServices(typebot, {
+        initialValues: {
+          record_id_airtable: "rec1",
+          panel: "TEST",
+          checkpoint: "Q8",
+          stato_json: JSON.stringify({
+            Q8: "2",
+            Q8_TESTO: "Probabilmente acquisterei",
+          }),
+        },
+      }),
+      ["Perché costa poco"],
+    );
+    const transcript = returning.transcript.join("\n");
+    expect(transcript).not.toContain("INFORMATIVA PRIVACY");
+    expect(transcript).not.toContain("Quanto sei propenso");
+    expect(transcript).toContain("«Probabilmente acquisterei»");
+    expect(returning.variables.Q8).toBe("2");
+  });
+
+  it("stops respondents without an Airtable record", async () => {
+    const stranger = await runTestInterview(
+      withMockedServices(typebot, {}),
+      [],
+    );
+    expect(stranger.transcript.join("\n")).toContain(
+      "Devi utilizzare il link che hai ricevuto",
+    );
+  });
+});
+
+describe("Airtable resume with routing", () => {
+  const { typebot } = convertQuestionnaireSpecToTypebot({
+    ...spec,
+    introText: null,
+    airtable: {
+      baseId: "appTEST",
+      tableId: "tblTEST",
+      lookupField: "Telefono",
+      linkParameter: "uid",
+      loadFields: [],
+    },
+    questions: [
+      ...spec.questions.slice(0, 2),
+      question({
+        code: "ACQ",
+        type: "continue",
+        text: "Ora acquista il prodotto e torna qui quando l'hai provato.",
+        options: [option("1", "▶️ CONTINUA")],
+      }),
+      ...spec.questions.slice(2),
+    ],
+  });
+  const matrixBlockId = typebot.groups
+    .find((group) => group.title === "D3")
+    ?.blocks.find((block) => block.type === "matrix input")?.id;
+
+  it("skips the questions the routing excludes, like a respondent who never left", async () => {
+    const returning = await runTestInterview(
+      withMockedServices(typebot, {
+        initialValues: {
+          record_id_airtable: "rec1",
+          checkpoint: "ACQ",
+          stato_json: JSON.stringify({ S1: "35", D1: "2" }),
+        },
+      }),
+      [],
+    );
+    // D1 = No: D2 and D2b are skipped, the next question is the grid.
+    expect(returning.inputBlockIds.at(-1)).toBe(matrixBlockId);
+    expect(returning.transcript.join("\n")).not.toContain("Con quali mezzi?");
+  });
+
+  it("saves the checkpoint before the continue button", async () => {
+    const respondent = await runTestInterview(
+      withMockedServices(typebot, {
+        initialValues: { record_id_airtable: "rec1" },
+      }),
+      ["35", "No"],
+    );
+    expect(respondent.transcript.join("\n")).toContain(
+      "Ora acquista il prodotto",
+    );
+    expect(respondent.variables.checkpoint).toBe("ACQ");
   });
 });

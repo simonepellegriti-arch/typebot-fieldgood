@@ -22,7 +22,10 @@ export const questionTypes = [
   "phone",
   "date",
   "info",
+  "continue",
 ] as const;
+
+export const openAnswerMedia = ["voice", "video"] as const;
 
 const optionSchema = z.object({
   code: z
@@ -43,18 +46,31 @@ const rowSchema = z.object({
 });
 
 const conditionSchema = z.object({
-  questionCode: z.string().describe("Code of an EARLIER question."),
+  questionCode: z
+    .string()
+    .describe(
+      "Code of an EARLIER question, or the name of a link / computed variable.",
+    ),
   operator: z.enum(["anyOf", "noneOf", "lessThan", "greaterThan"]),
   values: z
     .array(z.string())
     .describe(
-      "Option codes (anyOf / noneOf) or one number (lessThan / greaterThan).",
+      "Option codes or variable values (anyOf / noneOf), or one number (lessThan / greaterThan).",
     ),
 });
 
 const conditionGroupSchema = z.object({
   logic: z.enum(["all", "any"]),
   conditions: z.array(conditionSchema),
+});
+
+const probeSchema = z.object({
+  elements: z
+    .array(z.string())
+    .describe(
+      "What a complete answer must cover; the AI asks about what is missing or vague.",
+    ),
+  maxFollowUps: z.number().describe("Follow-up questions at most (1 to 3)."),
 });
 
 export const questionnaireQuestionSchema = z.object({
@@ -64,7 +80,11 @@ export const questionnaireQuestionSchema = z.object({
       "Question code from the document (D1, Q2a, S1...). Letters, numbers and _ only.",
     ),
   type: z.enum(questionTypes),
-  text: z.string().describe("Question text shown to respondents."),
+  text: z
+    .string()
+    .describe(
+      "Question text shown to respondents. Piping: {{CODE}} shows the answer to an earlier question, {{name}} a link / computed variable.",
+    ),
   instructions: z
     .string()
     .nullable()
@@ -72,7 +92,7 @@ export const questionnaireQuestionSchema = z.object({
   options: z
     .array(optionSchema)
     .describe(
-      "single / multiple: answer options. matrix: scale columns. Otherwise [].",
+      "single / multiple: answer options. matrix: scale columns. continue: one option = button text. Otherwise [].",
     ),
   rows: z
     .array(rowSchema)
@@ -92,10 +112,22 @@ export const questionnaireQuestionSchema = z.object({
     .number()
     .nullable()
     .describe("constantSum: amount to distribute (100), otherwise null."),
-  maxSelections: z.number().nullable(),
+  maxSelections: z
+    .number()
+    .nullable()
+    .describe("multiple: most options selectable. photo: number of photos."),
   isRandomized: z
     .boolean()
     .describe("Options / statements shown in random order (rotation)."),
+  media: z
+    .enum(openAnswerMedia)
+    .nullable()
+    .describe(
+      "open / openLong only: answer by voice message (transcribed) or by video. null = written.",
+    ),
+  probe: probeSchema
+    .nullable()
+    .describe("open / openLong only: AI follow-up questions, or null."),
   showIf: conditionGroupSchema
     .nullable()
     .describe(
@@ -106,11 +138,55 @@ export const questionnaireQuestionSchema = z.object({
     .describe("Screen-out: the interview ends when true after this answer."),
 });
 
+const linkVariableSchema = z.object({
+  name: z
+    .string()
+    .describe("Variable name: letters, numbers and _ (e.g. uid, panel)."),
+  description: z.string(),
+});
+
+const computedVariableSchema = z.object({
+  name: z.string().describe("Variable used in texts as {{name}}."),
+  sourceVariable: z
+    .string()
+    .describe("Link / Airtable variable or question code it depends on."),
+  cases: z
+    .array(z.object({ whenValue: z.string(), text: z.string() }))
+    .describe("Text to use for each value of the source variable."),
+  defaultText: z.string().describe("Text when no case matches."),
+});
+
+const airtableSchema = z.object({
+  baseId: z.string().describe("Airtable base id (app…)."),
+  tableId: z.string().describe("Airtable table id (tbl…) or name."),
+  lookupField: z
+    .string()
+    .describe("Airtable field that identifies the respondent (Telefono, ID…)."),
+  linkParameter: z
+    .string()
+    .describe("Link parameter holding that value (uid, cid…)."),
+  loadFields: z
+    .array(z.object({ airtableField: z.string(), variable: z.string() }))
+    .describe("Respondent fields loaded at the start (Nome, PDV, Panel…)."),
+});
+
 export const questionnaireSpecSchema = z.object({
   title: z.string(),
   language: z
     .string()
     .describe("ISO code of the questionnaire language, e.g. it, en."),
+  addressForm: z
+    .enum(["tu", "lei"])
+    .describe("How respondents are addressed (Italian: tu / lei)."),
+  privacyUrl: z
+    .string()
+    .nullable()
+    .describe("PDF of the privacy notice to accept before starting, or null."),
+  voiceTest: z
+    .boolean()
+    .describe(
+      "Microphone test before the questions (when there are voice answers).",
+    ),
   introText: z.string().nullable(),
   closingText: z.string().nullable(),
   screenOutText: z
@@ -118,6 +194,21 @@ export const questionnaireSpecSchema = z.object({
     .nullable()
     .describe(
       "Message when the interview ends early, or null for the default.",
+    ),
+  linkVariables: z
+    .array(linkVariableSchema)
+    .describe(
+      "Values that come with the respondent's link or Airtable record (panel, target, store…).",
+    ),
+  computedVariables: z
+    .array(computedVariableSchema)
+    .describe(
+      "Texts that change with a variable, e.g. format = 'lattina 330ml' when panel = TEST.",
+    ),
+  airtable: airtableSchema
+    .nullable()
+    .describe(
+      "ONLY when the researcher asks to connect Airtable and gives base and table; otherwise null.",
     ),
   questions: z.array(questionnaireQuestionSchema),
   notes: z
@@ -131,3 +222,4 @@ export type QuestionnaireSpec = z.infer<typeof questionnaireSpecSchema>;
 export type QuestionnaireQuestion = z.infer<typeof questionnaireQuestionSchema>;
 export type QuestionnaireCondition = z.infer<typeof conditionSchema>;
 export type QuestionnaireConditionGroup = z.infer<typeof conditionGroupSchema>;
+export type QuestionnaireAirtable = z.infer<typeof airtableSchema>;

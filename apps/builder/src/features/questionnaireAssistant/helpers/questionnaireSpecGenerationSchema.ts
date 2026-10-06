@@ -53,6 +53,9 @@ const questionTypeAliases: Record<string, (typeof questionTypes)[number]> = {
   picture: "photo",
   camera: "photo",
   firma: "signature",
+  button: "continue",
+  pulsante: "continue",
+  next: "continue",
 };
 
 const textOrNull = z
@@ -112,6 +115,67 @@ const operatorSchema = z.string().transform((value, context) => {
   context.addIssue({ code: "custom", message: `Unknown operator ${value}` });
   return z.NEVER;
 });
+
+const mediaOrNull = z.unknown().transform((value) => {
+  if (typeof value !== "string") return null;
+  const key = normalizeKey(value);
+  if (["voice", "vocale", "audio", "voicemessage"].includes(key))
+    return "voice" as const;
+  if (["video", "videomessage"].includes(key)) return "video" as const;
+  return null;
+});
+
+const probeOrNull = z.preprocess(
+  (value) => (value === undefined ? null : value),
+  z
+    .object({
+      elements: listOf(requiredText),
+      maxFollowUps: numberOrNull,
+    })
+    .nullable()
+    .transform((probe) =>
+      probe
+        ? {
+            elements: probe.elements,
+            maxFollowUps: Math.min(
+              3,
+              Math.max(1, Math.round(probe.maxFollowUps ?? 1)),
+            ),
+          }
+        : null,
+    ),
+);
+
+const variableName = requiredText.transform((value) =>
+  value.replace(/[^\p{L}\p{N}_]+/gu, "_").replace(/^_+|_+$/g, ""),
+);
+
+const airtableOrNull = z.preprocess(
+  (value) => (value === undefined ? null : value),
+  z
+    .object({
+      baseId: requiredText,
+      tableId: requiredText,
+      lookupField: textOrNull,
+      linkParameter: textOrNull,
+      loadFields: listOf(
+        z.object({ airtableField: requiredText, variable: variableName }),
+      ),
+    })
+    .nullable()
+    .transform((airtable) =>
+      airtable && airtable.baseId && airtable.tableId
+        ? {
+            ...airtable,
+            lookupField: airtable.lookupField ?? "Telefono",
+            linkParameter: (airtable.linkParameter ?? "uid").replace(
+              /[^\p{L}\p{N}_]+/gu,
+              "_",
+            ),
+          }
+        : null,
+    ),
+);
 
 const conditionGroupOrNull = z.preprocess(
   (value) => (value === undefined ? null : value),
@@ -184,6 +248,8 @@ const lenientQuestionSchema = z.object({
   total: numberOrNull,
   maxSelections: numberOrNull,
   isRandomized: booleanOrFalse,
+  media: mediaOrNull,
+  probe: probeOrNull,
   showIf: conditionGroupOrNull,
   terminateIf: conditionGroupOrNull,
 });
@@ -199,9 +265,44 @@ const lenientSpecSchema = z.object({
     .transform((value) =>
       typeof value === "string" && value.trim() ? value.trim() : "it",
     ),
+  addressForm: z
+    .unknown()
+    .transform((value) =>
+      typeof value === "string" && normalizeKey(value) === "lei"
+        ? ("lei" as const)
+        : ("tu" as const),
+    ),
+  privacyUrl: textOrNull,
+  voiceTest: booleanOrFalse,
   introText: textOrNull,
   closingText: textOrNull,
   screenOutText: textOrNull,
+  linkVariables: listOf(
+    z.object({ name: variableName, description: textOrNull }),
+  ).transform((variables) =>
+    variables
+      .filter((variable) => variable.name)
+      .map((variable) => ({
+        name: variable.name,
+        description: variable.description ?? "",
+      })),
+  ),
+  computedVariables: listOf(
+    z.object({
+      name: variableName,
+      sourceVariable: requiredText,
+      cases: listOf(z.object({ whenValue: requiredText, text: requiredText })),
+      defaultText: textOrNull,
+    }),
+  ).transform((variables) =>
+    variables
+      .filter((variable) => variable.name && variable.sourceVariable)
+      .map((variable) => ({
+        ...variable,
+        defaultText: variable.defaultText ?? "",
+      })),
+  ),
+  airtable: airtableOrNull,
   questions: listOf(lenientQuestionSchema),
   notes: listOf(requiredText),
 });

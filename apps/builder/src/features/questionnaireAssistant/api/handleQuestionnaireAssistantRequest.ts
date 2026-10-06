@@ -23,11 +23,11 @@ import {
   buildAssistantReply,
   questionnaireAssistantSystemPrompt,
 } from "../helpers/questionnaireAssistantPrompt";
-import { questionnaireSpecGenerationSchema } from "../helpers/questionnaireSpecGenerationSchema";
 import {
-  type QuestionnaireSpec,
-  questionnaireSpecSchema,
-} from "../questionnaireSpecSchema";
+  parseGeneratedQuestionnaireSpec,
+  questionnaireSpecGenerationSchema,
+} from "../helpers/questionnaireSpecGenerationSchema";
+import type { QuestionnaireSpec } from "../questionnaireSpecSchema";
 
 const requestSchema = z.object({
   workspaceId: z.string(),
@@ -49,7 +49,7 @@ const requestSchema = z.object({
     )
     .max(3),
   /** Follow-up: the questionnaire of the bot being edited. */
-  previousSpec: questionnaireSpecSchema.optional(),
+  previousSpec: z.unknown().optional(),
   typebotId: z.string().optional(),
 });
 
@@ -79,8 +79,15 @@ export const handleQuestionnaireAssistantRequest = async (request: Request) => {
     await request.json().catch(() => undefined),
   );
   if (!parsedBody.success) return errorResponse(400, "invalid-request");
-  const { workspaceId, message, documents, previousSpec, typebotId } =
-    parsedBody.data;
+  const { workspaceId, message, documents, typebotId } = parsedBody.data;
+  // Specs of older conversations may miss newer fields: read them leniently.
+  const parsedPreviousSpec =
+    parsedBody.data.previousSpec === undefined
+      ? undefined
+      : parseGeneratedQuestionnaireSpec(parsedBody.data.previousSpec);
+  if (parsedPreviousSpec && !parsedPreviousSpec.success)
+    return errorResponse(400, "invalid-request");
+  const previousSpec = parsedPreviousSpec?.data;
   if (!message.trim() && documents.length === 0)
     return errorResponse(400, "empty-request");
 
@@ -91,7 +98,7 @@ export const handleQuestionnaireAssistantRequest = async (request: Request) => {
   if (!membership || membership.role === WorkspaceRole.GUEST)
     return errorResponse(404, "workspace-not-found");
 
-  const models = await getWorkspaceModels(workspaceId);
+  const { models, openAiCredentialsId } = await getWorkspaceModels(workspaceId);
   if (models.length === 0) return errorResponse(400, "no-ai-credentials");
 
   let spec: QuestionnaireSpec;
@@ -109,7 +116,9 @@ export const handleQuestionnaireAssistantRequest = async (request: Request) => {
   if (spec.questions.length === 0)
     return errorResponse(422, "no-questions", spec.notes.join("\n"));
 
-  const { typebot, warnings } = convertQuestionnaireSpecToTypebot(spec);
+  const { typebot, warnings } = convertQuestionnaireSpecToTypebot(spec, {
+    openAiCredentialsId,
+  });
   const user = { id: userId };
   let savedTypebot: { id: string; name: string };
   let isNewBot = true;
@@ -241,9 +250,10 @@ const getWorkspaceModels = async (workspaceId: string) => {
   const credentials = await prisma.credentials.findMany({
     where: { workspaceId, type: { in: ["openai", "anthropic"] } },
     orderBy: { createdAt: "desc" },
-    select: { type: true, data: true, iv: true },
+    select: { id: true, type: true, data: true, iv: true },
   });
   const models: LanguageModel[] = [];
+  let openAiCredentialsId: string | undefined;
   for (const type of ["openai", "anthropic"] as const) {
     const credential = credentials.find((candidate) => candidate.type === type);
     if (!credential) continue;
@@ -251,6 +261,8 @@ const getWorkspaceModels = async (workspaceId: string) => {
       await decrypt(credential.data, credential.iv).catch(() => undefined),
     );
     if (!parsedData.success) continue;
+    // Voice transcriptions and AI follow-ups of the generated bots use it.
+    if (type === "openai") openAiCredentialsId = credential.id;
     const getModel = forgedBlocks[type].actions.find(
       (action) => action.aiGenerate,
     )?.aiGenerate?.getModel;
@@ -263,7 +275,7 @@ const getWorkspaceModels = async (workspaceId: string) => {
         }),
       );
   }
-  return models;
+  return { models, openAiCredentialsId };
 };
 
 const errorMessage = (error: unknown) =>
