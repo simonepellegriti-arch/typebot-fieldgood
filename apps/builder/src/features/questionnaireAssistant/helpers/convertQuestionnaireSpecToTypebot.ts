@@ -315,21 +315,51 @@ export const convertQuestionnaireSpecToTypebot = (
     if (/^(END|FINE|TERMINA(RE)?|CHIUDI)$/i.test(normalized))
       return screenOutGroup.start();
     const returnMatch = normalized.match(/^RETURN\s*:\s*(.+)$/i);
-    const code = returnMatch?.[1]?.trim() ?? normalized;
-    const target = questionGroupByCode.get(code);
-    if (!target) {
+    const destination = returnMatch?.[1]?.trim() ?? normalized;
+    // "Q4/Q4a": the first of the questions shown to this respondent (panel paths).
+    const codes = questionGroupByCode.has(destination)
+      ? [destination]
+      : destination
+          .split(/\s*[/|,]\s*/)
+          .map((code) => findQuestionCode(code))
+          .filter((code) => code !== undefined);
+    if (codes.length === 0) {
       warnings.push(
         `${questionCode}: il salto verso "${goTo}" non corrisponde a nessuna domanda ed è stato ignorato.`,
       );
       return undefined;
     }
-    if (!returnMatch) return target.start();
-    if (!airtable)
+    if (returnMatch && !airtable)
       warnings.push(
-        `${questionCode}: per riprendere più tardi da ${code} serve il collegamento ad Airtable; l'intervista si chiude con il messaggio di pausa.`,
+        `${questionCode}: per riprendere più tardi da ${codes.join("/")} serve il collegamento ad Airtable; l'intervista si chiude con il messaggio di pausa.`,
       );
-    return pauseGroupFor(code).start();
+    const targetOf = (code: string) =>
+      returnMatch
+        ? pauseGroupFor(code).start()
+        : (questionGroupByCode.get(code)?.start() ?? firstQuestionTarget);
+    if (codes.length === 1) return targetOf(codes[0]);
+    const routerGroup = bot.createGroup(`SMISTAMENTO ${codes.join(" / ")}`);
+    const alternatives = codes.map((code) => ({
+      code,
+      showIf: questionByCode.get(code)?.showIf ?? null,
+    }));
+    const routes = alternatives.flatMap(({ code, showIf }) =>
+      showIf
+        ? conditions
+            .toItems(showIf, false, code)
+            .map((content) => ({ content, to: targetOf(code) }))
+        : [],
+    );
+    if (routes.length > 0) routerGroup.add(bot.condition(routes));
+    const fallback =
+      alternatives.find(({ showIf }) => !showIf) ?? alternatives.at(-1);
+    routerGroup.setNext(targetOf(fallback?.code ?? codes[0]));
+    return routerGroup.start();
   };
+  const findQuestionCode = (code: string) =>
+    [...questionGroupByCode.keys()].find(
+      (candidate) => candidate.toLowerCase() === code.toLowerCase(),
+    );
   const resumeTargets = new Map<string, LazyTarget>();
 
   // Questions.

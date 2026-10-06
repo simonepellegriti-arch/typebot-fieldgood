@@ -745,6 +745,67 @@ describe("option routing (Passare a / Terminare / Ripetere)", () => {
     expect(back.transcript.join("\n")).toContain("Cerca l'espositore");
   });
 
+  it("jumps to the question of the respondent's path (Passare a Q4/Q4a)", async () => {
+    const onlyFor = (value: string) => ({
+      logic: "all" as const,
+      conditions: [
+        {
+          questionCode: "espositore",
+          operator: "anyOf" as const,
+          values: [value],
+        },
+      ],
+    });
+    const pathSpec: QuestionnaireSpec = {
+      ...spec,
+      introText: null,
+      linkVariables: [{ name: "espositore", description: "SLIM o POZZETTO" }],
+      questions: [
+        question({
+          code: "Q6",
+          type: "single",
+          text: "Trovi il prodotto nell'espositore?",
+          options: [option("1", "Sì"), option("2", "No", { goTo: "Q4/q4a" })],
+        }),
+        question({
+          code: "Q4",
+          type: "single",
+          text: "Slim: il prodotto non c'è.",
+          options: [option("1", "Ok")],
+          showIf: onlyFor("SLIM"),
+        }),
+        question({
+          code: "Q4a",
+          type: "single",
+          text: "Pozzetto: il prodotto non c'è.",
+          options: [option("1", "Ok")],
+          showIf: onlyFor("POZZETTO"),
+        }),
+        question({
+          code: "Q7",
+          type: "single",
+          text: "Quanto ti attira?",
+          options: [option("1", "Molto")],
+        }),
+      ],
+    };
+    const { typebot: pathBot, warnings: pathWarnings } =
+      convertQuestionnaireSpecToTypebot(pathSpec);
+    expect(pathWarnings).toEqual([]);
+    for (const [espositore, expected, other] of [
+      ["SLIM", "Slim:", "Pozzetto:"],
+      ["POZZETTO", "Pozzetto:", "Slim:"],
+    ]) {
+      const interview = await runTestInterview(
+        withMockedServices(pathBot, { initialValues: { espositore } }),
+        ["No"],
+      );
+      const transcript = interview.transcript.join("\n");
+      expect(transcript).toContain(expected);
+      expect(transcript).not.toContain(other);
+    }
+  });
+
   it("applies the routing of the last answer when resuming", async () => {
     const resumed = await runTestInterview(
       respondent({
