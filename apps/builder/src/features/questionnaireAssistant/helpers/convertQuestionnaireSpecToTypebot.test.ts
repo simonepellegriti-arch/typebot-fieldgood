@@ -978,6 +978,40 @@ describe("option routing (Passare a / Terminare / Ripetere)", () => {
   });
 });
 
+describe("video stimulus with a link", () => {
+  const { typebot } = convertQuestionnaireSpecToTypebot({
+    ...spec,
+    introText: null,
+    questions: [
+      question({
+        code: "Q32",
+        type: "open",
+        text: "Lo avevi già visto?",
+        stimulus: {
+          type: "video",
+          url: "https://example.com/spot.mp4",
+          label: "Spot",
+          allowReplay: false,
+        },
+      }),
+    ],
+  });
+
+  // Without a type the engine neither waits for the video nor records Q32_VISIONE.
+  it("types the video like a link pasted in the builder", () => {
+    const video = typebot.groups
+      .flatMap((group) => group.blocks)
+      .find((block) => block.type === "video");
+    expect(video).toMatchObject({
+      content: {
+        type: "url",
+        url: "https://example.com/spot.mp4",
+        watchTracking: { isEnabled: true, isRequired: true },
+      },
+    });
+  });
+});
+
 describe("stimuli repeated in random order (Ripetere G1–G2 dopo ciascun video)", () => {
   const stimulus = (label: string, allowReplay = false) => ({
     type: "video" as const,

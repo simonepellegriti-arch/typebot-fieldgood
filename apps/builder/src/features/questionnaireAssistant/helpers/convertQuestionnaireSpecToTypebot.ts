@@ -1,5 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
 import { BubbleBlockType } from "@typebot.io/blocks-bubbles/constants";
+import { parseVideoUrl } from "@typebot.io/blocks-bubbles/video/helpers";
 import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
 import { maxPhotosLimit } from "@typebot.io/blocks-inputs/photo/constants";
 import {
@@ -1204,10 +1205,21 @@ const addStimulus = (
     group.add({ id: createId(), type: BubbleBlockType.IMAGE, content: url });
     return;
   }
+  // Typed like a link pasted in the builder: the engine only waits for (and
+  // records the viewing of) a tracked video of a known type.
+  const parsedVideo = stimulus.url ? parseVideoUrl(stimulus.url) : undefined;
+  const videoContent = parsedVideo
+    ? {
+        type: parsedVideo.type,
+        url: parsedVideo.url,
+        id: parsedVideo.id,
+        ...parsedVideo.videoSizeSuggestion,
+      }
+    : {};
   const video = (watchTracking: Record<string, unknown>): BotBlock => ({
     id: createId(),
     type: BubbleBlockType.VIDEO,
-    content: { ...url, watchTracking },
+    content: { ...videoContent, watchTracking },
   });
   group.add(
     video({
