@@ -85,14 +85,20 @@ export const getAirtableTable = async (
   };
 };
 
-export const createAirtableField = (
+/** Creates a long-text field; returns its id. */
+export const createAirtableField = async (
   token: string,
   { baseId, tableId, name }: { baseId: string; tableId: string; name: string },
 ) =>
-  airtableRequest(token, `meta/bases/${baseId}/tables/${tableId}/fields`, {
-    method: "POST",
-    body: { name, type: "multilineText" },
-  });
+  createdFieldSchema.safeParse(
+    await airtableRequest(
+      token,
+      `meta/bases/${baseId}/tables/${tableId}/fields`,
+      { method: "POST", body: { name, type: "multilineText" } },
+    ),
+  ).data?.id;
+
+const createdFieldSchema = z.object({ id: z.string() });
 
 export const renameAirtableField = (
   token: string,

@@ -61,6 +61,7 @@ export const handleCreateAirtableFields = async ({
   ];
 
   const previousHeaders = airtable.fieldMap ?? {};
+  const failed: { name: string; error: string }[] = [];
   const currentHeaders: Record<string, string> = regenerate
     ? {}
     : { ...previousHeaders };
@@ -107,35 +108,63 @@ export const handleCreateAirtableFields = async ({
   const fieldsByName = new Map(
     table.fields.map((field) => [field.name.toLowerCase(), field]),
   );
+  const fieldsById = new Map(table.fields.map((field) => [field.id, field]));
+  const fieldIds: Record<string, string> = { ...airtable.fieldIds };
   const wantedNames = new Set(
     [...fixedFields, ...Object.values(headers)].map((name) =>
       name.toLowerCase(),
     ),
   );
-  const operations: { name: string; renameFrom?: string }[] = [];
+  const operations: {
+    name: string;
+    variableName?: string;
+    renameFrom?: string;
+  }[] = [];
   for (const name of fixedFields)
     if (!fieldsByName.has(name.toLowerCase())) operations.push({ name });
   for (const column of answerColumns) {
-    const header = headers[column.variableName];
-    if (!header || fieldsByName.has(header.toLowerCase())) continue;
+    const { variableName } = column;
+    const header = headers[variableName];
+    if (!header) continue;
+    // The field of this column, followed by id across renames.
+    const ownField = fieldsById.get(fieldIds[variableName] ?? "");
+    const namedField = fieldsByName.get(header.toLowerCase());
+    if (ownField) {
+      if (ownField.name === header) continue;
+      if (namedField && namedField.id !== ownField.id) {
+        failed.push({ name: header, error: headerTakenError });
+        continue;
+      }
+      operations.push({ name: header, variableName, renameFrom: ownField.id });
+      continue;
+    }
+    if (namedField) {
+      fieldIds[variableName] = namedField.id;
+      continue;
+    }
     // A field still named after the code or an older header is renamed.
-    const oldField = [previousHeaders[column.variableName], column.variableName]
+    const oldField = [previousHeaders[variableName], variableName]
       .flatMap((name) => (name ? [fieldsByName.get(name.toLowerCase())] : []))
       .find((field) => field && !wantedNames.has(field.name.toLowerCase()));
     if (oldField) {
       fieldsByName.delete(oldField.name.toLowerCase());
-      operations.push({ name: header, renameFrom: oldField.id });
-    } else operations.push({ name: header });
+      operations.push({ name: header, variableName, renameFrom: oldField.id });
+    } else operations.push({ name: header, variableName });
   }
 
   let createdCount = 0;
   let renamedCount = 0;
   let remainingCount = 0;
-  const failed: { name: string; error: string }[] = [];
+  let isFieldLimitReached = false;
   for (const [index, operation] of operations.entries()) {
     if (Date.now() - startedAt > timeBudgetMs) {
       remainingCount = operations.length - index;
       break;
+    }
+    // Past the field limit nothing else can be created (renames still work).
+    if (isFieldLimitReached && !operation.renameFrom) {
+      failed.push({ name: operation.name, error: fieldLimitError });
+      continue;
     }
     try {
       if (operation.renameFrom) {
@@ -145,19 +174,27 @@ export const handleCreateAirtableFields = async ({
           fieldId: operation.renameFrom,
           name: operation.name,
         });
+        if (operation.variableName)
+          fieldIds[operation.variableName] = operation.renameFrom;
         renamedCount++;
       } else {
-        await createAirtableField(token, {
+        const fieldId = await createAirtableField(token, {
           baseId: airtable.baseId,
           tableId: table.id,
           name: operation.name,
         });
+        if (operation.variableName && fieldId)
+          fieldIds[operation.variableName] = fieldId;
         createdCount++;
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("FAILED_LIMIT_CHECK")) isFieldLimitReached = true;
       failed.push({
         name: operation.name,
-        error: error instanceof Error ? error.message : String(error),
+        error: message.includes("FAILED_LIMIT_CHECK")
+          ? fieldLimitError
+          : message,
       });
     }
     // Airtable allows 5 requests per second per base.
@@ -174,6 +211,7 @@ export const handleCreateAirtableFields = async ({
       airtable: {
         ...airtable,
         fieldMap: headers,
+        fieldIds,
         fieldNames: refreshed.fieldNames,
         primaryFieldName: refreshed.primaryFieldName,
       },
@@ -193,6 +231,11 @@ const titleModelIds = {
   openai: ["gpt-5.4-mini", "gpt-4.1-mini", "gpt-4.1"],
   anthropic: ["claude-haiku-4-5", "claude-sonnet-4-6"],
 } as const;
+
+const fieldLimitError =
+  "la tabella Airtable ha raggiunto il limite di 500 campi: elimina le colonne che non servono";
+const headerTakenError =
+  "un altro campo della tabella ha già questo nome: rinominalo o eliminalo su Airtable";
 
 /** Stops before the serverless request limit; a second run finishes. */
 const timeBudgetMs = 200_000;

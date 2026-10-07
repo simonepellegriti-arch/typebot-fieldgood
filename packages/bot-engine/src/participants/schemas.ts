@@ -44,6 +44,8 @@ export const participantAirtableSchema = z.object({
    * "Lavoro e stile di vita"). Variables without one use their own name.
    */
   fieldMap: z.record(z.string(), z.string()).optional(),
+  /** Bot variable → Airtable field id: follows a field across renames. */
+  fieldIds: z.record(z.string(), z.string()).optional(),
 });
 export type ParticipantAirtable = z.infer<typeof participantAirtableSchema>;
 

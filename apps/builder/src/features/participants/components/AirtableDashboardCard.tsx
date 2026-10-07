@@ -63,7 +63,12 @@ export const AirtableDashboardCard = ({
             data.failed.length || data.remainingCount ? undefined : "success",
           description: data.failed.length
             ? t("participants.airtable.fieldsFailed", {
-                names: data.failed.map((field) => field.name).join(", "),
+                names: [
+                  ...data.failed.slice(0, 5).map((field) => field.name),
+                  ...(data.failed.length > 5
+                    ? [`+${data.failed.length - 5}`]
+                    : []),
+                ].join(", "),
                 error: data.failed[0]?.error ?? "",
               })
             : data.remainingCount
