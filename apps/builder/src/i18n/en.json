@@ -948,5 +948,10 @@
   "participants.airtable.headers": "Column headers ({count})",
   "participants.airtable.headersDescription": "On Airtable the answers are titled with the summarized question; the FIELDBOT export keeps the codes. You can edit any header: saving renames the field on Airtable. \"Regenerate with AI\" rewrites every title (manual edits included).",
   "participants.airtable.saveHeaders": "Save headers ({count})",
-  "participants.airtable.regenerateHeaders": "Regenerate with AI"
+  "participants.airtable.regenerateHeaders": "Regenerate with AI",
+  "participants.airtable.viewDescription": "Participants already in a table (e.g. recruitment): each record of the view gets its personal link, written in the \"Link Chatbot\" field, and the answers go into the same record.",
+  "participants.airtable.view": "View",
+  "participants.airtable.viewFields": "Fields used in the bot (comma separated)",
+  "participants.airtable.importView": "Import participants from the view",
+  "participants.airtable.viewImported": "{count} participants imported from the view ({skipped} already there); links written in \"Link Chatbot\""
 }

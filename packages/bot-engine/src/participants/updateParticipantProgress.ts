@@ -5,8 +5,8 @@ import prisma from "@typebot.io/prisma";
 import { updateAirtableRecord } from "./airtableClient";
 import { getAirtableAnswerFields } from "./getAirtableAnswerFields";
 import {
-  airtableStandardFields,
   airtableTokenSchema,
+  getAirtableStandardFields,
   parseParticipantAirtable,
   parseParticipantPanelColumns,
   participantStatusLabels,
@@ -76,8 +76,9 @@ export const updateParticipantProgress = async ({
       await decrypt(panel.airtableTokenData, panel.airtableTokenIv),
     );
     const listColumns = parseParticipantPanelColumns(panel.columns).mappings;
+    const standardFieldNames = getAirtableStandardFields(airtable);
     const excludedNames = new Set<string>([
-      ...Object.values(airtableStandardFields),
+      ...Object.values(standardFieldNames),
       ...listColumns.map((mapping) => mapping.column),
       ...listColumns.flatMap((mapping) =>
         mapping.variableName ? [mapping.variableName] : [],
@@ -86,9 +87,9 @@ export const updateParticipantProgress = async ({
     const fieldNames = new Set(airtable.fieldNames);
     const standardFields = Object.fromEntries(
       [
-        [airtableStandardFields.status, participantStatusLabels[status]],
-        [airtableStandardFields.checkpoint, participant.checkpoint ?? ""],
-        [airtableStandardFields.lastActivity, now.toISOString()],
+        [standardFieldNames.status, participantStatusLabels[status]],
+        [standardFieldNames.checkpoint, participant.checkpoint ?? ""],
+        [standardFieldNames.lastActivity, now.toISOString()],
       ].filter(([name]) => fieldNames.has(name ?? "")),
     );
     await updateAirtableRecord(

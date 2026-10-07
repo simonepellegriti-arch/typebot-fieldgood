@@ -789,5 +789,10 @@
   "participants.airtable.headers": "Intestazioni delle colonne ({count})",
   "participants.airtable.headersDescription": "Su Airtable le risposte hanno come titolo la domanda sintetizzata; lo scarico di FIELDBOT resta con i codici. Puoi correggere ogni intestazione: salvando, il campo viene rinominato su Airtable. \"Rigenera con l'AI\" riscrive tutti i titoli (anche quelli corretti a mano).",
   "participants.airtable.saveHeaders": "Salva intestazioni ({count})",
-  "participants.airtable.regenerateHeaders": "Rigenera con l'AI"
+  "participants.airtable.regenerateHeaders": "Rigenera con l'AI",
+  "participants.airtable.viewDescription": "Partecipanti già in una tabella (es. il reperimento): ogni record della vista riceve il suo link personale, scritto nel campo \"Link Chatbot\", e le risposte vanno nello stesso record.",
+  "participants.airtable.view": "Vista",
+  "participants.airtable.viewFields": "Campi da usare nel bot (separati da virgola)",
+  "participants.airtable.importView": "Importa partecipanti dalla vista",
+  "participants.airtable.viewImported": "{count} partecipanti importati dalla vista ({skipped} già presenti); link scritti in \"Link Chatbot\""
 }

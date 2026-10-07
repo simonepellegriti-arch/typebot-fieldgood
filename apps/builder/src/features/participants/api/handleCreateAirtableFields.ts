@@ -4,7 +4,7 @@ import {
   getAirtableTable,
   renameAirtableField,
 } from "@typebot.io/bot-engine/participants/airtableClient";
-import { airtableStandardFields } from "@typebot.io/bot-engine/participants/schemas";
+import { getAirtableStandardFields } from "@typebot.io/bot-engine/participants/schemas";
 import prisma from "@typebot.io/prisma";
 import type { User } from "@typebot.io/user/schemas";
 import { z } from "zod";
@@ -53,12 +53,40 @@ export const handleCreateAirtableFields = async ({
     typebot.groups,
     typebot.variables,
   ).filter((column) => !mappedVariableNames.has(column.variableName));
-  const fixedFields = [
-    ...new Set([
-      ...Object.values(airtableStandardFields),
-      ...listColumns.mappings.map((mapping) => mapping.column),
-    ]),
-  ];
+  const standardFieldNames = getAirtableStandardFields(airtable);
+  // Records of an existing table (view): its own columns are already there.
+  const fixedFields = airtable.linkedView
+    ? [
+        standardFieldNames.link,
+        standardFieldNames.status,
+        standardFieldNames.checkpoint,
+        standardFieldNames.lastActivity,
+      ]
+    : [
+        ...new Set([
+          ...Object.values(standardFieldNames),
+          ...listColumns.mappings.map((mapping) => mapping.column),
+        ]),
+      ];
+  const table = await getAirtableTable(token, {
+    baseId: airtable.baseId,
+    table: airtable.tableId,
+  });
+  // Columns that aren't the bot's (recruitment data…) are never written over:
+  // a new header can't take their name.
+  const ownFieldIds = new Set(Object.values(airtable.fieldIds ?? {}));
+  const ownFieldNames = new Set(
+    [...fixedFields, ...Object.values(airtable.fieldMap ?? {})].map((name) =>
+      name.toLowerCase(),
+    ),
+  );
+  const foreignFieldNames = table.fields
+    .filter(
+      (field) =>
+        !ownFieldIds.has(field.id) &&
+        !ownFieldNames.has(field.name.toLowerCase()),
+    )
+    .map((field) => field.name);
 
   const previousHeaders = airtable.fieldMap ?? {};
   const failed: { name: string; error: string }[] = [];
@@ -92,13 +120,9 @@ export const handleCreateAirtableFields = async ({
     columns: answerColumns,
     titlesByQuestion,
     currentHeaders,
-    reservedHeaders: fixedFields,
+    reservedHeaders: [...fixedFields, ...foreignFieldNames],
   });
 
-  const table = await getAirtableTable(token, {
-    baseId: airtable.baseId,
-    table: airtable.tableId,
-  });
   // Saved first: the live sync writes under the new headers as soon as they exist.
   await prisma.participantPanel.update({
     where: { typebotId },

@@ -146,6 +146,56 @@ export const createAirtableRecords = async (
   return ids;
 };
 
+const listedRecordsSchema = z.object({
+  records: z.array(
+    z.object({ id: z.string(), fields: z.record(z.string(), z.unknown()) }),
+  ),
+  offset: z.string().optional(),
+});
+
+/** Every record of a view (or of the table), only the fields asked for. */
+export const listAirtableRecords = async (
+  token: string,
+  {
+    baseId,
+    tableId,
+    view,
+    fieldNames,
+  }: { baseId: string; tableId: string; view?: string; fieldNames: string[] },
+) => {
+  const records: z.infer<typeof listedRecordsSchema>["records"] = [];
+  let offset: string | undefined;
+  do {
+    const query = new URLSearchParams({ pageSize: "100" });
+    if (view) query.set("view", view);
+    for (const name of fieldNames) query.append("fields[]", name);
+    if (offset) query.set("offset", offset);
+    const page = listedRecordsSchema.parse(
+      await airtableRequest(token, `${baseId}/${tableId}?${query}`),
+    );
+    records.push(...page.records);
+    offset = page.offset;
+    if (offset) await new Promise((resolve) => setTimeout(resolve, 220));
+  } while (offset);
+  return records;
+};
+
+/** Updates records 10 at a time (Airtable limit). */
+export const updateAirtableRecords = async (
+  token: string,
+  { baseId, tableId }: { baseId: string; tableId: string },
+  records: { id: string; fields: Record<string, string> }[],
+) => {
+  for (let start = 0; start < records.length; start += 10) {
+    await airtableRequest(token, `${baseId}/${tableId}`, {
+      method: "PATCH",
+      body: { records: records.slice(start, start + 10), typecast: true },
+    });
+    if (start + 10 < records.length)
+      await new Promise((resolve) => setTimeout(resolve, 220));
+  }
+};
+
 export const updateAirtableRecord = (
   token: string,
   {

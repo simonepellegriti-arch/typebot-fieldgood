@@ -31,6 +31,7 @@ const italianTu = {
   retryPhoto: "📷 Riprovo con un'altra foto",
   describePrompt:
     "Va benissimo! Scrivimi o dimmi a voce quali sono: nome e, se lo ricordi, il formato.",
+  resumeReady: "▶️ Sono pronto, riprendiamo",
 };
 
 const italianLei: typeof italianTu = {
@@ -59,6 +60,7 @@ const italianLei: typeof italianTu = {
   retryPhoto: "📷 Riprovo con un'altra foto",
   describePrompt:
     "Va benissimo! Mi scriva o mi dica a voce quali sono: nome e, se lo ricorda, il formato.",
+  resumeReady: "▶️ Sono pronto, riprendiamo",
 };
 
 const english: typeof italianTu = {
@@ -93,6 +95,7 @@ const english: typeof italianTu = {
   retryPhoto: "📷 Try another photo",
   describePrompt:
     "That's fine! Write or tell me which ones: name and, if you remember, the format.",
+  resumeReady: "▶️ I'm ready, let's go on",
 };
 
 /** Buttons and default messages of generated bots, in the questionnaire language and register. */

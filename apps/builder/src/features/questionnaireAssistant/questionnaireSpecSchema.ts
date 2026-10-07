@@ -178,6 +178,18 @@ export const questionnaireQuestionSchema = z.object({
         .describe(
           "When allowDescription: the request for the description (e.g. 'Scrivimi o dimmi a voce quali prodotti usi: nome e formato'), or null for the default.",
         ),
+      referenceImageUrl: z
+        .string()
+        .nullable()
+        .describe(
+          "Image of what the photo must match (e.g. the packs to find), given by the researcher as a link; the AI compares the photo with it. null otherwise.",
+        ),
+      failGoTo: z
+        .string()
+        .nullable()
+        .describe(
+          "Question code to go to when the second photo still fails the check (e.g. 'Q7a'), or null to go on.",
+        ),
     })
     .nullable()
     .describe("photo only: AI check and alternative description, or null."),

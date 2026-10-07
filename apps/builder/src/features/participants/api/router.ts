@@ -16,6 +16,10 @@ import {
   handleGetParticipants,
 } from "./handleGetParticipants";
 import {
+  handleImportAirtableView,
+  importAirtableViewInputSchema,
+} from "./handleImportAirtableView";
+import {
   handleImportParticipants,
   importParticipantsInputSchema,
 } from "./handleImportParticipants";
@@ -48,6 +52,9 @@ export const participantsRouter = {
   createAirtableFields: authenticatedProcedure
     .input(createAirtableFieldsInputSchema)
     .handler(handleCreateAirtableFields),
+  importAirtableView: authenticatedProcedure
+    .input(importAirtableViewInputSchema)
+    .handler(handleImportAirtableView),
   sendToAirtable: authenticatedProcedure
     .input(sendParticipantsToAirtableInputSchema)
     .handler(handleSendParticipantsToAirtable),

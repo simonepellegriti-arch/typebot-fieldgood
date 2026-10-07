@@ -368,6 +368,17 @@ export const convertQuestionnaireSpecToTypebot = (
     const group = bot.createGroup(`IN PAUSA - riprende da ${code}`);
     group.add(bot.textBubble(labels.pause));
     saveCheckpoint(group, `RIPRENDI:${code}`, "IN PAUSA - TORNA PIÙ TARDI");
+    // Personal links: the chat waits here; reopening the link shows the button.
+    if (!airtable)
+      group.add(
+        bot.buttons([
+          {
+            label: labels.resumeReady,
+            to: () =>
+              (questionGroupByCode.get(code)?.start() ?? firstQuestionTarget)(),
+          },
+        ]),
+      );
     pauseGroups.set(code, group);
     return group;
   };
@@ -393,10 +404,6 @@ export const convertQuestionnaireSpecToTypebot = (
       );
       return undefined;
     }
-    if (returnMatch && !airtable)
-      warnings.push(
-        `${questionCode}: per riprendere più tardi da ${codes.join("/")} serve il collegamento ad Airtable; l'intervista si chiude con il messaggio di pausa.`,
-      );
     const targetOf = (code: string) =>
       returnMatch
         ? pauseGroupFor(code).start()
@@ -477,6 +484,9 @@ export const convertQuestionnaireSpecToTypebot = (
         photo: question.photo,
         pipe,
         credentialsId: openAiCredentialsId,
+        failTarget: question.photo.failGoTo
+          ? routeTarget(question.photo.failGoTo, question.code)
+          : undefined,
       });
     else group.add(...buildQuestionBlocks({ question, bot, labels, pipe }));
     // Readable answer (labels instead of codes) for piping and Airtable.
@@ -985,6 +995,7 @@ const addCheckedPhotoQuestion = (
     photo,
     pipe,
     credentialsId,
+    failTarget,
   }: {
     bot: ReturnType<typeof createBotBuilder>;
     labels: BotLabels;
@@ -992,6 +1003,8 @@ const addCheckedPhotoQuestion = (
     photo: NonNullable<QuestionnaireQuestion["photo"]>;
     pipe: (text: string) => string;
     credentialsId: string | undefined;
+    /** Where the second failed photo leads (counter reset for next time). */
+    failTarget: LazyTarget | undefined;
   },
 ) => {
   const { code } = question;
@@ -1064,7 +1077,9 @@ Look at the images and answer on one line, in the language of that description:
 "SI | <the products / packs you recognize, brand and name when readable>" when the photo shows it,
 "NO | <what the photo shows instead>" otherwise (people, documents, blurry or unrelated pictures).
 Nothing else.`,
-        user: `La foto deve mostrare: ${check}\n\n{{${code}_FOTO_JSON}}`,
+        user: photo.referenceImageUrl
+          ? `La foto deve mostrare: ${check}\nPrima immagine: il riferimento (quello che va trovato). Le immagini dopo: la foto del rispondente. Rispondi SI se la foto mostra almeno uno degli elementi del riferimento.\n\n${photo.referenceImageUrl}\n\n{{${code}_FOTO_JSON}}`
+          : `La foto deve mostrare: ${check}\n\n{{${code}_FOTO_JSON}}`,
         resultVariable: `${code}_FOTO_AI`,
       }),
       // No answer from the AI never blocks the respondent.
@@ -1083,6 +1098,12 @@ Nothing else.`,
         },
       ]),
     );
+    const failGroup = failTarget
+      ? bot
+          .createGroup(`${code} FOTO NON VALIDA - RITORNO`)
+          .add(bot.setVariable(`${code}_TENTATIVI`, "return 0"))
+          .setNext(failTarget)
+      : undefined;
     retryGroup.add(
       bot.condition([
         {
@@ -1091,7 +1112,7 @@ Nothing else.`,
             ComparisonOperators.GREATER_OR_EQUAL,
             "2",
           ),
-          to: descriptionGroup?.start() ?? toContinue,
+          to: failGroup?.start() ?? descriptionGroup?.start() ?? toContinue,
         },
       ]),
       bot.textBubble(labels.photoNotRecognized),

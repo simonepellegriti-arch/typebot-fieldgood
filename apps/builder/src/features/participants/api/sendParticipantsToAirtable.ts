@@ -3,8 +3,8 @@ import {
   getAirtableTable,
 } from "@typebot.io/bot-engine/participants/airtableClient";
 import {
-  airtableStandardFields,
   airtableTokenSchema,
+  getAirtableStandardFields,
   parseParticipantAirtable,
   parseParticipantPanelColumns,
   participantRowSchema,
@@ -79,6 +79,7 @@ export const sendParticipantsToAirtable = async (typebot: {
   });
   if (participants.length === 0) return { sentCount: 0 };
   const fieldNames = new Set(airtable.fieldNames);
+  const standardFieldNames = getAirtableStandardFields(airtable);
   const keepExisting = (fields: Record<string, string>) =>
     Object.fromEntries(
       Object.entries(fields).filter(([name]) => fieldNames.has(name)),
@@ -103,12 +104,9 @@ export const sendParticipantsToAirtable = async (typebot: {
               participant.externalId ?? participant.token,
           }
         : {}),
-      [airtableStandardFields.id]: participant.externalId ?? participant.token,
-      [airtableStandardFields.link]: getParticipantLink(
-        typebot,
-        participant.token,
-      ),
-      [airtableStandardFields.status]: participantStatusLabels[status],
+      [standardFieldNames.id]: participant.externalId ?? participant.token,
+      [standardFieldNames.link]: getParticipantLink(typebot, participant.token),
+      [standardFieldNames.status]: participantStatusLabels[status],
     });
   });
   // Saved batch by batch: a failure halfway never creates duplicates on retry.

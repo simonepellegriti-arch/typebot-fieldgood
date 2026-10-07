@@ -359,6 +359,78 @@ describe("photo of the products with an AI check or a description", () => {
   });
 });
 
+describe("photo checked against a reference image, back to an earlier question", () => {
+  const { typebot, warnings } = convertQuestionnaireSpecToTypebot(
+    {
+      ...spec,
+      questions: [
+        question({
+          code: "Q7a",
+          type: "single",
+          text: "Sei sicuro di essere davanti allo scaffale giusto?",
+          options: [
+            option("1", "Sì, ora le vedo"),
+            option("2", "Non ci sono", { goTo: "RETURN:Q7a" }),
+          ],
+        }),
+        question({
+          code: "Q9X",
+          type: "photo",
+          text: "Fai una foto delle confezioni.",
+          photo: {
+            check: "una confezione Kinderini limited edition",
+            allowDescription: false,
+            describePrompt: null,
+            referenceImageUrl: "https://example.com/confezioni.png",
+            failGoTo: "Q7a",
+          },
+        }),
+      ],
+    },
+    { openAiCredentialsId: "cred_openai" },
+  );
+  const blocks = typebot.groups.flatMap((group) => group.blocks);
+
+  it("sends the reference image with the photo and goes back after two failures", () => {
+    expect(warnings).toEqual([]);
+    const check = blocks.find(
+      (block) =>
+        block.type === "openai" &&
+        block.options?.action === "Create chat completion",
+    );
+    expect(JSON.stringify(check?.options)).toContain(
+      "\\n\\nhttps://example.com/confezioni.png\\n\\n{{Q9X_FOTO_JSON}}",
+    );
+    const failGroup = typebot.groups.find(
+      (group) => group.title === "Q9X FOTO NON VALIDA - RITORNO",
+    );
+    const q7aGroup = typebot.groups.find((group) => group.title === "Q7a");
+    const failEdge = typebot.edges.find(
+      (edge) =>
+        "blockId" in edge.from &&
+        edge.from.blockId === failGroup?.blocks.at(-1)?.id,
+    );
+    expect(failEdge?.to.groupId).toBe(q7aGroup?.id);
+  });
+
+  it("keeps the chat open on a pause, with a button to go on", async () => {
+    const interview = await runTestInterview(
+      {
+        ...typebot,
+        id: "pause",
+        isArchived: false,
+        updatedAt: new Date(),
+        workspaceId: "w",
+      },
+      ["Non ci sono", "▶️ Sono pronto, riprendiamo"],
+    );
+    expect(interview.transcript.join("\n")).toContain("riapri questo link");
+    expect(interview.transcript.join("\n").match(/Sei sicuro/g)?.length).toBe(
+      2,
+    );
+  });
+});
+
 describe("photo questions", () => {
   it("become photo blocks with the number of photos asked", () => {
     const { typebot } = convertQuestionnaireSpecToTypebot({

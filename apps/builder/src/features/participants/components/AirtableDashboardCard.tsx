@@ -17,6 +17,7 @@ type Props = {
     tableName: string | null;
     fieldNames: string[];
     hasToken: boolean;
+    linkedView: string | null;
     headers: { variableName: string; header: string }[];
   } | null;
   unsentCount: number;
@@ -39,6 +40,8 @@ export const AirtableDashboardCard = ({
   const [table, setTable] = useState(
     airtable?.tableName ?? airtable?.tableId ?? "",
   );
+  const [view, setView] = useState(airtable?.linkedView ?? "");
+  const [variableFields, setVariableFields] = useState("Nome");
 
   const { mutate: connect, isPending: isConnecting } = useMutation(
     orpc.participants.connectAirtable.mutationOptions({
@@ -80,6 +83,21 @@ export const AirtableDashboardCard = ({
                   created: data.createdCount,
                   renamed: data.renamedCount,
                 }),
+        });
+        onChange();
+      },
+      onError: (error) => toast({ description: error.message }),
+    }),
+  );
+  const { mutate: importView, isPending: isImportingView } = useMutation(
+    orpc.participants.importAirtableView.mutationOptions({
+      onSuccess: (data) => {
+        toast({
+          type: "success",
+          description: t("participants.airtable.viewImported", {
+            count: data.importedCount,
+            skipped: data.skippedCount,
+          }),
         });
         onChange();
       },
@@ -195,6 +213,47 @@ export const AirtableDashboardCard = ({
           </>
         )}
       </div>
+      {airtable && (
+        <div className="flex flex-col gap-3 pt-3 border-t">
+          <p className="text-sm text-gray-11">
+            {t("participants.airtable.viewDescription")}
+          </p>
+          <div className="flex flex-wrap items-end gap-3">
+            <Field.Root className="flex-1 min-w-40">
+              <Field.Label>{t("participants.airtable.view")}</Field.Label>
+              <Input
+                value={view}
+                placeholder="CHATBOT"
+                onValueChange={setView}
+              />
+            </Field.Root>
+            <Field.Root className="flex-1 min-w-56">
+              <Field.Label>{t("participants.airtable.viewFields")}</Field.Label>
+              <Input
+                value={variableFields}
+                placeholder="Nome"
+                onValueChange={setVariableFields}
+              />
+            </Field.Root>
+            <Button
+              variant="secondary"
+              disabled={isImportingView || !view.trim()}
+              onClick={() =>
+                importView({
+                  typebotId,
+                  view: view.trim(),
+                  variableFields: variableFields
+                    .split(",")
+                    .map((name) => name.trim())
+                    .filter(Boolean),
+                })
+              }
+            >
+              {t("participants.airtable.importView")}
+            </Button>
+          </div>
+        </div>
+      )}
       {airtable && airtable.headers.length > 0 && (
         <AirtableHeadersEditor
           headers={airtable.headers}

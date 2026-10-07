@@ -246,6 +246,10 @@ const photoOrNull = z.preprocess(
       check: textOrNull,
       allowDescription: booleanOrFalse,
       describePrompt: textOrNull,
+      referenceImageUrl: textOrNull.transform((url) =>
+        url && /^https?:\/\//i.test(url.trim()) ? url.trim() : null,
+      ),
+      failGoTo: textOrNull.transform((code) => code?.trim() || null),
     })
     .nullable()
     .transform((photo) =>

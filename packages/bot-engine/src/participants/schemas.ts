@@ -46,6 +46,22 @@ export const participantAirtableSchema = z.object({
   fieldMap: z.record(z.string(), z.string()).optional(),
   /** Bot variable → Airtable field id: follows a field across renames. */
   fieldIds: z.record(z.string(), z.string()).optional(),
+  /**
+   * The participants are the records of this view of an existing table (e.g.
+   * the recruitment table): answers go into those records.
+   */
+  linkedView: z.string().optional(),
+  /** Names of the standard fields when they differ from the defaults. */
+  standardFieldNames: z
+    .object({
+      id: z.string(),
+      link: z.string(),
+      status: z.string(),
+      checkpoint: z.string(),
+      lastActivity: z.string(),
+    })
+    .partial()
+    .optional(),
 });
 export type ParticipantAirtable = z.infer<typeof participantAirtableSchema>;
 
@@ -65,6 +81,19 @@ export const airtableStandardFields = {
   checkpoint: "Checkpoint",
   lastActivity: "Ultima attività",
 } as const;
+
+/** Standard fields in a table that already has its own columns (recruitment). */
+export const linkedTableStandardFieldNames = {
+  link: "Link Chatbot",
+  status: "Stato Chatbot",
+  checkpoint: "Checkpoint Chatbot",
+  lastActivity: "Ultima attività Chatbot",
+} as const;
+
+/** Standard field names of a connected table. */
+export const getAirtableStandardFields = (
+  airtable: Pick<ParticipantAirtable, "standardFieldNames"> | undefined,
+) => ({ ...airtableStandardFields, ...airtable?.standardFieldNames });
 
 export const parseParticipantPanelColumns = (value: unknown) =>
   participantPanelColumnsSchema.safeParse(value).data ?? {

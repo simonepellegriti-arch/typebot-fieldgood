@@ -63,6 +63,7 @@ export const handleGetParticipants = async ({
                 tableName: airtable.tableName ?? null,
                 fieldNames: airtable.fieldNames,
                 hasToken: Boolean(panel.airtableTokenData),
+                linkedView: airtable.linkedView ?? null,
                 // Answer columns and their headers, in flow order.
                 headers: getAnswerColumns(typebot.groups, typebot.variables)
                   .filter((column) => airtable.fieldMap?.[column.variableName])
