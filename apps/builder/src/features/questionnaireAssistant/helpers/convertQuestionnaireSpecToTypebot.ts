@@ -469,7 +469,16 @@ export const convertQuestionnaireSpecToTypebot = (
       return;
     }
 
-    group.add(...buildQuestionBlocks({ question, bot, labels, pipe }));
+    if (question.type === "photo" && question.photo)
+      addCheckedPhotoQuestion(group, {
+        bot,
+        labels,
+        question,
+        photo: question.photo,
+        pipe,
+        credentialsId: openAiCredentialsId,
+      });
+    else group.add(...buildQuestionBlocks({ question, bot, labels, pipe }));
     // Readable answer (labels instead of codes) for piping and Airtable.
     if (labelledCodes.has(question.code))
       group.add(
@@ -955,6 +964,187 @@ const addTranscription = (
     ),
   );
   afterTranscription.position = group.mark();
+};
+
+/**
+ * Photo question with an AI check and/or a description instead of the photo:
+ *   CODE_MODO       Foto / Descrizione (when describing is allowed)
+ *   CODE            the photo links
+ *   CODE_FOTO_OK    Sì / No: the AI sees what was asked (a failed check counts as Sì)
+ *   CODE_PRODOTTI_FOTO  what the AI recognizes in the photo
+ *   CODE_DESCRIZIONE    the description, written or by voice (+ _URL, _TRASCRIZIONE)
+ * A photo that doesn't show what was asked can be replaced (or described);
+ * after the second one the interview goes on.
+ */
+const addCheckedPhotoQuestion = (
+  group: GroupBuilder,
+  {
+    bot,
+    labels,
+    question,
+    photo,
+    pipe,
+    credentialsId,
+  }: {
+    bot: ReturnType<typeof createBotBuilder>;
+    labels: BotLabels;
+    question: QuestionnaireQuestion;
+    photo: NonNullable<QuestionnaireQuestion["photo"]>;
+    pipe: (text: string) => string;
+    credentialsId: string | undefined;
+  },
+) => {
+  const { code } = question;
+  const text = pipe(question.text);
+  const instructions = question.instructions
+    ? pipe(question.instructions)
+    : undefined;
+  const photoPosition = { value: -1 };
+  const continuePosition = { value: -1 };
+  const toPhoto: LazyTarget = () => group.at(photoPosition.value)();
+  const toContinue: LazyTarget = () => group.at(continuePosition.value)();
+  const descriptionGroup = photo.allowDescription
+    ? bot.createGroup(`${code} DESCRIZIONE`)
+    : undefined;
+  const isChecked = Boolean(photo.check && credentialsId);
+  const retryGroup = isChecked
+    ? bot.createGroup(`${code} FOTO NON RICONOSCIUTA`)
+    : undefined;
+
+  if (descriptionGroup)
+    group.add(
+      bot.textBubble(text, instructions),
+      bot.buttons(
+        [
+          { label: labels.photoChoice, value: "Foto", to: toPhoto },
+          {
+            label: labels.describeChoice,
+            value: "Descrizione",
+            to: descriptionGroup.start(),
+          },
+        ],
+        `${code}_MODO`,
+      ),
+    );
+  photoPosition.value = group.mark();
+  group.add({
+    id: createId(),
+    type: InputBlockType.PHOTO,
+    options: {
+      variableId: bot.variable(code),
+      question: descriptionGroup
+        ? labels.photoPrompt
+        : instructions
+          ? `${text}\n${instructions}`
+          : text,
+      buttonLabel: labels.send,
+      source: "cameraOrGallery",
+      maxPhotos: Math.min(
+        maxPhotosLimit,
+        Math.max(1, Math.round(question.maxSelections ?? 1)),
+      ),
+    },
+  });
+  if (isChecked && retryGroup && credentialsId) {
+    const check = photo.check ?? "";
+    group.add(
+      bot.setVariable(
+        `${code}_TENTATIVI`,
+        `return Number({{${code}_TENTATIVI}} || 0) + 1`,
+      ),
+      bot.textBubble(labels.checkingPhoto),
+      bot.setVariable(
+        `${code}_FOTO_JSON`,
+        `return JSON.stringify(String({{${code}}} || "").split(/,\\s*/).filter(Boolean))`,
+      ),
+      bot.lookAtImages({
+        credentialsId,
+        system: `You check photos sent by respondents of a market research interview. The photo must show: ${check}.
+Look at the images and answer on one line, in the language of that description:
+"SI | <the products / packs you recognize, brand and name when readable>" when the photo shows it,
+"NO | <what the photo shows instead>" otherwise (people, documents, blurry or unrelated pictures).
+Nothing else.`,
+        user: `La foto deve mostrare: ${check}\n\n{{${code}_FOTO_JSON}}`,
+        resultVariable: `${code}_FOTO_AI`,
+      }),
+      // No answer from the AI never blocks the respondent.
+      bot.setVariable(
+        `${code}_FOTO_OK`,
+        `return /^\\s*NO\\b/i.test(String({{${code}_FOTO_AI}} || "")) ? "No" : "Sì"`,
+      ),
+      bot.setVariable(
+        `${code}_PRODOTTI_FOTO`,
+        `return String({{${code}_FOTO_AI}} || "").split("|").slice(1).join("|").trim()`,
+      ),
+      bot.condition([
+        {
+          content: equals(bot.variable(`${code}_FOTO_OK`), "No"),
+          to: retryGroup.start(),
+        },
+      ]),
+    );
+    retryGroup.add(
+      bot.condition([
+        {
+          content: comparison(
+            bot.variable(`${code}_TENTATIVI`),
+            ComparisonOperators.GREATER_OR_EQUAL,
+            "2",
+          ),
+          to: descriptionGroup?.start() ?? toContinue,
+        },
+      ]),
+      bot.textBubble(labels.photoNotRecognized),
+      bot.buttons(
+        [
+          { label: labels.retryPhoto, value: "Foto", to: toPhoto },
+          ...(descriptionGroup
+            ? [
+                {
+                  label: labels.describeChoice,
+                  value: "Descrizione",
+                  to: descriptionGroup.start(),
+                },
+              ]
+            : []),
+        ],
+        `${code}_MODO`,
+      ),
+    );
+  }
+  if (descriptionGroup) {
+    const answerVariable = `${code}_DESCRIZIONE`;
+    descriptionGroup.add(
+      bot.textBubble(
+        photo.describePrompt
+          ? pipe(photo.describePrompt)
+          : labels.describePrompt,
+      ),
+      {
+        id: createId(),
+        type: InputBlockType.TEXT,
+        options: {
+          variableId: bot.variable(answerVariable),
+          isLong: true,
+          labels: { placeholder: labels.typeOrSpeak, button: labels.send },
+          audioClip: {
+            isEnabled: true,
+            saveVariableId: bot.variable(`${answerVariable}_URL`),
+            visibility: "Public",
+          },
+        },
+      },
+    );
+    if (credentialsId)
+      addTranscription(descriptionGroup, {
+        bot,
+        credentialsId,
+        audioUrlVariable: `${answerVariable}_URL`,
+        resultVariable: answerVariable,
+      });
+    descriptionGroup.setNext(toContinue);
+  }
+  continuePosition.value = group.mark();
 };
 
 /**

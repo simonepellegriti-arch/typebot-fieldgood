@@ -159,6 +159,28 @@ export const questionnaireQuestionSchema = z.object({
     .describe(
       "Video or image shown before the question text (concept, pack, spot), or null.",
     ),
+  photo: z
+    .object({
+      check: z
+        .string()
+        .nullable()
+        .describe(
+          "What the photo must show, verified by AI on the picture (e.g. 'confezioni di farmaci o prodotti per digestione, bruciore o reflusso'), or null for no check.",
+        ),
+      allowDescription: z
+        .boolean()
+        .describe(
+          "The respondent may describe in words (written or voice) instead of sending a photo.",
+        ),
+      describePrompt: z
+        .string()
+        .nullable()
+        .describe(
+          "When allowDescription: the request for the description (e.g. 'Scrivimi o dimmi a voce quali prodotti usi: nome e formato'), or null for the default.",
+        ),
+    })
+    .nullable()
+    .describe("photo only: AI check and alternative description, or null."),
   showIf: conditionGroupSchema
     .nullable()
     .describe(

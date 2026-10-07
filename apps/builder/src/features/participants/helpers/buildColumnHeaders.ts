@@ -83,6 +83,10 @@ const suffixOf = (column: AnswerColumn) => {
       return round ? `${round} video` : " – video";
     case "watch":
       return " – visione video (%)";
+    case "photoCheck":
+      return " – foto valida (AI)";
+    case "photoProducts":
+      return " – prodotti riconosciuti (AI)";
   }
 };
 

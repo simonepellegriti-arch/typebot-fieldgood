@@ -115,6 +115,20 @@ export const getAnswerColumns = (groups: unknown, variables: unknown) => {
             kind: "transcription",
           });
       }
+      // Result of the AI photo check (CODE_FOTO_OK, CODE_PRODOTTI_FOTO).
+      if (block.type === "Set variable") {
+        const checkName = nameOf(block.options?.variableId);
+        const checkMatch = checkName?.match(/^(.+)_(FOTO_OK|PRODOTTI_FOTO)$/);
+        const photoColumn = checkMatch
+          ? columnByVariable.get(checkMatch[1] ?? "")
+          : undefined;
+        if (checkName && checkMatch && photoColumn)
+          add({
+            ...photoColumn,
+            variableName: checkName,
+            kind: checkMatch[2] === "FOTO_OK" ? "photoCheck" : "photoProducts",
+          });
+      }
     }
   }
   return columns;
@@ -122,7 +136,14 @@ export const getAnswerColumns = (groups: unknown, variables: unknown) => {
 
 export type AnswerColumn = {
   variableName: string;
-  kind: "answer" | "audio" | "video" | "transcription" | "watch";
+  kind:
+    | "answer"
+    | "audio"
+    | "video"
+    | "transcription"
+    | "watch"
+    | "photoCheck"
+    | "photoProducts";
   /** Code of the question (the follow-ups and files of A1 have "A1"). */
   baseName: string;
   /** AI follow-up round (A1_R1 → 1). */

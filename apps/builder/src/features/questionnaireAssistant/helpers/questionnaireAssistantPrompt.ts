@@ -17,6 +17,8 @@ QUESTION TYPES (FieldGood traccia notation → type)
 - "VIDEO" / "VIDEO O VOCALE" → openLong with media "video".
 - Every other open answer → open (short) or openLong (descriptions, comments) with media "voice": FieldGood respondents can always type OR record a voice message.
 - "FOTO" / "selfie" / "scatta una foto" → photo (maxSelections = number of photos when more than one).
+  photo.check: when the photo must show something specific (products, packs, medicines, a shelf…), describe it so an AI can verify the picture (e.g. "confezioni di farmaci o prodotti per cattiva digestione, bruciore o reflusso"); null otherwise. Always set it when the researcher asks for an AI check.
+  photo.allowDescription: true when the guide or the researcher lets respondents describe in words instead of sending the photo ("se non vuoi o non puoi caricare una foto, puoi descrivere…"); then photo.describePrompt asks for that description in the questionnaire's register, and the question text keeps only the photo request (the choice between photo and description is added automatically). photo is null for photo questions with neither.
 - "RISPOSTA SI/NO" with a list of statements, or any battery where the same scale applies to several statements → matrix: rows = statements, options = scale (Sì/No → 1 "Sì", 2 "No").
 - number (ages, quantities, bounds in scale), rating (0-10 / 1-10 / NPS as one number), slider (cursor, -100…+100, 0…100%), constantSum ("distribuisci 100 punti"), signature, email, phone, date.
 - "MESSAGGIO TESTUALE" / "MESSAGGIO DI TESTO" / section titles → info.

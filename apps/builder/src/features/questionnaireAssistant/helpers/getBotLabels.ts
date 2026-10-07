@@ -22,6 +22,15 @@ const italianTu = {
     "Nessun problema: potrai rispondere anche scrivendo. Cominciamo!",
   pause:
     "Perfetto 👍 Quando sarai pronto, riapri questo link e riprendiamo da dove eravamo rimasti.",
+  photoChoice: "📷 Carico una foto",
+  describeChoice: "✍️ Preferisco descriverli",
+  photoPrompt: "Scatta la foto o sceglila dalla galleria 📷",
+  checkingPhoto: "Un attimo, guardo la foto… 👀",
+  photoNotRecognized:
+    "Dalla foto non riesco a riconoscere quello che ti ho chiesto. Puoi riprovare con un'altra foto oppure descriverli a parole.",
+  retryPhoto: "📷 Riprovo con un'altra foto",
+  describePrompt:
+    "Va benissimo! Scrivimi o dimmi a voce quali sono: nome e, se lo ricordi, il formato.",
 };
 
 const italianLei: typeof italianTu = {
@@ -41,6 +50,15 @@ const italianLei: typeof italianTu = {
     "Nessun problema: potrà rispondere anche scrivendo. Cominciamo!",
   pause:
     "Perfetto 👍 Quando sarà pronto, riapra questo link e riprenderemo da dove eravamo rimasti.",
+  photoChoice: "📷 Carico una foto",
+  describeChoice: "✍️ Preferisco descriverli",
+  photoPrompt: "Scatti la foto o la scelga dalla galleria 📷",
+  checkingPhoto: "Un attimo, guardo la foto… 👀",
+  photoNotRecognized:
+    "Dalla foto non riesco a riconoscere quello che le ho chiesto. Può riprovare con un'altra foto oppure descriverli a parole.",
+  retryPhoto: "📷 Riprovo con un'altra foto",
+  describePrompt:
+    "Va benissimo! Mi scriva o mi dica a voce quali sono: nome e, se lo ricorda, il formato.",
 };
 
 const english: typeof italianTu = {
@@ -66,6 +84,15 @@ const english: typeof italianTu = {
   voiceTestWritten: "No problem: you can also answer in writing. Let's start!",
   pause:
     "Great 👍 When you're ready, open this link again and we'll pick up where we left off.",
+  photoChoice: "📷 I'll upload a photo",
+  describeChoice: "✍️ I'd rather describe them",
+  photoPrompt: "Take the photo or pick it from your gallery 📷",
+  checkingPhoto: "Just a moment, I'm looking at the photo… 👀",
+  photoNotRecognized:
+    "I can't recognize what I asked for in the photo. You can try another photo or describe them in words.",
+  retryPhoto: "📷 Try another photo",
+  describePrompt:
+    "That's fine! Write or tell me which ones: name and, if you remember, the format.",
 };
 
 /** Buttons and default messages of generated bots, in the questionnaire language and register. */

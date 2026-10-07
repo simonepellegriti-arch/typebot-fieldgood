@@ -285,6 +285,42 @@ export const createBotBuilder = () => {
     },
   });
 
+  /**
+   * Chat message to a vision model: image links in the user message (a JSON
+   * list after a blank line) are sent as images.
+   */
+  const lookAtImages = ({
+    credentialsId,
+    system,
+    user,
+    resultVariable,
+  }: {
+    credentialsId: string;
+    system: string;
+    user: string;
+    resultVariable: string;
+  }): BotBlock => ({
+    id: createId(),
+    type: "openai",
+    options: {
+      credentialsId,
+      action: "Create chat completion",
+      model: "gpt-4o",
+      temperature: 0,
+      messages: [
+        { id: createId(), role: "system", content: system },
+        { id: createId(), role: "user", content: user },
+      ],
+      responseMapping: [
+        {
+          id: createId(),
+          item: "Message content",
+          variableId: variable(resultVariable),
+        },
+      ],
+    },
+  });
+
   /** Final bot: edges resolved, groups laid out in rows of four. */
   const build = ({ startTarget }: { startTarget: LazyTarget }) => {
     for (const { group, getNextTarget } of groups) {
@@ -335,6 +371,7 @@ export const createBotBuilder = () => {
     httpRequest,
     transcription,
     generateText,
+    lookAtImages,
     build,
   };
 };

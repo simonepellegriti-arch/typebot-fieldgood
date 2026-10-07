@@ -80,6 +80,7 @@ const question = (
   media: null,
   probe: null,
   stimulus: null,
+  photo: null,
   showIf: null,
   terminateIf: null,
   ...overrides,
@@ -278,6 +279,83 @@ describe("convertQuestionnaireSpecToTypebot", () => {
     const minor = await runTestInterview(runnableTypebot, ["16"]);
     expect(minor.transcript.join("\n")).toContain("l'intervista termina qui");
     expect(minor.transcript.join("\n")).not.toContain("Hai viaggiato");
+  });
+});
+
+describe("photo of the products with an AI check or a description", () => {
+  const { typebot, warnings } = convertQuestionnaireSpecToTypebot(
+    {
+      ...spec,
+      questions: [
+        question({
+          code: "B1",
+          type: "photo",
+          text: "Carica una foto dei prodotti che usi per la digestione.",
+          photo: {
+            check: "confezioni di farmaci o prodotti per la digestione",
+            allowDescription: true,
+            describePrompt: "Scrivimi o dimmi a voce quali prodotti usi.",
+          },
+        }),
+        question({ code: "B2", type: "open", text: "Da quanto li usi?" }),
+      ],
+    },
+    { openAiCredentialsId: "cred_openai" },
+  );
+  const blocks = typebot.groups.flatMap((group) => group.blocks);
+
+  it("asks photo or description, checks the photo and lets it be replaced", () => {
+    expect(warnings).toEqual([]);
+    expect(() =>
+      typebotV6Schema
+        .pick({ groups: true, edges: true, events: true, variables: true })
+        .parse(typebot),
+    ).not.toThrow();
+    expect(typebot.groups.map((group) => group.title)).toEqual(
+      expect.arrayContaining([
+        "B1",
+        "B1 DESCRIZIONE",
+        "B1 FOTO NON RICONOSCIUTA",
+      ]),
+    );
+    const photoBlock = blocks.find((block) => block.type === "photo input");
+    expect(photoBlock?.options).toMatchObject({ source: "cameraOrGallery" });
+    const check = blocks.find(
+      (block) =>
+        block.type === "openai" &&
+        block.options?.action === "Create chat completion",
+    );
+    expect(JSON.stringify(check?.options)).toContain(
+      "confezioni di farmaci o prodotti per la digestione",
+    );
+    expect(typebot.variables.map((variable) => variable.name)).toEqual(
+      expect.arrayContaining([
+        "B1_MODO",
+        "B1",
+        "B1_FOTO_OK",
+        "B1_PRODOTTI_FOTO",
+        "B1_DESCRIZIONE",
+        "B1_DESCRIZIONE_TRASCRIZIONE",
+      ]),
+    );
+  });
+
+  it("goes on to the next question after the description", async () => {
+    const interview = await runTestInterview(
+      {
+        ...typebot,
+        id: "photo",
+        isArchived: false,
+        updatedAt: new Date(),
+        workspaceId: "w",
+      },
+      ["✍️ Preferisco descriverli", "Uso Maalox Plus e Gaviscon"],
+    );
+    expect(interview.variables.B1_MODO).toBe("Descrizione");
+    expect(interview.variables.B1_DESCRIZIONE).toBe(
+      "Uso Maalox Plus e Gaviscon",
+    );
+    expect(interview.transcript.join("\n")).toContain("Da quanto li usi?");
   });
 });
 

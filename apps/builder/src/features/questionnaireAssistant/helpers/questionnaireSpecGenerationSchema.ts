@@ -239,6 +239,20 @@ const stimulusOrNull = z.preprocess(
     }),
 );
 
+const photoOrNull = z.preprocess(
+  (value) => (value === undefined ? null : value),
+  z
+    .object({
+      check: textOrNull,
+      allowDescription: booleanOrFalse,
+      describePrompt: textOrNull,
+    })
+    .nullable()
+    .transform((photo) =>
+      photo && (photo.check || photo.allowDescription) ? photo : null,
+    ),
+);
+
 const lenientQuestionSchema = z
   .object({
     code: requiredText,
@@ -282,6 +296,7 @@ const lenientQuestionSchema = z
     media: mediaOrNull,
     probe: probeOrNull,
     stimulus: stimulusOrNull,
+    photo: photoOrNull,
     showIf: conditionGroupOrNull,
     terminateIf: conditionGroupOrNull,
   })
