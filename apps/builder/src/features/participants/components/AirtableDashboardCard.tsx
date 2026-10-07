@@ -195,6 +195,7 @@ export const AirtableDashboardCard = ({
           headers={airtable.headers}
           isSaving={isCreatingFields}
           onSave={(headers) => createFields({ typebotId, headers })}
+          onRegenerate={() => createFields({ typebotId, regenerate: true })}
         />
       )}
     </div>

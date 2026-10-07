@@ -946,6 +946,7 @@
   "participants.airtable.fieldsUpdated": "Airtable updated: {created} fields created, {renamed} renamed",
   "participants.airtable.fieldsRemaining": "{done} fields updated, {count} left: click \"Create / update fields\" again",
   "participants.airtable.headers": "Column headers ({count})",
-  "participants.airtable.headersDescription": "On Airtable the answers are titled with the summarized question; the FIELDBOT export keeps the codes. You can edit any header: saving renames the field on Airtable.",
-  "participants.airtable.saveHeaders": "Save headers ({count})"
+  "participants.airtable.headersDescription": "On Airtable the answers are titled with the summarized question; the FIELDBOT export keeps the codes. You can edit any header: saving renames the field on Airtable. \"Regenerate with AI\" rewrites every title (manual edits included).",
+  "participants.airtable.saveHeaders": "Save headers ({count})",
+  "participants.airtable.regenerateHeaders": "Regenerate with AI"
 }

@@ -8,6 +8,7 @@ type Props = {
   headers: { variableName: string; header: string }[];
   isSaving: boolean;
   onSave: (changedHeaders: Record<string, string>) => void;
+  onRegenerate: () => void;
 };
 
 /**
@@ -15,7 +16,12 @@ type Props = {
  * one by one: saving renames the fields on Airtable. The FIELDBOT export keeps
  * the codes.
  */
-export const AirtableHeadersEditor = ({ headers, isSaving, onSave }: Props) => {
+export const AirtableHeadersEditor = ({
+  headers,
+  isSaving,
+  onSave,
+  onRegenerate,
+}: Props) => {
   const { t } = useTranslate();
   const [editedHeaders, setEditedHeaders] = useState<Record<string, string>>(
     {},
@@ -65,13 +71,16 @@ export const AirtableHeadersEditor = ({ headers, isSaving, onSave }: Props) => {
               </div>
             ))}
           </div>
-          <div className="flex">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="secondary"
               disabled={isSaving || changedCount === 0}
               onClick={save}
             >
               {t("participants.airtable.saveHeaders", { count: changedCount })}
+            </Button>
+            <Button variant="ghost" disabled={isSaving} onClick={onRegenerate}>
+              {t("participants.airtable.regenerateHeaders")}
             </Button>
           </div>
         </Accordion.Panel>

@@ -27,6 +27,8 @@ export const getAnswerColumns = (groups: unknown, variables: unknown) => {
   };
   // Audio variable → answer it belongs to (transcriptions point at the audio).
   const answerByAudioVariable = new Map<string, string>();
+  // "Perché?" only makes sense with the question before it.
+  let previousQuestionText = "";
 
   for (const group of groupsSchema.safeParse(groups).data ?? []) {
     let pendingText: string[] = [];
@@ -47,6 +49,7 @@ export const getAnswerColumns = (groups: unknown, variables: unknown) => {
           baseName,
           round: undefined,
           questionText: pendingText.join("\n") || group.title,
+          previousQuestionText,
         });
         continue;
       }
@@ -65,15 +68,21 @@ export const getAnswerColumns = (groups: unknown, variables: unknown) => {
                   baseName: probedColumn.baseName,
                   round: Number(probe[2]),
                   questionText: probedColumn.questionText,
+                  previousQuestionText: probedColumn.previousQuestionText,
                 }
               : {
                   variableName: answerName,
                   kind: "answer",
                   baseName: answerName,
                   round: undefined,
-                  questionText: pendingText.join("\n") || group.title,
+                  questionText:
+                    pendingText.join("\n") ||
+                    block.options?.question ||
+                    group.title,
+                  previousQuestionText,
                 };
           add(answerColumn);
+          if (!probedColumn) previousQuestionText = answerColumn.questionText;
           const audioName = nameOf(block.options?.audioClip?.saveVariableId);
           if (audioName) {
             answerByAudioVariable.set(audioName, answerName);
@@ -119,6 +128,8 @@ export type AnswerColumn = {
   /** AI follow-up round (A1_R1 → 1). */
   round: number | undefined;
   questionText: string;
+  /** Text of the question asked before (context for "Perché?"). */
+  previousQuestionText: string;
 };
 
 const inputBlockTypes = new Set<string>(Object.values(InputBlockType));
@@ -135,6 +146,8 @@ const blockSchema = z.object({
       action: z.string().optional(),
       url: z.string().optional(),
       transcriptionVariableId: z.string().optional(),
+      /** Photo input: the request shown with the camera button. */
+      question: z.string().optional(),
     })
     .passthrough()
     .optional(),

@@ -19,6 +19,8 @@ export const createAirtableFieldsInputSchema = z.object({
   typebotId: z.string(),
   /** Headers edited by the researcher: variable → header. */
   headers: z.record(z.string(), z.string()).optional(),
+  /** New AI titles for every column (edited headers are lost). */
+  regenerate: z.boolean().optional(),
 });
 
 /**
@@ -30,7 +32,7 @@ export const createAirtableFieldsInputSchema = z.object({
  * out and says how many fields are left.
  */
 export const handleCreateAirtableFields = async ({
-  input: { typebotId, headers: editedHeaders },
+  input: { typebotId, headers: editedHeaders, regenerate },
   context: { user },
 }: {
   input: z.infer<typeof createAirtableFieldsInputSchema>;
@@ -59,7 +61,9 @@ export const handleCreateAirtableFields = async ({
   ];
 
   const previousHeaders = airtable.fieldMap ?? {};
-  const currentHeaders = { ...previousHeaders };
+  const currentHeaders: Record<string, string> = regenerate
+    ? {}
+    : { ...previousHeaders };
   for (const [variableName, header] of Object.entries(editedHeaders ?? {}))
     if (cleanHeader(header)) currentHeaders[variableName] = cleanHeader(header);
   const questionsToTitle = [
@@ -68,7 +72,11 @@ export const handleCreateAirtableFields = async ({
         .filter((column) => !currentHeaders[column.variableName])
         .map((column) => [
           column.baseName,
-          { code: column.baseName, text: column.questionText },
+          {
+            code: column.baseName,
+            text: column.questionText,
+            previousText: column.previousQuestionText,
+          },
         ]),
     ).values(),
   ];

@@ -787,6 +787,7 @@
   "participants.airtable.fieldsUpdated": "Airtable aggiornato: {created} campi creati, {renamed} rinominati",
   "participants.airtable.fieldsRemaining": "{done} campi aggiornati, ne mancano {count}: clicca di nuovo \"Crea / aggiorna i campi\"",
   "participants.airtable.headers": "Intestazioni delle colonne ({count})",
-  "participants.airtable.headersDescription": "Su Airtable le risposte hanno come titolo la domanda sintetizzata; lo scarico di FIELDBOT resta con i codici. Puoi correggere ogni intestazione: salvando, il campo viene rinominato su Airtable.",
-  "participants.airtable.saveHeaders": "Salva intestazioni ({count})"
+  "participants.airtable.headersDescription": "Su Airtable le risposte hanno come titolo la domanda sintetizzata; lo scarico di FIELDBOT resta con i codici. Puoi correggere ogni intestazione: salvando, il campo viene rinominato su Airtable. \"Rigenera con l'AI\" riscrive tutti i titoli (anche quelli corretti a mano).",
+  "participants.airtable.saveHeaders": "Salva intestazioni ({count})",
+  "participants.airtable.regenerateHeaders": "Rigenera con l'AI"
 }

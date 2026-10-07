@@ -12,10 +12,10 @@ export const synthesizeQuestionTitles = async ({
   questions,
 }: {
   models: LanguageModel[];
-  questions: { code: string; text: string }[];
+  questions: { code: string; text: string; previousText: string }[];
 }) => {
   const titles = new Map<string, string>();
-  const batches: { code: string; text: string }[][] = [];
+  const batches: (typeof questions)[] = [];
   for (let start = 0; start < questions.length; start += batchSize)
     batches.push(questions.slice(start, start + batchSize));
   const results = await Promise.all(
@@ -41,12 +41,14 @@ For every question you get its code and its text as shown to the respondent. Wri
 - a neutral noun phrase, no question mark, no code, no quotes, no emoji
 - keep product, brand or stimulus names when the question is about one of them (repeated blocks must stay distinguishable)
 - ignore greetings, thanks and instructions such as "una sola risposta" or "puoi rispondere a voce"
+- "previous" is the question asked just before: when the question only asks why, or makes no sense alone, title it after the previous one ("Perché?" after a question about the relationship with digestion → "Motivo rapporto con digestione")
+- every title must say what is specific to its question: two different questions never get the same title
 Examples: "Che cosa fai nella vita e come descriveresti il tuo stile di vita?" → "Lavoro e stile di vita"; "Quanto ti è piaciuto lo spot di Gaviscon che hai appena visto?" → "Gradimento spot Gaviscon".
 Return one title per code.`;
 
 const generateTitles = async (
   models: LanguageModel[],
-  batch: { code: string; text: string }[],
+  batch: { code: string; text: string; previousText: string }[],
 ) => {
   let lastError: unknown;
   for (const model of models) {
@@ -59,6 +61,7 @@ const generateTitles = async (
           batch.map((question) => ({
             code: question.code,
             text: question.text.slice(0, 600),
+            previous: question.previousText.slice(0, 300),
           })),
         ),
         providerOptions: { openai: { strictJsonSchema: true } },
