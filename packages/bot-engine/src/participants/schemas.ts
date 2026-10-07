@@ -39,6 +39,11 @@ export const participantAirtableSchema = z.object({
   primaryFieldName: z.string().optional(),
   /** Fields of the table when last checked: only these are written. */
   fieldNames: z.array(z.string()),
+  /**
+   * Bot variable → Airtable header (short question title, e.g. A1 →
+   * "Lavoro e stile di vita"). Variables without one use their own name.
+   */
+  fieldMap: z.record(z.string(), z.string()).optional(),
 });
 export type ParticipantAirtable = z.infer<typeof participantAirtableSchema>;
 

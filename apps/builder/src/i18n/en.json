@@ -938,10 +938,14 @@
   "participants.airtable.connect": "Connect Airtable",
   "participants.airtable.update": "Update connection",
   "participants.airtable.connected": "Connected to table {table}",
-  "participants.airtable.createFields": "Create missing fields",
-  "participants.airtable.fieldsCreated": "{count} fields created on Airtable",
+  "participants.airtable.createFields": "Create / update fields",
   "participants.airtable.fieldsFailed": "Fields not created ({names}): {error}",
   "participants.airtable.send": "Send to Airtable ({count})",
   "participants.airtable.sent": "{count} participants sent to Airtable",
-  "participants.airtable.sendError": "Airtable not updated:"
+  "participants.airtable.sendError": "Airtable not updated:",
+  "participants.airtable.fieldsUpdated": "Airtable updated: {created} fields created, {renamed} renamed",
+  "participants.airtable.fieldsRemaining": "{done} fields updated, {count} left: click \"Create / update fields\" again",
+  "participants.airtable.headers": "Column headers ({count})",
+  "participants.airtable.headersDescription": "On Airtable the answers are titled with the summarized question; the FIELDBOT export keeps the codes. You can edit any header: saving renames the field on Airtable.",
+  "participants.airtable.saveHeaders": "Save headers ({count})"
 }

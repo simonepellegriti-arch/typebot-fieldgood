@@ -102,6 +102,7 @@ export const updateParticipantProgress = async ({
         ...getAirtableAnswerFields(state, {
           fieldNames: airtable.fieldNames,
           excludedNames,
+          fieldMap: airtable.fieldMap,
         }),
         ...standardFields,
       },

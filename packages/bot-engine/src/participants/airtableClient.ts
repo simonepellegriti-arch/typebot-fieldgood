@@ -78,6 +78,7 @@ export const getAirtableTable = async (
     id: found.id,
     name: found.name,
     fieldNames: found.fields.map((field) => field.name),
+    fields: found.fields,
     primaryFieldName: found.fields.find(
       (field) => field.id === found.primaryFieldId,
     )?.name,
@@ -92,6 +93,21 @@ export const createAirtableField = (
     method: "POST",
     body: { name, type: "multilineText" },
   });
+
+export const renameAirtableField = (
+  token: string,
+  {
+    baseId,
+    tableId,
+    fieldId,
+    name,
+  }: { baseId: string; tableId: string; fieldId: string; name: string },
+) =>
+  airtableRequest(
+    token,
+    `meta/bases/${baseId}/tables/${tableId}/fields/${fieldId}`,
+    { method: "PATCH", body: { name } },
+  );
 
 const recordsSchema = z.object({
   records: z.array(z.object({ id: z.string() })),

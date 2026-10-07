@@ -779,10 +779,14 @@
   "participants.airtable.connect": "Collega Airtable",
   "participants.airtable.update": "Aggiorna collegamento",
   "participants.airtable.connected": "Collegato alla tabella {table}",
-  "participants.airtable.createFields": "Crea i campi mancanti",
-  "participants.airtable.fieldsCreated": "{count} campi creati su Airtable",
+  "participants.airtable.createFields": "Crea / aggiorna i campi",
   "participants.airtable.fieldsFailed": "Campi non creati ({names}): {error}",
   "participants.airtable.send": "Invia ad Airtable ({count})",
   "participants.airtable.sent": "{count} partecipanti inviati ad Airtable",
-  "participants.airtable.sendError": "Airtable non aggiornato:"
+  "participants.airtable.sendError": "Airtable non aggiornato:",
+  "participants.airtable.fieldsUpdated": "Airtable aggiornato: {created} campi creati, {renamed} rinominati",
+  "participants.airtable.fieldsRemaining": "{done} campi aggiornati, ne mancano {count}: clicca di nuovo \"Crea / aggiorna i campi\"",
+  "participants.airtable.headers": "Intestazioni delle colonne ({count})",
+  "participants.airtable.headersDescription": "Su Airtable le risposte hanno come titolo la domanda sintetizzata; lo scarico di FIELDBOT resta con i codici. Puoi correggere ogni intestazione: salvando, il campo viene rinominato su Airtable.",
+  "participants.airtable.saveHeaders": "Salva intestazioni ({count})"
 }

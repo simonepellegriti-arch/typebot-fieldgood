@@ -53,4 +53,14 @@ describe("getAirtableAnswerFields", () => {
       }),
     ).toEqual({ Q1: "Molto, Poco", Q2: "Prezzo: Sì", Q3: "testo" });
   });
+
+  it("writes each answer under its question title when one is set", () => {
+    expect(
+      getAirtableAnswerFields(state, {
+        fieldNames: ["Livello di gradimento", "Q2", "Q3"],
+        excludedNames: new Set(),
+        fieldMap: { Q1: "Livello di gradimento", Q3: "Commento libero" },
+      }),
+    ).toEqual({ "Livello di gradimento": "Molto, Poco", Q2: "Prezzo: Sì" });
+  });
 });

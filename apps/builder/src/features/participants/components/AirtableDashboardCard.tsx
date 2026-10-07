@@ -7,6 +7,7 @@ import { Input } from "@typebot.io/ui/components/Input";
 import { useState } from "react";
 import { orpc } from "@/lib/queryClient";
 import { toast } from "@/lib/toast";
+import { AirtableHeadersEditor } from "./AirtableHeadersEditor";
 
 type Props = {
   typebotId: string;
@@ -16,6 +17,7 @@ type Props = {
     tableName: string | null;
     fieldNames: string[];
     hasToken: boolean;
+    headers: { variableName: string; header: string }[];
   } | null;
   unsentCount: number;
   onChange: () => void;
@@ -57,15 +59,22 @@ export const AirtableDashboardCard = ({
     orpc.participants.createAirtableFields.mutationOptions({
       onSuccess: (data) => {
         toast({
-          type: data.failed.length ? undefined : "success",
+          type:
+            data.failed.length || data.remainingCount ? undefined : "success",
           description: data.failed.length
             ? t("participants.airtable.fieldsFailed", {
                 names: data.failed.map((field) => field.name).join(", "),
                 error: data.failed[0]?.error ?? "",
               })
-            : t("participants.airtable.fieldsCreated", {
-                count: data.createdCount,
-              }),
+            : data.remainingCount
+              ? t("participants.airtable.fieldsRemaining", {
+                  done: data.createdCount + data.renamedCount,
+                  count: data.remainingCount,
+                })
+              : t("participants.airtable.fieldsUpdated", {
+                  created: data.createdCount,
+                  renamed: data.renamedCount,
+                }),
         });
         onChange();
       },
@@ -181,6 +190,13 @@ export const AirtableDashboardCard = ({
           </>
         )}
       </div>
+      {airtable && airtable.headers.length > 0 && (
+        <AirtableHeadersEditor
+          headers={airtable.headers}
+          isSaving={isCreatingFields}
+          onSave={(headers) => createFields({ typebotId, headers })}
+        />
+      )}
     </div>
   );
 };

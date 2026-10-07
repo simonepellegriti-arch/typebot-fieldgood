@@ -17,6 +17,7 @@ export const getParticipantsTypebot = async (
       name: true,
       publicId: true,
       customDomain: true,
+      workspaceId: true,
       groups: true,
       variables: true,
       collaborators: { select: { userId: true, type: true } },

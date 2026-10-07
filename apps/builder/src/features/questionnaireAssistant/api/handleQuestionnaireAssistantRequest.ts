@@ -1,7 +1,5 @@
 import { auth } from "@typebot.io/auth/lib/nextAuth";
-import { decrypt } from "@typebot.io/credentials/decrypt";
 import { env } from "@typebot.io/env";
-import { forgedBlocks } from "@typebot.io/forge-repository/definitions";
 import prisma from "@typebot.io/prisma";
 import { WorkspaceRole } from "@typebot.io/prisma/enum";
 import { typebotV6Schema } from "@typebot.io/typebot/schemas/typebot";
@@ -20,6 +18,7 @@ import {
 import { isWriteTypebotForbidden } from "@/features/typebot/helpers/isWriteTypebotForbidden";
 import { convertQuestionnaireSpecToTypebot } from "../helpers/convertQuestionnaireSpecToTypebot";
 import { expandQuestionLoops } from "../helpers/expandQuestionLoops";
+import { getWorkspaceAiModels } from "../helpers/getWorkspaceAiModels";
 import {
   buildAssistantReply,
   questionnaireAssistantSystemPrompt,
@@ -52,10 +51,6 @@ const requestSchema = z.object({
   /** Follow-up: the questionnaire of the bot being edited. */
   previousSpec: z.unknown().optional(),
   typebotId: z.string().optional(),
-});
-
-const aiCredentialsSchema = z.object({
-  apiKey: z.string().min(1),
 });
 
 /** Models tried in order (the first one the account can use). */
@@ -100,7 +95,10 @@ export const handleQuestionnaireAssistantRequest = async (request: Request) => {
   if (!membership || membership.role === WorkspaceRole.GUEST)
     return errorResponse(404, "workspace-not-found");
 
-  const { models, openAiCredentialsId } = await getWorkspaceModels(workspaceId);
+  const { models, openAiCredentialsId } = await getWorkspaceAiModels(
+    workspaceId,
+    modelIdsByProvider,
+  );
   if (models.length === 0) return errorResponse(400, "no-ai-credentials");
 
   let spec: QuestionnaireSpec;
@@ -247,39 +245,6 @@ const generateQuestionnaireSpec = async ({
     }
   }
   throw lastError;
-};
-
-/** AI models of the workspace credentials: OpenAI first, then Anthropic. */
-const getWorkspaceModels = async (workspaceId: string) => {
-  const credentials = await prisma.credentials.findMany({
-    where: { workspaceId, type: { in: ["openai", "anthropic"] } },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, type: true, data: true, iv: true },
-  });
-  const models: LanguageModel[] = [];
-  let openAiCredentialsId: string | undefined;
-  for (const type of ["openai", "anthropic"] as const) {
-    const credential = credentials.find((candidate) => candidate.type === type);
-    if (!credential) continue;
-    const parsedData = aiCredentialsSchema.safeParse(
-      await decrypt(credential.data, credential.iv).catch(() => undefined),
-    );
-    if (!parsedData.success) continue;
-    // Voice transcriptions and AI follow-ups of the generated bots use it.
-    if (type === "openai") openAiCredentialsId = credential.id;
-    const getModel = forgedBlocks[type].actions.find(
-      (action) => action.aiGenerate,
-    )?.aiGenerate?.getModel;
-    if (!getModel) continue;
-    for (const modelId of modelIdsByProvider[type])
-      models.push(
-        getModel({
-          credentials: { apiKey: parsedData.data.apiKey },
-          model: modelId,
-        }),
-      );
-  }
-  return { models, openAiCredentialsId };
 };
 
 const errorMessage = (error: unknown) =>

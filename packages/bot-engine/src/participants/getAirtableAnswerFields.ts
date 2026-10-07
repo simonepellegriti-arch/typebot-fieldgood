@@ -6,7 +6,8 @@ import { z } from "zod";
 
 /**
  * Answers of the interview for the Airtable dashboard, one field per variable
- * (only fields that exist in the table). Choice and grid answers are written
+ * under its header (the short question title, or the variable name), only
+ * for fields that exist in the table. Choice and grid answers are written
  * with their labels, so the client reads "Molto" instead of "1".
  */
 export const getAirtableAnswerFields = (
@@ -14,19 +15,24 @@ export const getAirtableAnswerFields = (
   {
     fieldNames,
     excludedNames,
-  }: { fieldNames: string[]; excludedNames: Set<string> },
+    fieldMap = {},
+  }: {
+    fieldNames: string[];
+    excludedNames: Set<string>;
+    fieldMap?: Record<string, string>;
+  },
 ) => {
   const { typebot } = state.typebotsQueue[0];
   const fieldSet = new Set(fieldNames);
   const labelersByVariableId = getAnswerLabelers(typebot.groups);
   const fields: Record<string, string> = {};
   for (const variable of typebot.variables) {
-    if (!fieldSet.has(variable.name) || excludedNames.has(variable.name))
-      continue;
+    const fieldName = fieldMap[variable.name] ?? variable.name;
+    if (!fieldSet.has(fieldName) || excludedNames.has(variable.name)) continue;
     if (variable.value === undefined || variable.value === null) continue;
     const text = stringifyValue(variable.value);
     const labeler = labelersByVariableId.get(variable.id);
-    fields[variable.name] = labeler ? labeler(text) : text;
+    fields[fieldName] = labeler ? labeler(text) : text;
   }
   return fields;
 };

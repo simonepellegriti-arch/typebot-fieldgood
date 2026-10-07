@@ -6,6 +6,7 @@ import {
 import prisma from "@typebot.io/prisma";
 import type { User } from "@typebot.io/user/schemas";
 import { z } from "zod";
+import { getAnswerColumns } from "../helpers/getAnswerColumns";
 import { getParticipantLink } from "../helpers/getParticipantLink";
 import { getParticipantsTypebot } from "./getParticipantsTypebot";
 
@@ -62,6 +63,13 @@ export const handleGetParticipants = async ({
                 tableName: airtable.tableName ?? null,
                 fieldNames: airtable.fieldNames,
                 hasToken: Boolean(panel.airtableTokenData),
+                // Answer columns and their headers, in flow order.
+                headers: getAnswerColumns(typebot.groups, typebot.variables)
+                  .filter((column) => airtable.fieldMap?.[column.variableName])
+                  .map((column) => ({
+                    variableName: column.variableName,
+                    header: airtable.fieldMap?.[column.variableName] ?? "",
+                  })),
               }
             : null,
         }
