@@ -411,6 +411,12 @@ describe("photo checked against a reference image, back to an earlier question",
         edge.from.blockId === failGroup?.blocks.at(-1)?.id,
     );
     expect(failEdge?.to.groupId).toBe(q7aGroup?.id);
+    // No description alternative: the retry message doesn't offer one, and
+    // going back is explained.
+    const texts = JSON.stringify(typebot.groups);
+    expect(texts).not.toContain("descriverli a parole");
+    expect(texts).toContain("ben inquadrata");
+    expect(JSON.stringify(failGroup?.blocks)).toContain("Torniamo un attimo");
   });
 
   it("keeps the chat open on a pause, with a button to go on", async () => {

@@ -28,10 +28,15 @@ const italianTu = {
   checkingPhoto: "Un attimo, guardo la foto… 👀",
   photoNotRecognized:
     "Dalla foto non riesco a riconoscere quello che ti ho chiesto. Puoi riprovare con un'altra foto oppure descriverli a parole.",
+  photoNotRecognizedRetry:
+    "Dalla foto non riesco a riconoscere quello che ti ho chiesto. Riprova con un'altra foto, ben inquadrata e a fuoco.",
+  photoFailGoBack:
+    "Non riesco a riconoscerlo nemmeno in questa foto. Torniamo un attimo indietro.",
   retryPhoto: "📷 Riprovo con un'altra foto",
   describePrompt:
     "Va benissimo! Scrivimi o dimmi a voce quali sono: nome e, se lo ricordi, il formato.",
   resumeReady: "▶️ Sono pronto, riprendiamo",
+  watchVideoFirst: "Guarda il video fino alla fine per continuare",
 };
 
 const italianLei: typeof italianTu = {
@@ -57,10 +62,15 @@ const italianLei: typeof italianTu = {
   checkingPhoto: "Un attimo, guardo la foto… 👀",
   photoNotRecognized:
     "Dalla foto non riesco a riconoscere quello che le ho chiesto. Può riprovare con un'altra foto oppure descriverli a parole.",
+  photoNotRecognizedRetry:
+    "Dalla foto non riesco a riconoscere quello che le ho chiesto. Riprovi con un'altra foto, ben inquadrata e a fuoco.",
+  photoFailGoBack:
+    "Non riesco a riconoscerlo nemmeno in questa foto. Torniamo un attimo indietro.",
   retryPhoto: "📷 Riprovo con un'altra foto",
   describePrompt:
     "Va benissimo! Mi scriva o mi dica a voce quali sono: nome e, se lo ricorda, il formato.",
   resumeReady: "▶️ Sono pronto, riprendiamo",
+  watchVideoFirst: "Guardi il video fino alla fine per continuare",
 };
 
 const english: typeof italianTu = {
@@ -92,10 +102,15 @@ const english: typeof italianTu = {
   checkingPhoto: "Just a moment, I'm looking at the photo… 👀",
   photoNotRecognized:
     "I can't recognize what I asked for in the photo. You can try another photo or describe them in words.",
+  photoNotRecognizedRetry:
+    "I can't recognize what I asked for in the photo. Please try another photo, well framed and in focus.",
+  photoFailGoBack:
+    "I can't recognize it in this photo either. Let's go back a step.",
   retryPhoto: "📷 Try another photo",
   describePrompt:
     "That's fine! Write or tell me which ones: name and, if you remember, the format.",
   resumeReady: "▶️ I'm ready, let's go on",
+  watchVideoFirst: "Please watch the video to the end to continue",
 };
 
 /** Buttons and default messages of generated bots, in the questionnaire language and register. */

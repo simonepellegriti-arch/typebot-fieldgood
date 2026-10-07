@@ -1075,10 +1075,15 @@ const addCheckedPhotoQuestion = (
         system: `You check photos sent by respondents of a market research interview. The photo must show: ${check}.
 Look at the images and answer on one line, in the language of that description:
 "SI | <the products / packs you recognize, brand and name when readable>" when the photo shows it,
-"NO | <what the photo shows instead>" otherwise (people, documents, blurry or unrelated pictures).
+"NO | <what the photo shows instead>" otherwise (people, documents, blurry or unrelated pictures).${
+          photo.referenceImageUrl
+            ? `
+The first image is the reference: the exact packs to find. Other products of the same brand or line (standard packs, other editions or flavours) do NOT count: answer SI only when at least one pack in the photo has the same design as a pack of the reference (graphics, colours, special wording), and name which one.`
+            : ""
+        }
 Nothing else.`,
         user: photo.referenceImageUrl
-          ? `La foto deve mostrare: ${check}\nPrima immagine: il riferimento (quello che va trovato). Le immagini dopo: la foto del rispondente. Rispondi SI se la foto mostra almeno uno degli elementi del riferimento.\n\n${photo.referenceImageUrl}\n\n{{${code}_FOTO_JSON}}`
+          ? `La foto deve mostrare: ${check}\nPrima immagine: il riferimento (le confezioni esatte da trovare). Le immagini dopo: la foto del rispondente. Rispondi SI solo se nella foto c'è almeno una confezione con la stessa grafica di una del riferimento; prodotti simili della stessa marca con un'altra grafica non valgono.\n\n${photo.referenceImageUrl}\n\n{{${code}_FOTO_JSON}}`
           : `La foto deve mostrare: ${check}\n\n{{${code}_FOTO_JSON}}`,
         resultVariable: `${code}_FOTO_AI`,
       }),
@@ -1101,7 +1106,10 @@ Nothing else.`,
     const failGroup = failTarget
       ? bot
           .createGroup(`${code} FOTO NON VALIDA - RITORNO`)
-          .add(bot.setVariable(`${code}_TENTATIVI`, "return 0"))
+          .add(
+            bot.textBubble(labels.photoFailGoBack),
+            bot.setVariable(`${code}_TENTATIVI`, "return 0"),
+          )
           .setNext(failTarget)
       : undefined;
     retryGroup.add(
@@ -1115,7 +1123,11 @@ Nothing else.`,
           to: failGroup?.start() ?? descriptionGroup?.start() ?? toContinue,
         },
       ]),
-      bot.textBubble(labels.photoNotRecognized),
+      bot.textBubble(
+        descriptionGroup
+          ? labels.photoNotRecognized
+          : labels.photoNotRecognizedRetry,
+      ),
       bot.buttons(
         [
           { label: labels.retryPhoto, value: "Foto", to: toPhoto },
@@ -1206,6 +1218,7 @@ const addStimulus = (
       autoContinueOnEnd: stimulus.allowReplay,
       variableId: bot.variable(`${code}_VISIONE`),
       buttonLabel: labels.continue,
+      requirementMessage: labels.watchVideoFirst,
     }),
   );
   if (!stimulus.allowReplay) return;
