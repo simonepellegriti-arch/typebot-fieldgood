@@ -210,10 +210,12 @@ export const ParticipantsPage = () => {
             </div>
           )}
 
-          {typebot && isWriteMode && (
+          {typebot && isWriteMode && data && (
             <AirtableDashboardCard
+              // Fields start from the saved connection once it is loaded.
+              key={`${data.panel?.airtable?.baseId}-${data.panel?.airtable?.tableId}`}
               typebotId={typebot.id}
-              airtable={data?.panel?.airtable ?? null}
+              airtable={data.panel?.airtable ?? null}
               unsentCount={unsentCount}
               onChange={refetch}
             />

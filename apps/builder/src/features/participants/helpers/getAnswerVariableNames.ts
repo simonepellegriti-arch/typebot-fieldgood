@@ -51,8 +51,13 @@ export const getAnswerVariableNames = (groups: unknown, variables: unknown) => {
         : [block.content?.watchTracking?.variableId];
       for (const variableId of variableIds) {
         const name = variableId ? nameById.get(variableId) : undefined;
-        if (name && !names.includes(name)) names.push(name);
+        if (name && !names.includes(name) && !isTechnicalName(name))
+          names.push(name);
       }
     }
   return names;
 };
+
+/** Microphone test and second viewings: not answers for the client's dashboard. */
+const isTechnicalName = (name: string) =>
+  /^test_vocale/i.test(name) || /_VISIONE_BIS$/.test(name);

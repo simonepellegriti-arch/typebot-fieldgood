@@ -1,4 +1,7 @@
-import { createAirtableRecords } from "@typebot.io/bot-engine/participants/airtableClient";
+import {
+  createAirtableRecords,
+  getAirtableTable,
+} from "@typebot.io/bot-engine/participants/airtableClient";
 import {
   airtableStandardFields,
   airtableTokenSchema,
@@ -48,7 +51,21 @@ export const sendParticipantsToAirtable = async (typebot: {
 }) => {
   const connection = await getPanelAirtable(typebot.id);
   if (!connection) return { sentCount: 0 };
-  const { token, airtable } = connection;
+  const { token } = connection;
+  // Fields may have been added on Airtable since the connection: read them again.
+  const table = await getAirtableTable(token, {
+    baseId: connection.airtable.baseId,
+    table: connection.airtable.tableId,
+  });
+  const airtable = {
+    ...connection.airtable,
+    fieldNames: table.fieldNames,
+    primaryFieldName: table.primaryFieldName,
+  };
+  await prisma.participantPanel.update({
+    where: { typebotId: typebot.id },
+    data: { airtable },
+  });
   const participants = await prisma.participant.findMany({
     where: { typebotId: typebot.id, airtableRecordId: null },
     orderBy: { createdAt: "asc" },
