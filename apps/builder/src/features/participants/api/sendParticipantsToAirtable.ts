@@ -79,6 +79,13 @@ export const sendParticipantsToAirtable = async (typebot: {
           String(value ?? ""),
         ]),
       ),
+      // The table's first column (e.g. "Name") shows who the record is.
+      ...(airtable.primaryFieldName
+        ? {
+            [airtable.primaryFieldName]:
+              participant.externalId ?? participant.token,
+          }
+        : {}),
       [airtableStandardFields.id]: participant.externalId ?? participant.token,
       [airtableStandardFields.link]: getParticipantLink(
         typebot,

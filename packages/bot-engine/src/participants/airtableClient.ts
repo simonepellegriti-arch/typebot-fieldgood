@@ -53,7 +53,8 @@ const tablesSchema = z.object({
     z.object({
       id: z.string(),
       name: z.string(),
-      fields: z.array(z.object({ name: z.string() })),
+      primaryFieldId: z.string().optional(),
+      fields: z.array(z.object({ id: z.string(), name: z.string() })),
     }),
   ),
 });
@@ -77,6 +78,9 @@ export const getAirtableTable = async (
     id: found.id,
     name: found.name,
     fieldNames: found.fields.map((field) => field.name),
+    primaryFieldName: found.fields.find(
+      (field) => field.id === found.primaryFieldId,
+    )?.name,
   };
 };
 

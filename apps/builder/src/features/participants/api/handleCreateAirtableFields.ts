@@ -76,7 +76,13 @@ export const handleCreateAirtableFields = async ({
   });
   await prisma.participantPanel.update({
     where: { typebotId },
-    data: { airtable: { ...airtable, fieldNames: refreshed.fieldNames } },
+    data: {
+      airtable: {
+        ...airtable,
+        fieldNames: refreshed.fieldNames,
+        primaryFieldName: refreshed.primaryFieldName,
+      },
+    },
   });
   return {
     createdCount: missing.length - failed.length,

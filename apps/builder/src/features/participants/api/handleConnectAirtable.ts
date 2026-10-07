@@ -66,6 +66,7 @@ export const handleConnectAirtable = async ({
     tableId: airtableTable.id,
     tableName: airtableTable.name,
     fieldNames: airtableTable.fieldNames,
+    primaryFieldName: airtableTable.primaryFieldName,
   };
   await prisma.participantPanel.upsert({
     where: { typebotId },
@@ -89,5 +90,6 @@ export const handleConnectAirtable = async ({
   return {
     tableName: airtableTable.name,
     fieldNames: airtableTable.fieldNames,
+    primaryFieldName: airtableTable.primaryFieldName,
   };
 };

@@ -35,6 +35,8 @@ export const participantAirtableSchema = z.object({
   baseId: z.string(),
   tableId: z.string(),
   tableName: z.string().optional(),
+  /** First column of the table (e.g. "Name"): receives the participant ID. */
+  primaryFieldName: z.string().optional(),
   /** Fields of the table when last checked: only these are written. */
   fieldNames: z.array(z.string()),
 });
