@@ -49,11 +49,23 @@ type Groups = SessionState["typebotsQueue"][number]["typebot"]["groups"];
 const getAnswerLabelers = (groups: Groups) => {
   const labelers = new Map<string, (value: string) => string>();
   const blocks: Block[] = groups.flatMap((group): Block[] => group.blocks);
+  // A variable saved by several button blocks (e.g. "photo or description",
+  // then "try again or describe") keeps its codes: the labels differ.
+  const choiceBlockCountByVariable = new Map<string, number>();
+  for (const block of blocks)
+    if (block.type === InputBlockType.CHOICE && block.options?.variableId)
+      choiceBlockCountByVariable.set(
+        block.options.variableId,
+        (choiceBlockCountByVariable.get(block.options.variableId) ?? 0) + 1,
+      );
   for (const block of blocks) {
     if (!isInputBlock(block)) continue;
     const variableId = block.options?.variableId;
     if (!variableId) continue;
-    if (block.type === InputBlockType.CHOICE) {
+    if (
+      block.type === InputBlockType.CHOICE &&
+      (choiceBlockCountByVariable.get(variableId) ?? 0) === 1
+    ) {
       const labelsByCode = new Map(
         (block.items ?? []).flatMap((item) =>
           item.content ? [[item.value ?? item.content, item.content]] : [],

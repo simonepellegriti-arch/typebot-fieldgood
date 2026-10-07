@@ -63,4 +63,36 @@ describe("getAirtableAnswerFields", () => {
       }),
     ).toEqual({ "Livello di gradimento": "Molto, Poco", Q2: "Prezzo: Sì" });
   });
+
+  it("keeps the codes of a variable saved by several button blocks", () => {
+    const twoButtonBlocks = {
+      typebotsQueue: [
+        {
+          typebot: {
+            groups: [
+              {
+                id: "g",
+                title: "B1",
+                blocks: ["Carico una foto", "Riprovo con un'altra foto"].map(
+                  (label, index) => ({
+                    id: `b${index}`,
+                    type: "choice input",
+                    items: [{ id: `i${index}`, content: label, value: "Foto" }],
+                    options: { variableId: "vMode" },
+                  }),
+                ),
+              },
+            ],
+            variables: [{ id: "vMode", name: "B1_MODO", value: "Foto" }],
+          },
+        },
+      ],
+    } as unknown as SessionState;
+    expect(
+      getAirtableAnswerFields(twoButtonBlocks, {
+        fieldNames: ["B1_MODO"],
+        excludedNames: new Set(),
+      }),
+    ).toEqual({ B1_MODO: "Foto" });
+  });
 });
