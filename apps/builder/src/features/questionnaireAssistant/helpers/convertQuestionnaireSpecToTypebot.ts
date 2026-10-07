@@ -914,7 +914,12 @@ const buildQuestionBlocks = ({
   }
 };
 
-/** Voice answer: transcribed into the answer variable (typed answers are kept as they are). */
+/**
+ * Voice answer: GPT writes the transcription to its own field
+ * (CODE_TRASCRIZIONE, results and Airtable) and the answer variable takes the
+ * transcribed text, so AI follow-ups and piping read words, not an audio link.
+ * Typed answers are kept as they are and leave CODE_TRASCRIZIONE empty.
+ */
 const addTranscription = (
   group: GroupBuilder,
   {
@@ -930,6 +935,7 @@ const addTranscription = (
   },
 ) => {
   const afterTranscription = { position: -1 };
+  const transcriptionVariable = `${resultVariable}_TRASCRIZIONE`;
   group.add(
     bot.condition([
       {
@@ -937,7 +943,16 @@ const addTranscription = (
         to: () => group.at(afterTranscription.position)(),
       },
     ]),
-    bot.transcription({ credentialsId, audioUrlVariable, resultVariable }),
+    bot.transcription({
+      credentialsId,
+      audioUrlVariable,
+      resultVariable: transcriptionVariable,
+    }),
+    // A failed transcription leaves the answer as it was.
+    bot.setVariable(
+      resultVariable,
+      `return {{${transcriptionVariable}}} || {{${resultVariable}}}`,
+    ),
   );
   afterTranscription.position = group.mark();
 };
@@ -1271,7 +1286,10 @@ const airtableFieldsOf = (
     ? `{{${question.code}_TESTO}}`
     : `{{${question.code}}}`,
   ...(isOpen(question) && question.media === "voice"
-    ? { [`${question.code}_URL`]: `{{${question.code}_URL}}` }
+    ? {
+        [`${question.code}_URL`]: `{{${question.code}_URL}}`,
+        [`${question.code}_TRASCRIZIONE`]: `{{${question.code}_TRASCRIZIONE}}`,
+      }
     : {}),
   ...(isOpen(question) && question.media === "video"
     ? { [`${question.code}_VIDEO`]: `{{${question.code}_VIDEO}}` }

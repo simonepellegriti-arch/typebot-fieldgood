@@ -10,6 +10,8 @@ const blockSchema = z.object({
       variableId: z.string().optional(),
       audioClip: z.object({ saveVariableId: z.string().optional() }).optional(),
       videoClip: z.object({ saveVariableId: z.string().optional() }).optional(),
+      action: z.string().optional(),
+      transcriptionVariableId: z.string().optional(),
     })
     .passthrough()
     .optional(),
@@ -28,7 +30,8 @@ const variablesSchema = z.array(z.object({ id: z.string(), name: z.string() }));
 
 /**
  * Variables answered in the interview (one Airtable column each): input
- * answers, voice / video files and watched video shares, in flow order.
+ * answers, voice / video files, GPT transcriptions of the voice answers and
+ * watched video shares, in flow order.
  */
 export const getAnswerVariableNames = (groups: unknown, variables: unknown) => {
   const nameById = new Map(
@@ -48,7 +51,9 @@ export const getAnswerVariableNames = (groups: unknown, variables: unknown) => {
             block.options?.audioClip?.saveVariableId,
             block.options?.videoClip?.saveVariableId,
           ]
-        : [block.content?.watchTracking?.variableId];
+        : isTranscription(block)
+          ? [block.options?.transcriptionVariableId]
+          : [block.content?.watchTracking?.variableId];
       for (const variableId of variableIds) {
         const name = variableId ? nameById.get(variableId) : undefined;
         if (name && !names.includes(name) && !isTechnicalName(name))
@@ -57,6 +62,9 @@ export const getAnswerVariableNames = (groups: unknown, variables: unknown) => {
     }
   return names;
 };
+
+const isTranscription = (block: z.infer<typeof blockSchema>) =>
+  block.type === "openai" && block.options?.action === "Create transcription";
 
 /** Microphone test and second viewings: not answers for the client's dashboard. */
 const isTechnicalName = (name: string) =>
